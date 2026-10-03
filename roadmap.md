@@ -1,0 +1,3 @@
+- [x] Create ASAINDO-maroon visual system and responsive SPAKE dashboard.
+- [x] Add frontend-only views for the requester, general affairs, and finance workflows.
+- [x] Provide simulated submission, stock verification, approval, tracking, and CSV export.
