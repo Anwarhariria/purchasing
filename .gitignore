@@ -19,8 +19,19 @@ dist-ssr
 # Netlify
 .netlify
 
-# Backend (Frontend only repo)
-backend/
+# Backend ignores
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/storage/*.key
+backend/storage/logs/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/.phpunit.cache
+backend/public/storage
 
 # Wrangler / Cloudflare
 .wrangler/
