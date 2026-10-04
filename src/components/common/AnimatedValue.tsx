@@ -1,128 +1,154 @@
 import React, { useEffect, useRef, useState } from "react";
 
 interface AnimatedValueProps {
-  value: string;
+  value: string | number;
   className?: string;
   showIndicator?: boolean;
+  startDelay?: number;
+}
+
+function parseTargetNum(rawStr: string): number {
+  let cleanStr = rawStr.replace(/Rp\s?/g, "").replace(/%/g, "").trim();
+  if (cleanStr.includes(".") && !cleanStr.includes(",")) {
+    if (/^\d{1,3}(\.\d{3})+$/.test(cleanStr)) {
+      cleanStr = cleanStr.replace(/\./g, "");
+    }
+  } else if (cleanStr.includes(".") && cleanStr.includes(",")) {
+    cleanStr = cleanStr.replace(/\./g, "").replace(",", ".");
+  }
+  return parseFloat(cleanStr.replace(/[^0-9.-]/g, ""));
+}
+
+function formatNumber(
+  current: number,
+  rawStr: string,
+  isCurrency: boolean,
+  isPercent: boolean,
+  hasLeadingZero: boolean
+): string {
+  if (isCurrency) {
+    const rounded = Math.round(current);
+    return rounded.toLocaleString("id-ID");
+  } else if (isPercent) {
+    return current.toFixed(1) + "%";
+  } else if (hasLeadingZero) {
+    const rounded = Math.round(current);
+    return String(rounded).padStart(rawStr.length, "0");
+  } else {
+    // Extract suffix like "Item", "PR", "Hidangan"
+    const match = rawStr.match(/^\s*[\d.,]+\s*(.*)$/);
+    const suffix = match && match[1] ? match[1].trim() : "";
+    const prefix = rawStr.match(/^[^\d]*/)?.[0] || "";
+    const rounded = Math.round(current);
+    return prefix + (suffix ? `${rounded} ${suffix}` : String(rounded));
+  }
 }
 
 /**
  * AnimatedValue Component
- * Displays numbers, currency, and percentages with a smooth, elegant count-up/down animation.
- * Tulisan "Rp" diletakkan di bawah angka, dan warna angka selalu berwarna biru solid (tidak berubah-ubah).
+ * Displays numbers, currency, and percentages with a smooth count-up animation that
+ * starts right after the parent card/container finishes its entrance transition.
  */
 export function AnimatedValue({
   value,
   className = "",
   showIndicator = true,
+  startDelay,
 }: AnimatedValueProps) {
   const str = String(value).trim();
   const isCurrency = str.startsWith("Rp") || str.includes("Rp");
   const isPercent = str.endsWith("%");
   const hasLeadingZero = /^0\d+/.test(str);
 
+  const initialTarget = parseTargetNum(str);
+
+  // Initial state starts at 0 so the user clearly sees numbers count up after container arrives
   const [displayNumber, setDisplayNumber] = useState<string>(() => {
-    if (isCurrency) {
-      return str.replace(/Rp\s?/g, "").trim() || "0";
+    if (isNaN(initialTarget)) {
+      return isCurrency ? str.replace(/Rp\s?/g, "").trim() || "0" : str;
     }
-    return str;
+    return formatNumber(0, str, isCurrency, isPercent, hasLeadingZero);
   });
+
   const [isChanging, setIsChanging] = useState<boolean>(false);
   const [direction, setDirection] = useState<"up" | "down" | "neutral">("neutral");
   const prevNumRef = useRef<number | null>(null);
-  const isInitialMount = useRef<boolean>(true);
 
   useEffect(() => {
-    // Extract digits for parsing
-    let cleanStr = str.replace(/Rp\s?/g, "").replace(/%/g, "").trim();
-
-    // Thousand separators in ID format
-    if (cleanStr.includes(".") && !cleanStr.includes(",")) {
-      if (/^\d{1,3}(\.\d{3})+$/.test(cleanStr)) {
-        cleanStr = cleanStr.replace(/\./g, "");
-      }
-    } else if (cleanStr.includes(".") && cleanStr.includes(",")) {
-      cleanStr = cleanStr.replace(/\./g, "").replace(",", ".");
-    }
-
-    const targetNum = parseFloat(cleanStr.replace(/[^0-9.-]/g, ""));
-
-    if (isNaN(targetNum)) {
+    const nextTarget = parseTargetNum(str);
+    if (isNaN(nextTarget)) {
       setDisplayNumber(isCurrency ? str.replace(/Rp\s?/g, "").trim() : str);
       return;
     }
 
-    const startNum = prevNumRef.current !== null ? prevNumRef.current : 0;
-    prevNumRef.current = targetNum;
+    const isFirstMount = prevNumRef.current === null;
+    const startNum = isFirstMount ? 0 : prevNumRef.current;
+    prevNumRef.current = nextTarget;
 
-    if (!isInitialMount.current) {
-      if (targetNum > startNum) {
+    if (!isFirstMount) {
+      if (nextTarget > startNum) {
         setDirection("up");
-      } else if (targetNum < startNum) {
+      } else if (nextTarget < startNum) {
         setDirection("down");
       } else {
         setDirection("neutral");
       }
     } else {
-      isInitialMount.current = false;
       setDirection("neutral");
     }
 
-    setIsChanging(true);
+    // If first mount and nextTarget is 0, keep at 0 without unnecessary loop
+    if (isFirstMount && nextTarget === 0) {
+      setDisplayNumber(formatNumber(0, str, isCurrency, isPercent, hasLeadingZero));
+      return;
+    }
 
-    // Animasi lebih halus & tidak terburu-buru (1600ms)
-    const duration = 1600;
-    const startTime = performance.now();
+    // Wait for the card/container entrance to finish first!
+    // Default initial delay is 420ms (cards finish slide-up at ~450ms)
+    const delay = isFirstMount ? (startDelay ?? 420) : 0;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
     let animationFrameId: number;
 
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Smooth ease-out quart (mulai lembut, melambat anggun)
-      const ease = 1 - Math.pow(1 - progress, 4);
-      const current = startNum + (targetNum - startNum) * ease;
+    timeoutId = setTimeout(() => {
+      setIsChanging(true);
+      const duration = 1200; // Smooth 1.2s count-up duration
+      const startTime = performance.now();
 
-      let formattedDigits: string;
-      if (isCurrency) {
-        const rounded = Math.round(current);
-        formattedDigits = rounded.toLocaleString("id-ID");
-      } else if (isPercent) {
-        formattedDigits = current.toFixed(1) + "%";
-      } else if (hasLeadingZero) {
-        const rounded = Math.round(current);
-        formattedDigits = String(rounded).padStart(str.length, "0");
-      } else {
-        const suffix = str.replace(/^[0-9.,\s]+/, "");
-        const prefix = str.match(/^[^\d]*/)?.[0] || "";
-        const rounded = Math.round(current);
-        formattedDigits = prefix + (suffix ? rounded + " " + suffix.trim() : String(rounded));
-      }
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Quartic ease-out: starts with swift natural motion, decelerates smoothly
+        const ease = 1 - Math.pow(1 - progress, 4);
+        const current = startNum + (nextTarget - startNum) * ease;
 
-      setDisplayNumber(formattedDigits);
+        setDisplayNumber(formatNumber(current, str, isCurrency, isPercent, hasLeadingZero));
 
-      if (progress < 1) {
-        animationFrameId = requestAnimationFrame(animate);
-      } else {
-        // Snap ke target tepat
-        if (isCurrency) {
-          setDisplayNumber(str.replace(/Rp\s?/g, "").trim());
+        if (progress < 1) {
+          animationFrameId = requestAnimationFrame(animate);
         } else {
-          setDisplayNumber(str);
+          // Snap precisely to target at end
+          if (isCurrency) {
+            setDisplayNumber(str.replace(/Rp\s?/g, "").trim());
+          } else {
+            setDisplayNumber(str);
+          }
+          const t = setTimeout(() => {
+            setIsChanging(false);
+            setDirection("neutral");
+          }, 350);
+          return () => clearTimeout(t);
         }
-        const timer = setTimeout(() => {
-          setIsChanging(false);
-          setDirection("neutral");
-        }, 600);
-        return () => clearTimeout(timer);
-      }
-    };
+      };
 
-    animationFrameId = requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
+    }, delay);
 
     return () => {
+      clearTimeout(timeoutId);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [value, isCurrency, isPercent, hasLeadingZero, str]);
+  }, [value, isCurrency, isPercent, hasLeadingZero, str, startDelay]);
 
   return (
     <div className={`inline-flex items-baseline gap-1.5 whitespace-nowrap leading-none ${className}`}>

@@ -12,6 +12,7 @@ export function MetricCard({
   kind,
   className = "",
   style,
+  startDelay,
 }: {
   label: string;
   value: string;
@@ -22,8 +23,27 @@ export function MetricCard({
   kind?: "primary" | "warning" | "success" | "danger" | "info";
   className?: string;
   style?: React.CSSProperties;
+  startDelay?: number;
 }) {
   const scheme = colorScheme || kind || "primary";
+
+  // Compute count-up delay based on stagger classes so card moves first, then number animates!
+  const computedDelay =
+    startDelay !== undefined
+      ? startDelay
+      : className.includes("stagger-1")
+      ? 380
+      : className.includes("stagger-2")
+      ? 450
+      : className.includes("stagger-3")
+      ? 520
+      : className.includes("stagger-4")
+      ? 590
+      : className.includes("stagger-5")
+      ? 660
+      : className.includes("stagger-6")
+      ? 730
+      : 400;
   const iconColorMap = {
     primary: "text-primary",
     warning: "text-blue-600 dark:text-blue-400",
@@ -64,7 +84,7 @@ export function MetricCard({
         </div>
       </div>
       <div className="mt-2.5 sm:mt-3 min-h-[36px] flex items-center">
-        <AnimatedValue value={value} />
+        <AnimatedValue value={value} startDelay={computedDelay} />
       </div>
       <div className="mt-3 sm:mt-4 flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 text-[11px] border-t border-border/60 pt-2 min-w-0">
         <span className="text-muted-foreground line-clamp-1">{foot}</span>

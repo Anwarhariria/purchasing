@@ -63,7 +63,7 @@ export function InventoryStockView({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
+      <div className="animate-slide-up-fade stagger-1 rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -89,6 +89,7 @@ export function InventoryStockView({
             foot="Bahan masakan terdaftar di inventaris"
             icon={Package}
             kind="primary"
+            className="animate-slide-up-fade stagger-1"
           />
           <MetricCard
             label="Stok Aman / Tersedia"
@@ -97,6 +98,7 @@ export function InventoryStockView({
             icon={CheckCircle2}
             trend="Tersedia"
             kind="success"
+            className="animate-slide-up-fade stagger-2"
           />
           <MetricCard
             label="Stok Menipis"
@@ -105,6 +107,7 @@ export function InventoryStockView({
             icon={Clock3}
             trend="Hampir Habis"
             kind="warning"
+            className="animate-slide-up-fade stagger-3"
           />
           <MetricCard
             label="Stok Habis (0)"
@@ -113,11 +116,12 @@ export function InventoryStockView({
             icon={Box}
             trend="Perlu Belanja"
             kind="danger"
+            className="animate-slide-up-fade stagger-4"
           />
         </div>
 
         {/* Operational Note Banner for Asdos */}
-        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50/70 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
+        <div className="animate-slide-up-fade stagger-3 mt-4 rounded-lg border border-blue-200 bg-blue-50/70 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
           <p className="font-bold flex items-center gap-1.5">
             <Info className="size-4 shrink-0 text-blue-700 dark:text-blue-400" />
             Panduan Pengelolaan Stok Asdos Laboratorium:
@@ -130,7 +134,7 @@ export function InventoryStockView({
         </div>
 
         {/* Search and Status Filter Bar */}
-        <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border pb-4">
+        <div className="animate-slide-up-fade stagger-4 mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border pb-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
             <Input
@@ -181,9 +185,13 @@ export function InventoryStockView({
         ) : (
           <>
             {/* Mobile Cards View (<sm) */}
-            <div className="mt-4 space-y-2.5 sm:hidden">
+            <div className="animate-slide-up-fade stagger-5 mt-4 space-y-2.5 sm:hidden">
               {items.map((item, idx) => (
-                <div key={item.name} className="rounded-lg border border-border bg-surface p-3 space-y-2.5 shadow-2xs">
+                <div
+                  key={item.name}
+                  className="animate-row-enter rounded-lg border border-border bg-surface p-3 space-y-2.5 shadow-2xs"
+                  style={{ animationDelay: `${idx * 20}ms` }}
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <span className="text-[10px] font-bold text-muted-foreground">#{idx + 1}</span>
@@ -261,7 +269,7 @@ export function InventoryStockView({
             </div>
 
             {/* Desktop Table View (sm+) */}
-            <div className="mt-4 hidden sm:block overflow-x-auto rounded-lg border border-border">
+            <div className="animate-slide-up-fade stagger-5 mt-4 hidden sm:block overflow-x-auto rounded-lg border border-border">
               <table className="w-full min-w-[700px] text-left text-xs">
                 <thead className="bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   <tr>
@@ -276,7 +284,11 @@ export function InventoryStockView({
                 </thead>
                 <tbody className="divide-y divide-border">
                   {items.map((item, idx) => (
-                    <tr key={item.name} className="hover:bg-surface/60 transition-colors">
+                    <tr
+                      key={item.name}
+                      className="animate-row-enter hover:bg-surface/60 transition-colors"
+                      style={{ animationDelay: `${idx * 20}ms` }}
+                    >
                       <td className="px-4 py-3 text-center font-bold text-muted-foreground">{idx + 1}</td>
                       <td className="px-4 py-3 font-bold text-foreground">
                         <div className="flex items-center gap-2">

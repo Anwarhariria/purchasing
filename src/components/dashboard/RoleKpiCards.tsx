@@ -42,7 +42,7 @@ interface RoleKpiCardsProps {
 export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps) {
   return (
     <>
-      <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div key={role} className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {role === "Staf / Asdos" && (
           <>
             <MetricCard
@@ -242,7 +242,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
 
       {/* SUPER ADMIN 6-STEP CYCLE MONITOR */}
       {role === "Super Admin" && (
-        <div className="mb-7 rounded-xl border border-border bg-card p-5 sm:p-6 shadow-xs">
+        <div className="animate-slide-up-fade stagger-5 mb-7 rounded-xl border border-border bg-card p-5 sm:p-6 shadow-xs">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
             <div>
               <h3 className="text-sm font-extrabold flex items-center gap-2 text-foreground">
