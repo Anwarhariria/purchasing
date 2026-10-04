@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Info,
   Plus,
+  Sparkles,
 } from "lucide-react";
 import {
   INGREDIENT_FORECAST_DATASET,
@@ -311,6 +312,7 @@ export function ForecastingView({
             foot="Proyeksi jadwal praktikum kelas"
             icon={Package}
             kind="primary"
+            className="animate-slide-up-fade stagger-1"
           />
           <MetricCard
             label="Stok Gudang Lab Saat Ini"
@@ -319,6 +321,7 @@ export function ForecastingView({
             icon={PackageCheck}
             trend={currentLabStock > 0 ? "Tersedia" : "Kosong"}
             kind={currentLabStock > 0 ? "info" : "warning"}
+            className="animate-slide-up-fade stagger-2"
           />
           <MetricCard
             label="Rekomendasi Pengadaan Baru"
@@ -327,6 +330,7 @@ export function ForecastingView({
             icon={ShoppingBag}
             trend={deficitToOrder > 0 ? "Perlu Belanja" : "Stok Cukup"}
             kind={deficitToOrder > 0 ? "danger" : "success"}
+            className="animate-slide-up-fade stagger-3"
           />
           <MetricCard
             label="Tingkat Keandalan Prediksi"
@@ -335,11 +339,12 @@ export function ForecastingView({
             icon={CheckCircle2}
             trend={forecastResult.mape < 20 ? "Stabil" : "Fluktuatif"}
             kind={forecastResult.mape < 20 ? "success" : "info"}
+            className="animate-slide-up-fade stagger-4"
           />
         </div>
 
         {/* Visual Time Series Line Chart (Interactive Responsive SVG) */}
-        <div className="mt-6 rounded-xl border border-border bg-card p-5">
+        <div className="mt-6 rounded-xl border border-border bg-card p-5 shadow-xs animate-slide-up-fade stagger-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
             <div>
               <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
@@ -405,6 +410,27 @@ export function ForecastingView({
                   stroke="currentColor"
                   strokeOpacity="0.3"
                 />
+
+                {/* Batang Grafik Penggunaan (Bar Chart Fill / Scale-Y Growth) */}
+                {selectedIng.history.map((h, i) => {
+                  const cx = getX(i);
+                  const barWidth = 20;
+                  const baselineY = paddingTop + plotHeight;
+                  const barTopY = getY(h.actual);
+                  const barHeight = Math.max(3, baselineY - barTopY);
+                  return (
+                    <rect
+                      key={`bar-${i}`}
+                      x={cx - barWidth / 2}
+                      y={barTopY}
+                      width={barWidth}
+                      height={barHeight}
+                      rx={3}
+                      className="fill-blue-500/20 hover:fill-blue-500/40 transition-colors animate-bar-grow"
+                      style={{ animationDelay: `${i * 50}ms` }}
+                    />
+                  );
+                })}
 
                 {/* Polyline Model Ramalan (Garis Merah Putus-putus) */}
                 <polyline
@@ -534,7 +560,11 @@ export function ForecastingView({
                   const isAccurate = row.ape <= 35;
 
                   return (
-                    <tr key={row.month} className="hover:bg-surface/60 transition-colors">
+                    <tr
+                      key={row.month}
+                      className="hover:bg-surface/60 transition-colors animate-row-enter"
+                      style={{ animationDelay: `${idx * 35}ms` }}
+                    >
                       <td className="px-4 py-2.5 text-center font-bold text-muted-foreground">{idx + 1}</td>
                       <td className="px-4 py-2.5 font-semibold text-foreground">{row.month}</td>
                       <td className="px-4 py-2.5 text-muted-foreground">{note}</td>
@@ -605,7 +635,7 @@ export function ForecastingView({
         {/* Ringkasan Analisis Kebutuhan & Aksi Pengadaan */}
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
           {/* Ringkasan Analisis Kebutuhan */}
-          <div className="lg:col-span-2 rounded-xl border border-border bg-card p-5 space-y-2.5 shadow-xs">
+          <div className="lg:col-span-2 rounded-xl border border-border bg-card p-5 space-y-2.5 shadow-xs animate-slide-up-fade stagger-4">
             <div className="flex items-center gap-2 text-foreground font-black text-sm">
               <Info className="size-4 text-primary" />
               <span>Ringkasan Perencanaan Stok & Pengadaan Laboratorium</span>
@@ -631,16 +661,24 @@ export function ForecastingView({
             </div>
           </div>
 
-          {/* Action Card: Integrasi Langsung ke Alur Pengadaan SPAKE */}
-          <div className="rounded-xl border border-border bg-card p-5 space-y-3 flex flex-col justify-between shadow-xs">
-            <div>
-              <span className="rounded bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                Aksi Cepat Pengadaan
-              </span>
-              <h4 className="text-sm font-black text-foreground mt-1.5">
-                Buat Pengajuan Bahan Otomatis
-              </h4>
-              <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+          {/* Action Card: Asisten AI Rekomendasi & Integrasi Alur Pengadaan */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-3 flex flex-col justify-between shadow-xs animate-slide-up-fade stagger-5">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                {/* 3D Glowing Pulsing Gradient Orb */}
+                <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-blue-700 via-indigo-600 to-sky-400 text-white shadow-md animate-orb-floating">
+                  <Sparkles className="size-5 text-white animate-pulse" />
+                </div>
+                <div>
+                  <span className="rounded bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
+                    Asisten Rekomendasi AI
+                  </span>
+                  <h4 className="text-sm font-black text-foreground mt-0.5">
+                    Buat Pengajuan Bahan Otomatis
+                  </h4>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-snug">
                 Isi formulir pengadaan bahan secara otomatis dengan kuantitas rekomendasi (<strong>{deficitToOrder} {selectedIng.unit}</strong>) untuk diajukan ke Koordinator Lab.
               </p>
             </div>

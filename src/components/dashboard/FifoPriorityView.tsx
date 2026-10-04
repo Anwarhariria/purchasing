@@ -33,7 +33,7 @@ export function FifoPriorityView({
     <div className="space-y-6">
       {/* FIFO Quick Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs animate-slide-up-fade stagger-1">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100 text-primary">
               <Layers className="size-5" />
@@ -45,7 +45,7 @@ export function FifoPriorityView({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs animate-slide-up-fade stagger-2">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
               <Clock className="size-5" />
@@ -59,7 +59,7 @@ export function FifoPriorityView({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs animate-slide-up-fade stagger-3">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-sky-100 text-sky-800">
               <Timer className="size-5" />
@@ -73,7 +73,7 @@ export function FifoPriorityView({
       </div>
 
       {/* FIFO Main Table View */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-xs animate-slide-up-fade stagger-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -112,7 +112,11 @@ export function FifoPriorityView({
             </thead>
             <tbody className="divide-y divide-border">
               {fifoRankings.map((item, idx) => (
-                <tr key={item.id} className="transition-colors hover:bg-surface/70">
+                <tr
+                  key={item.id}
+                  className="transition-colors hover:bg-surface/70 animate-row-enter"
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                >
                   <td className="px-4 py-3.5 text-center">
                     <span
                       className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-black ${

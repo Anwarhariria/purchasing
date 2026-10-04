@@ -34,7 +34,7 @@ export function CurriculumMasterView({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+      <div className="animate-slide-up-fade stagger-2 rounded-xl border border-border bg-card p-6 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
           <div>
             <h2 className="text-lg font-black text-foreground flex items-center gap-2">
@@ -176,7 +176,11 @@ export function CurriculumMasterView({
                 </thead>
                 <tbody className="divide-y divide-border">
                   {currentSemCourses.map((c, idx) => (
-                    <tr key={c.courseName + idx} className="hover:bg-surface/60 transition-colors">
+                    <tr
+                      key={c.courseName + idx}
+                      className="animate-row-enter hover:bg-surface/60 transition-colors"
+                      style={{ animationDelay: `${idx * 25}ms` }}
+                    >
                       <td className="px-4 py-3 text-center font-bold text-muted-foreground">{idx + 1}</td>
                       <td className="px-4 py-3 font-bold text-foreground">
                         <div className="flex items-center gap-2">

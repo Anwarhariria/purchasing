@@ -51,6 +51,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Seluruh menu praktik diajukan"
               icon={ClipboardList}
               kind="primary"
+              className="animate-slide-up-fade stagger-1"
             />
             <MetricCard
               label="Menunggu ACC (Koor/Kaprodi)"
@@ -59,6 +60,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={Clock3}
               trend="Dalam antrean"
               kind="warning"
+              className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
               label="Siap / Sedang Dibelanjakan"
@@ -66,6 +68,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Dana cair / proses belanja"
               icon={ShoppingBag}
               kind="info"
+              className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
               label="Praktik Selesai"
@@ -74,6 +77,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={PackageCheck}
               trend="Transaksi tuntas"
               kind="success"
+              className="animate-slide-up-fade stagger-4"
             />
           </>
         )}
@@ -86,6 +90,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Pengajuan bahan dapur masak"
               icon={Layers}
               kind="primary"
+              className="animate-slide-up-fade stagger-1"
             />
             <MetricCard
               label="Perlu Verifikasi Qty"
@@ -94,6 +99,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={ClipboardCheck}
               trend="Perlu ditinjau"
               kind="warning"
+              className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
               label="Dalam Proses Lanjutan"
@@ -101,6 +107,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Di Kaprodi / Keuangan / Belanja"
               icon={Activity}
               kind="info"
+              className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
               label="Selesai Dipertanggungjawabkan"
@@ -109,6 +116,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={PackageCheck}
               trend="Selesai"
               kind="success"
+              className="animate-slide-up-fade stagger-4"
             />
           </>
         )}
@@ -121,6 +129,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Mata kuliah praktik semester aktif"
               icon={Award}
               kind="primary"
+              className="animate-slide-up-fade stagger-1"
             />
             <MetricCard
               label="Menunggu Persetujuan Kaprodi"
@@ -129,6 +138,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={Clock3}
               trend="Siap di-ACC"
               kind="warning"
+              className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
               label="Disetujui & Dijalankan"
@@ -136,6 +146,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Dalam tahap pencairan & belanja"
               icon={ShoppingBag}
               kind="info"
+              className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
               label="Siklus Selesai"
@@ -144,6 +155,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={PackageCheck}
               trend="Selesai"
               kind="success"
+              className="animate-slide-up-fade stagger-4"
             />
           </>
         )}
@@ -156,6 +168,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Akumulasi kebutuhan semester"
               icon={Wallet}
               kind="primary"
+              className="animate-slide-up-fade stagger-1"
             />
             <MetricCard
               label="Perlu Transfer ke Asdos"
@@ -164,6 +177,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={Clock3}
               trend="Perlu pencairan"
               kind="danger"
+              className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
               label="Perlu Verifikasi LPJ Belanja"
@@ -172,6 +186,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={ClipboardList}
               trend="Cek nota & selisih"
               kind="warning"
+              className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
               label="Total Dana Ditransfer"
@@ -180,6 +195,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={CheckCircle2}
               trend="Realisasi kas"
               kind="success"
+              className="animate-slide-up-fade stagger-4"
             />
           </>
         )}
@@ -192,6 +208,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Total database permohonan"
               icon={ClipboardList}
               kind="primary"
+              className="animate-slide-up-fade stagger-1"
             />
             <MetricCard
               label="Pengguna Terdaftar"
@@ -199,6 +216,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               foot="Akun sistem pengadaan"
               icon={Users}
               kind="info"
+              className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
               label="Belanja Aktif"
@@ -207,6 +225,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={Activity}
               trend="Aktif berproses"
               kind="warning"
+              className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
               label="Siklus Selesai"
@@ -215,6 +234,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
               icon={ShieldCheck}
               trend="Selesai sempurna"
               kind="success"
+              className="animate-slide-up-fade stagger-4"
             />
           </>
         )}

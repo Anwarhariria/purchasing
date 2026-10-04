@@ -57,7 +57,7 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
   updateStatus,
 }) => {
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+    <section className="animate-slide-up-fade stagger-2 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
       {/* Table Header Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border p-4 sm:p-5">
         <div>
@@ -141,8 +141,12 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {visibleRequests.map((r) => (
-              <tr key={r.id} className="transition-colors hover:bg-surface/70">
+            {visibleRequests.map((r, idx) => (
+              <tr
+                key={r.id}
+                className="animate-row-enter transition-colors hover:bg-surface/70"
+                style={{ animationDelay: `${idx * 25}ms` }}
+              >
                 {/* Kode PR */}
                 <td className="whitespace-nowrap px-5 py-4">
                   <span className="text-xs font-extrabold text-foreground font-mono">{r.id}</span>

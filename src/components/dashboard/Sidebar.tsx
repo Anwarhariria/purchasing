@@ -93,7 +93,7 @@ export function Sidebar({
       {/* ====== SIDEBAR (FIXED) ====== */}
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-50 w-[265px] flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white overflow-hidden transition-transform duration-300 ease-in-out shadow-xl",
+          "fixed inset-y-0 left-0 z-50 w-[265px] flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white overflow-hidden transition-transform duration-300 ease-in-out shadow-xl animate-sidebar-enter",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
           sidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
         ].join(" ")}

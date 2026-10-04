@@ -1233,7 +1233,7 @@ function Dashboard() {
         {/* MAIN BODY */}
         <main className="mx-auto w-full max-w-[1440px] flex-1 px-3.5 py-4 sm:px-8 sm:py-8 xl:px-10 min-w-0">
           {/* Page Header */}
-          <div className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+          <div className="animate-slide-up-fade stagger-1 mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
             <div>
               <div className="mb-1 flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#0f172a] dark:text-slate-100">
                 <span className="h-0.5 w-3 sm:w-4 bg-[#0f172a] dark:bg-slate-100" />
@@ -1255,7 +1255,7 @@ function Dashboard() {
 
           {/* Quick Action Banner for Bagian Keuangan */}
           {role === "Bagian Keuangan" && financeUrgentItem && (
-            <div className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs transition-colors hover:border-blue-400">
+            <div className="animate-slide-up-fade stagger-2 mb-6 rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs transition-colors hover:border-blue-400">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-900 border border-blue-200">

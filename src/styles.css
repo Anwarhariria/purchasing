@@ -107,3 +107,105 @@
 
 .brand-mark { clip-path: polygon(50% 0%, 91% 10%, 91% 64%, 50% 100%, 9% 64%, 9% 10%); }
 .grid-lines { background-image: linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px); background-size: 22px 22px; }
+
+/* ==========================================================================
+   ANIMATIONS & TRANSITIONS (SPAKE UI Animation Suite)
+   ========================================================================== */
+
+/* 1. Sidebar Entrance: Slide-in from left with Fade-in (0% -> 100%) */
+@keyframes sidebarSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-sidebar-enter {
+  animation: sidebarSlideIn 450ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 2. Staggered Card & Container Entrance: Slide-up (16px -> 0) + Fade-in (0% -> 100%) */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-fade {
+  animation: slideUpFade 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger Delay Utility Classes */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 110ms; }
+.stagger-3 { animation-delay: 170ms; }
+.stagger-4 { animation-delay: 230ms; }
+.stagger-5 { animation-delay: 290ms; }
+.stagger-6 { animation-delay: 350ms; }
+.stagger-7 { animation-delay: 410ms; }
+.stagger-8 { animation-delay: 470ms; }
+
+/* 3. Bar Chart Vertical Fill / Scale-Y Growth */
+@keyframes barGrowUp {
+  0% {
+    transform: scaleY(0);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.animate-bar-grow {
+  transform-origin: bottom;
+  animation: barGrowUp 750ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 4. Table Rows Cascade / Staggered Fade-in */
+@keyframes rowFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-row-enter {
+  animation: rowFadeIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 5. Floating / Pulsing Subtle Glow (AI Orb / Highlight elements) */
+@keyframes orbFloating {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.35);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 0 25px rgba(37, 99, 235, 0.65);
+  }
+}
+
+.animate-orb-floating {
+  animation: orbFloating 3.5s ease-in-out infinite;
+}
+
+/* 6. Smooth Global Color Transitions */
+.smooth-theme-transition {
+  transition: background-color 350ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 350ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}

@@ -10,6 +10,8 @@ export function MetricCard({
   trend,
   colorScheme,
   kind,
+  className = "",
+  style,
 }: {
   label: string;
   value: string;
@@ -18,6 +20,8 @@ export function MetricCard({
   trend?: string;
   colorScheme?: "primary" | "warning" | "success" | "danger" | "info";
   kind?: "primary" | "warning" | "success" | "danger" | "info";
+  className?: string;
+  style?: React.CSSProperties;
 }) {
   const scheme = colorScheme || kind || "primary";
   const iconColorMap = {
@@ -42,7 +46,8 @@ export function MetricCard({
 
   return (
     <div
-      className={`panel-shadow rounded-xl border bg-card p-4 sm:p-5 transition-all duration-700 w-full min-w-0 ${
+      style={style}
+      className={`panel-shadow rounded-xl border bg-card p-4 sm:p-5 transition-all duration-700 w-full min-w-0 ${className} ${
         highlight
           ? "border-blue-500/60 shadow-md ring-2 ring-blue-500/15 bg-blue-50/15 dark:bg-blue-950/20"
           : "border-border hover:border-blue-400/50 dark:hover:border-blue-600/50"

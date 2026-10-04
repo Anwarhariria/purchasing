@@ -16,7 +16,7 @@ export function UserManagementView({
   notify,
 }: UserManagementViewProps) {
   return (
-    <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+    <div className="animate-slide-up-fade stagger-2 rounded-xl border border-border bg-card p-6 shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
         <div>
           <h2 className="text-lg font-black text-foreground flex items-center gap-2">
@@ -49,8 +49,12 @@ export function UserManagementView({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {users.map((u) => (
-              <tr key={u.id} className="transition-colors hover:bg-surface/60">
+            {users.map((u, idx) => (
+              <tr
+                key={u.id}
+                className="animate-row-enter transition-colors hover:bg-surface/60"
+                style={{ animationDelay: `${idx * 25}ms` }}
+              >
                 <td className="px-5 py-3.5 text-xs font-extrabold text-foreground font-mono">{u.id}</td>
                 <td className="px-5 py-3.5 text-xs">
                   <p className="font-bold text-foreground">{u.name}</p>

@@ -54,6 +54,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             foot="Transaksi resmi ditutup"
             icon={Wallet}
             kind="success"
+            className="animate-slide-up-fade stagger-1"
           />
           <MetricCard
             label="Permohonan Berjalan"
@@ -64,6 +65,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             foot="Masih dalam tahapan siklus"
             icon={Activity}
             kind="warning"
+            className="animate-slide-up-fade stagger-2"
           />
           <MetricCard
             label="Tingkat Pemenuhan"
@@ -75,10 +77,11 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             foot="Rasio permohonan selesai"
             icon={ShieldCheck}
             kind="primary"
+            className="animate-slide-up-fade stagger-3"
           />
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+        <div className="animate-slide-up-fade stagger-4 rounded-xl border border-border bg-card p-6 shadow-xs">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h3 className="text-base font-bold text-foreground">
@@ -189,6 +192,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             } transaksi dicairkan ke rekening Asdos`}
             icon={Wallet}
             kind="primary"
+            className="animate-slide-up-fade stagger-2"
           />
           <MetricCard
             label="Realisasi Belanja (Nota / Bon)"
@@ -196,6 +200,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             foot="Total fisik belanja riil bahan masakan"
             icon={ShoppingBag}
             kind="info"
+            className="animate-slide-up-fade stagger-3"
           />
           <MetricCard
             label="Sisa Kembalian (Dipegang Asdos)"
@@ -204,6 +209,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             icon={CheckCircle2}
             trend="Kas di Asdos"
             kind="success"
+            className="animate-slide-up-fade stagger-4"
           />
           <MetricCard
             label="Total Uang Kurang"
@@ -212,6 +218,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             icon={Clock3}
             trend={totalKurang > 0 ? "Perlu Reimburse" : "Aman"}
             kind={totalKurang > 0 ? "danger" : "success"}
+            className="animate-slide-up-fade stagger-5"
           />
         </div>
 
@@ -246,8 +253,12 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredPeriodRequests.map((r) => (
-                <tr key={r.id} className="transition-colors hover:bg-surface/60">
+              {filteredPeriodRequests.map((r, idx) => (
+                <tr
+                  key={r.id}
+                  className="animate-row-enter transition-colors hover:bg-surface/60"
+                  style={{ animationDelay: `${idx * 25}ms` }}
+                >
                   <td className="px-4 py-3.5">
                     <span className="font-mono font-extrabold text-primary text-xs">{r.id}</span>
                     <p className="font-bold text-foreground mt-0.5">{r.menu || r.item}</p>
