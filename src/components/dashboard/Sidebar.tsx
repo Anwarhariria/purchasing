@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Mark } from "@/components/common/Mark";
 import {
   ChevronLeft,
-  ChevronRight,
+  Menu,
   X,
   Download,
   FileText,
@@ -62,11 +62,11 @@ interface SidebarProps {
 function SidebarTooltip({
   label,
   children,
-  enabled,
+  enabled = true,
 }: {
   label: React.ReactNode;
   children: React.ReactNode;
-  enabled: boolean;
+  enabled?: boolean;
 }) {
   if (!enabled) {
     return <>{children}</>;
@@ -110,7 +110,8 @@ export function Sidebar({
   onOpenSawPriority,
   onOpenVerify,
 }: SidebarProps) {
-  const [mounted, setMounted] = useState(false);
+  // First load state: animasi entrance dijalankan SEKALI SAJA di awal
+  const [firstLoad, setFirstLoad] = useState(true);
   const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== "undefined") {
       return window.innerWidth >= 1024;
@@ -124,13 +125,14 @@ export function Sidebar({
     };
     window.addEventListener("resize", handleResize);
 
-    const raf = requestAnimationFrame(() => {
-      setMounted(true);
-    });
+    // Matikan status firstLoad setelah 700ms agar saat toggle tidak ada animasi berulang
+    const timer = setTimeout(() => {
+      setFirstLoad(false);
+    }, 700);
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(raf);
+      clearTimeout(timer);
     };
   }, []);
 
@@ -154,63 +156,88 @@ export function Sidebar({
       {/* ====== COLLAPSIBLE SIDEBAR ====== */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white shadow-2xl sidebar-collapsible ${
-          mobileOpen ? "mobile-open" : "sidebar-mobile-drawer"
+          mobileOpen ? "mobile-open" : ""
         } ${
-          isMini ? "w-[72px] mini-sidebar" : "w-[265px] open"
+          isMini ? "w-[72px]" : "w-[265px]"
         }`}
       >
-        {/* Logo Brand Header */}
+        {/* Header: Logo Kampus ASAINDO & Tombol Toggle 'Tutup Menu' */}
         {!isMini ? (
           <div
-            className="sidebar-nav-item flex h-[84px] shrink-0 items-center gap-3 border-b border-white/10 px-5"
-            style={{ transitionDelay: "40ms" }}
+            className={`flex h-[76px] shrink-0 items-center justify-between border-b border-white/10 px-4 ${
+              firstLoad ? "animate-first-load" : ""
+            }`}
+            style={firstLoad ? { animationDelay: "40ms" } : undefined}
           >
-            <Mark />
-            <div className="min-w-0 flex-1">
-              <div className="text-[20px] font-black tracking-tight text-white">
-                SPAKE
-              </div>
-              <div className="text-[10px] font-bold tracking-wider uppercase text-blue-200">
-                Pengadaan ASAINDO
-              </div>
-            </div>
-            {/* Desktop collapse button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden lg:flex shrink-0 size-8 text-blue-200 hover:text-white hover:bg-white/10 rounded-md cursor-pointer"
-              onClick={() => setSidebarCollapsed(true)}
-              title="Ciutkan Menu (Mini Sidebar)"
-              aria-label="Ciutkan Menu"
+            {/* Logo Kampus ASAINDO & SPAKE (Berfungsi murni sebagai navigasi beranda) */}
+            <button
+              type="button"
+              onClick={() => {
+                setSection("Ringkasan");
+                setMobileOpen(false);
+              }}
+              className="flex items-center gap-3 text-left group cursor-pointer focus:outline-none"
+              title="Beranda SPAKE"
             >
-              <ChevronLeft className="size-5" />
-            </Button>
-            {/* Mobile close button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden shrink-0 size-8 text-blue-200 hover:text-white hover:bg-white/10 cursor-pointer"
-              onClick={() => setMobileOpen(false)}
-              aria-label="Tutup menu"
-            >
-              <X className="size-5" />
-            </Button>
-          </div>
-        ) : (
-          <div className="flex h-[84px] shrink-0 items-center justify-center border-b border-white/10 px-2">
-            <SidebarTooltip label="Perluas Sidebar" enabled={isMini}>
+              <div className="shrink-0 transition-transform group-hover:scale-105">
+                <Mark />
+              </div>
+              <div className="min-w-0 transition-opacity duration-200 ease-in-out">
+                <div className="text-[19px] font-black tracking-tight text-white leading-tight">
+                  SPAKE
+                </div>
+                <div className="text-[10px] font-bold tracking-wider uppercase text-blue-200 leading-tight">
+                  Pengadaan ASAINDO
+                </div>
+              </div>
+            </button>
+
+            {/* Tombol Toggle Buka-Tutup khusus di sebelah kanan header dengan tooltip 'Tutup Menu' */}
+            <div className="flex items-center gap-1">
+              <SidebarTooltip label="Tutup Menu" enabled={true}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden lg:flex size-8 text-blue-200 hover:text-white hover:bg-white/15 rounded-lg cursor-pointer transition-colors"
+                  onClick={() => setSidebarCollapsed(true)}
+                  aria-label="Tutup Menu"
+                >
+                  <ChevronLeft className="size-5" />
+                </Button>
+              </SidebarTooltip>
+
+              {/* Mobile close button */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative flex size-11 items-center justify-center text-blue-200 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer group"
-                onClick={() => setSidebarCollapsed(false)}
-                aria-label="Perluas Sidebar"
+                className="lg:hidden size-8 text-blue-200 hover:text-white hover:bg-white/15 rounded-lg cursor-pointer"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Tutup menu"
               >
-                <Mark />
-                <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs group-hover:scale-110 transition-transform">
-                  <ChevronRight className="size-3" />
-                </span>
+                <X className="size-5" />
               </Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`flex h-[76px] shrink-0 items-center justify-center border-b border-white/10 px-2 ${
+              firstLoad ? "animate-first-load" : ""
+            }`}
+          >
+            {/* Logo Kampus saat mini: Tetap sebagai identitas kampus & navigasi beranda */}
+            <SidebarTooltip label="Beranda SPAKE" enabled={true}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSection("Ringkasan");
+                }}
+                className="flex size-11 items-center justify-center rounded-lg hover:bg-white/10 transition-colors cursor-pointer group focus:outline-none"
+                aria-label="Beranda SPAKE"
+              >
+                <div className="transition-transform group-hover:scale-105">
+                  <Mark />
+                </div>
+              </button>
             </SidebarTooltip>
           </div>
         )}
@@ -221,12 +248,31 @@ export function Sidebar({
             isMini ? "px-2 py-3" : "px-3 py-4"
           } [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent`}
         >
+          {/* Tombol Toggle Khusus 'Buka Menu' di bagian paling atas deretan ikon saat mini sidebar */}
+          {isMini && (
+            <div className="mb-3 flex justify-center">
+              <SidebarTooltip label="Buka Menu" enabled={true}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-11 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xs cursor-pointer flex items-center justify-center transition-all hover:scale-105"
+                  onClick={() => setSidebarCollapsed(false)}
+                  aria-label="Buka Menu"
+                >
+                  <Menu className="size-5 text-sky-200" />
+                </Button>
+              </SidebarTooltip>
+            </div>
+          )}
+
           {/* Fitur Input · Sesuai Dashboard Peran */}
           <div className="mb-3 space-y-1.5">
             {!isMini ? (
               <div
-                className="sidebar-nav-item px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/80"
-                style={{ transitionDelay: "80ms" }}
+                className={`px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/80 ${
+                  firstLoad ? "animate-first-load" : ""
+                }`}
+                style={firstLoad ? { animationDelay: "80ms" } : undefined}
               >
                 Fitur Input · {role}
               </div>
@@ -237,219 +283,295 @@ export function Sidebar({
             {/* STAF / ASDOS */}
             {role === "Staf / Asdos" && (
               <div className="space-y-1">
-                <SidebarTooltip label="Ajukan Bahan Praktik" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenCreateRequest?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "130ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <Plus className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Ajukan Bahan Praktik</span>}
-                  </Button>
-                </SidebarTooltip>
-                <SidebarTooltip label="Input Stok Barang Lab" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenAddStock?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "190ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <PackageCheck className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Stok Barang Lab</span>}
-                  </Button>
-                </SidebarTooltip>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
+                  <SidebarTooltip label="Ajukan Bahan Praktik" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenCreateRequest?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <Plus className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Ajukan Bahan Praktik
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
+                  <SidebarTooltip label="Input Stok Barang Lab" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenAddStock?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <PackageCheck className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Stok Barang Lab
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
               </div>
             )}
 
             {/* KOORDINATOR LAB */}
             {role === "Koordinator" && (
               <div className="space-y-1">
-                <SidebarTooltip label="Prioritas FIFO Belanja" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      handleOpenFifo();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "130ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <Scale className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Prioritas FIFO Belanja</span>}
-                  </Button>
-                </SidebarTooltip>
-                <SidebarTooltip label="Input Verifikasi Berkas" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenVerify?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "190ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <ClipboardCheck className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Verifikasi Berkas</span>}
-                  </Button>
-                </SidebarTooltip>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
+                  <SidebarTooltip label="Prioritas FIFO Belanja" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        handleOpenFifo();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <Scale className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Prioritas FIFO Belanja
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
+                  <SidebarTooltip label="Input Verifikasi Berkas" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenVerify?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <ClipboardCheck className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Verifikasi Berkas
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
               </div>
             )}
 
             {/* KAPRODI */}
             {role === "Kaprodi" && (
               <div className="space-y-1">
-                <SidebarTooltip label="Input Menu & Resep" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenAddMenu?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "130ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <ChefHat className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Menu &amp; Resep</span>}
-                  </Button>
-                </SidebarTooltip>
-                <SidebarTooltip label="Prioritas FIFO Belanja" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      handleOpenFifo();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "190ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <Scale className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Prioritas FIFO Belanja</span>}
-                  </Button>
-                </SidebarTooltip>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
+                  <SidebarTooltip label="Input Menu & Resep" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenAddMenu?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <ChefHat className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Menu &amp; Resep
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
+                  <SidebarTooltip label="Prioritas FIFO Belanja" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        handleOpenFifo();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <Scale className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Prioritas FIFO Belanja
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
               </div>
             )}
 
             {/* BAGIAN KEUANGAN */}
             {role === "Bagian Keuangan" && (
               <div className="space-y-1">
-                <SidebarTooltip label="Input Pencairan Dana" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onQuickReviewFinance?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "130ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <Banknote className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Pencairan Dana</span>}
-                  </Button>
-                </SidebarTooltip>
-                <SidebarTooltip label="Input Verifikasi LPJ" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenVerify?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "190ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <Receipt className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Verifikasi LPJ</span>}
-                  </Button>
-                </SidebarTooltip>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
+                  <SidebarTooltip label="Input Pencairan Dana" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onQuickReviewFinance?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <Banknote className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Pencairan Dana
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
+                  <SidebarTooltip label="Input Verifikasi LPJ" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenVerify?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <Receipt className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Verifikasi LPJ
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
               </div>
             )}
 
             {/* SUPER ADMIN */}
             {role === "Super Admin" && (
               <div className="space-y-1">
-                <SidebarTooltip label="Input Pengguna Baru" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenAddUser?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "130ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <UserPlus className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Pengguna Baru</span>}
-                  </Button>
-                </SidebarTooltip>
-                <SidebarTooltip label="Input Mata Kuliah" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenAddCourse?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "190ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <Plus className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Mata Kuliah</span>}
-                  </Button>
-                </SidebarTooltip>
-                <SidebarTooltip label="Input Program Studi" enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenAddProdi?.();
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: "250ms" }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                  >
-                    <Building2 className="size-[18px] shrink-0 text-blue-200" />
-                    {!isMini && <span className="truncate">Input Program Studi</span>}
-                  </Button>
-                </SidebarTooltip>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
+                  <SidebarTooltip label="Input Pengguna Baru" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenAddUser?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <UserPlus className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Pengguna Baru
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
+                  <SidebarTooltip label="Input Mata Kuliah" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenAddCourse?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <Plus className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Mata Kuliah
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
+                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "200ms" } : undefined}>
+                  <SidebarTooltip label="Input Program Studi" enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onOpenAddProdi?.();
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
+                    >
+                      <Building2 className="size-[18px] shrink-0 text-blue-200" />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        Input Program Studi
+                      </span>
+                    </Button>
+                  </SidebarTooltip>
+                </div>
               </div>
             )}
           </div>
 
-          <div
-            className={`sidebar-nav-item h-px bg-white/10 ${isMini ? "my-2 mx-2" : "my-3"}`}
-            style={{ transitionDelay: "220ms" }}
-          />
+          <div className={`h-px bg-white/10 ${isMini ? "my-2 mx-2" : "my-3"}`} />
 
           {!isMini && (
             <div
-              className="sidebar-nav-item px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75"
-              style={{ transitionDelay: "250ms" }}
+              className={`px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75 ${
+                firstLoad ? "animate-first-load" : ""
+              }`}
+              style={firstLoad ? { animationDelay: "220ms" } : undefined}
             >
               Menu Utama · {role}
             </div>
@@ -458,46 +580,58 @@ export function Sidebar({
           <nav className="space-y-1">
             {sidebarNav.map(({ label, icon: Icon, count }, idx) => {
               const isActive = section === label;
-              const itemDelay = 280 + idx * 60;
               const tooltipLabel = count !== undefined && count > 0 ? `${label} (${count})` : label;
               return (
-                <SidebarTooltip key={label} label={tooltipLabel} enabled={isMini}>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSection(label);
-                      setMobileOpen(false);
-                    }}
-                    style={{ transitionDelay: `${itemDelay}ms` }}
-                    className={`sidebar-nav-item h-11 ${
-                      isMini ? "w-11 px-0 justify-center mx-auto relative" : "w-full justify-start gap-3 px-3.5"
-                    } text-[13px] font-semibold transition-colors cursor-pointer rounded-lg ${
-                      isActive
-                        ? "bg-white/20 text-white font-bold shadow-xs hover:bg-white/25 border border-white/20"
-                        : "text-blue-100/80 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <Icon className={`size-[18px] shrink-0 ${isActive ? "text-sky-300" : "text-blue-200"}`} />
-                    {!isMini && <span className="truncate">{label}</span>}
-                    {count !== undefined && count > 0 && (
-                      !isMini ? (
-                        <span className="ml-auto rounded-full bg-white/20 text-white border border-white/25 px-2 py-0.5 text-[10px] font-extrabold shadow-xs">
-                          {count}
-                        </span>
-                      ) : (
-                        <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-sky-300 ring-2 ring-[#1e3a8a]" />
-                      )
-                    )}
-                  </Button>
-                </SidebarTooltip>
+                <div
+                  key={label}
+                  className={firstLoad ? "animate-first-load" : ""}
+                  style={firstLoad ? { animationDelay: `${240 + idx * 40}ms` } : undefined}
+                >
+                  <SidebarTooltip label={tooltipLabel} enabled={isMini}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSection(label);
+                        setMobileOpen(false);
+                      }}
+                      className={`h-11 ${
+                        isMini ? "w-11 px-0 justify-center mx-auto relative" : "w-full justify-start gap-3 px-3.5"
+                      } text-[13px] font-semibold transition-colors cursor-pointer rounded-lg ${
+                        isActive
+                          ? "bg-white/20 text-white font-bold shadow-xs hover:bg-white/25 border border-white/20"
+                          : "text-blue-100/80 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      <Icon className={`size-[18px] shrink-0 ${isActive ? "text-sky-300" : "text-blue-200"}`} />
+                      <span
+                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                        }`}
+                      >
+                        {label}
+                      </span>
+                      {count !== undefined && count > 0 && (
+                        !isMini ? (
+                          <span className="ml-auto rounded-full bg-white/20 text-white border border-white/25 px-2 py-0.5 text-[10px] font-extrabold shadow-xs transition-opacity duration-200">
+                            {count}
+                          </span>
+                        ) : (
+                          <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-sky-300 ring-2 ring-[#1e3a8a]" />
+                        )
+                      )}
+                    </Button>
+                  </SidebarTooltip>
+                </div>
               );
             })}
           </nav>
 
           {!isMini ? (
             <div
-              className="sidebar-nav-item mt-7 px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75"
-              style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 20}ms` }}
+              className={`mt-6 px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75 ${
+                firstLoad ? "animate-first-load" : ""
+              }`}
+              style={firstLoad ? { animationDelay: "420ms" } : undefined}
             >
               Utilitas
             </div>
@@ -506,54 +640,77 @@ export function Sidebar({
           )}
 
           <div className="space-y-1">
-            <SidebarTooltip label="Rekap (Excel)" enabled={isMini}>
-              <Button
-                variant="ghost"
-                onClick={exportExcel}
-                style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 70}ms` }}
-                className={`sidebar-nav-item h-10 ${
-                  isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
-              >
-                <Download className="size-[17px] shrink-0 text-blue-200" />
-                {!isMini && <span>Rekap (Excel)</span>}
-              </Button>
-            </SidebarTooltip>
-            <SidebarTooltip label="Rekap (PDF)" enabled={isMini}>
-              <Button
-                variant="ghost"
-                onClick={exportPdf}
-                style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 120}ms` }}
-                className={`sidebar-nav-item h-10 ${
-                  isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
-              >
-                <FileText className="size-[17px] shrink-0 text-blue-200" />
-                {!isMini && <span>Rekap (PDF)</span>}
-              </Button>
-            </SidebarTooltip>
-            <SidebarTooltip label="Bantuan & Alur Siklus" enabled={isMini}>
-              <Button
-                variant="ghost"
-                onClick={() => notify("SPAKE Demo - Dokumentasi dan Alur Siklus 6 Tahap Pengadaan ASAINDO.")}
-                style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 170}ms` }}
-                className={`sidebar-nav-item h-10 ${
-                  isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
-              >
-                <CircleHelp className="size-[17px] shrink-0 text-blue-200" />
-                {!isMini && <span>Bantuan &amp; Alur</span>}
-              </Button>
-            </SidebarTooltip>
+            <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "460ms" } : undefined}>
+              <SidebarTooltip label="Rekap (Excel)" enabled={isMini}>
+                <Button
+                  variant="ghost"
+                  onClick={exportExcel}
+                  className={`h-10 ${
+                    isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                  } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
+                >
+                  <Download className="size-[17px] shrink-0 text-blue-200" />
+                  <span
+                    className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                      isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                    }`}
+                  >
+                    Rekap (Excel)
+                  </span>
+                </Button>
+              </SidebarTooltip>
+            </div>
+
+            <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "500ms" } : undefined}>
+              <SidebarTooltip label="Rekap (PDF)" enabled={isMini}>
+                <Button
+                  variant="ghost"
+                  onClick={exportPdf}
+                  className={`h-10 ${
+                    isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                  } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
+                >
+                  <FileText className="size-[17px] shrink-0 text-blue-200" />
+                  <span
+                    className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                      isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                    }`}
+                  >
+                    Rekap (PDF)
+                  </span>
+                </Button>
+              </SidebarTooltip>
+            </div>
+
+            <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "540ms" } : undefined}>
+              <SidebarTooltip label="Bantuan & Alur Siklus" enabled={isMini}>
+                <Button
+                  variant="ghost"
+                  onClick={() => notify("SPAKE Demo - Dokumentasi dan Alur Siklus 6 Tahap Pengadaan ASAINDO.")}
+                  className={`h-10 ${
+                    isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
+                  } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
+                >
+                  <CircleHelp className="size-[17px] shrink-0 text-blue-200" />
+                  <span
+                    className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
+                      isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                    }`}
+                  >
+                    Bantuan &amp; Alur
+                  </span>
+                </Button>
+              </SidebarTooltip>
+            </div>
           </div>
         </div>
 
         {/* User profile footer */}
         <div
-          className={`sidebar-nav-item border-t border-white/10 ${
+          className={`border-t border-white/10 ${
             isMini ? "p-3" : "p-4"
-          } bg-black/15 shrink-0`}
-          style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 220}ms` }}
+          } bg-black/15 shrink-0 ${firstLoad ? "animate-first-load" : ""}`}
+          style={firstLoad ? { animationDelay: "580ms" } : undefined}
         >
           {!isMini ? (
             <>

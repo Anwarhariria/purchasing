@@ -55,8 +55,8 @@ export function DashboardHeader({
           size="icon"
           className="hidden lg:flex shrink-0 size-9 text-muted-foreground hover:text-foreground cursor-pointer"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          title={sidebarCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar (Mode Mini)"}
-          aria-label={sidebarCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar (Mode Mini)"}
+          title={sidebarCollapsed ? "Buka Menu" : "Tutup Menu"}
+          aria-label={sidebarCollapsed ? "Buka Menu" : "Tutup Menu"}
         >
           <Menu className="size-5" />
         </Button>
