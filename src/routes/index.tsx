@@ -146,8 +146,42 @@ function Dashboard() {
     }
   };
 
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const [role, setRole] = useState<Role>("Staf / Asdos");
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("spake_user");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return null;
+  });
+  const [role, setRole] = useState<Role>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("spake_role") as Role;
+        if (saved) return saved;
+      } catch (e) {}
+    }
+    return "Staf / Asdos";
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (currentUser) {
+        localStorage.setItem("spake_user", JSON.stringify(currentUser));
+        localStorage.setItem("spake_role", currentUser.role);
+      } else {
+        localStorage.removeItem("spake_user");
+      }
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("spake_role", role);
+    }
+  }, [role]);
+
   const [loginEmail, setLoginEmail] = useState("asdos@gmail.com");
   const [loginPassword, setLoginPassword] = useState("123");
   const [loginError, setLoginError] = useState("");
@@ -315,6 +349,7 @@ function Dashboard() {
     setCurrentUser(null);
     setCurrentView("landing");
     if (typeof window !== "undefined") {
+      localStorage.removeItem("spake_user");
       window.location.hash = "";
     }
     setLoginError("");

@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, Bell, LogOut, LogIn, ArrowRight } from "lucide-react";
+import { Menu, Bell, LogOut, ArrowRight } from "lucide-react";
 import type { Role, UserAccount, NotificationItem } from "@/types/procurement";
 
 interface DashboardHeaderProps {
@@ -152,30 +152,18 @@ export function DashboardHeader({
           )}
         </div>
 
-        {/* Login / Logout Button */}
-        {currentUser ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="h-8 sm:h-9 px-2 sm:px-3 gap-1.5 text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer shrink-0"
-            title="Keluar ke Halaman Utama"
-          >
-            <LogOut className="size-4 shrink-0" />
-            <span className="hidden sm:inline">Keluar</span>
-          </Button>
-        ) : (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setCurrentView("login")}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 gap-1.5 text-xs font-bold bg-primary text-primary-foreground shadow-xs hover:opacity-90 cursor-pointer shrink-0"
-            title="Buka Halaman Login"
-          >
-            <LogIn className="size-4 shrink-0" />
-            <span className="hidden xs:inline">Masuk</span>
-          </Button>
-        )}
+        {/* Logout Button: Selalu statis netral tanpa class aktif dinamis */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          className="h-8 sm:h-9 px-2.5 sm:px-3.5 gap-1.5 text-xs font-semibold bg-white dark:bg-card border border-slate-200 dark:border-border text-slate-600 dark:text-slate-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/20 dark:hover:text-red-400 dark:hover:border-red-800 shadow-xs focus:outline-none focus:ring-0 focus-visible:ring-0 active:scale-95 transition-colors cursor-pointer shrink-0"
+          title="Keluar ke Halaman Utama"
+        >
+          <LogOut className="size-3.5 sm:size-4 shrink-0 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400" />
+          <span className="hidden sm:inline">Keluar</span>
+        </Button>
       </div>
     </header>
   );
