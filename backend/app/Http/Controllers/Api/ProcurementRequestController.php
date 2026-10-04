@@ -70,6 +70,25 @@ class ProcurementRequestController extends Controller
     {
         $query = ProcurementRequest::with('details')->orderBy('created_at', 'desc');
 
+        // Filter Rentang Periode (Start Month/Year s/d End Month/Year)
+        if ($request->filled('start_month') && $request->filled('start_year') && $request->filled('end_month') && $request->filled('end_year')) {
+            try {
+                $startDate = Carbon::createFromDate((int)$request->start_year, (int)$request->start_month, 1)->startOfMonth();
+                $endDate = Carbon::createFromDate((int)$request->end_year, (int)$request->end_month, 1)->endOfMonth();
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            } catch (\Exception $e) {
+                // Fallback gracefully if dates are invalid
+            }
+        } elseif ($request->filled('start_date') && $request->filled('end_date')) {
+            try {
+                $startDate = Carbon::parse($request->start_date)->startOfDay();
+                $endDate = Carbon::parse($request->end_date)->endOfDay();
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            } catch (\Exception $e) {
+                // Fallback gracefully
+            }
+        }
+
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
         }
@@ -374,6 +393,14 @@ class ProcurementRequestController extends Controller
         }
 
         $receipts = $request->receiptImages ?? $request->receipt_images ?? [];
+
+        // Asdos WAJIB input bon fisik
+        if (empty($receipts) || (is_array($receipts) && count($receipts) === 0)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Wajib melampirkan foto bon / nota belanja fisik! Tanpa foto bon, laporan tidak dapat diajukan.',
+            ], 422);
+        }
 
         $req->actual_spent = $actual;
         $req->refund_amount = $refund;

@@ -268,9 +268,9 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
                             setReportSpentAmount(r.disbursedAmount || r.price);
                           }}
                           className="h-8 gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-xs cursor-pointer"
-                          title="Input total belanja sesuai nota dan laporkan selisih dana"
+                          title="Barang sudah sampai / belanja selesai: wajib unggah foto bon belanja"
                         >
-                          <Receipt className="size-3" /> Lapor Bon & Selisih
+                          <Receipt className="size-3" /> Barang Sampai & Lapor Bon
                         </Button>
                       )}
 

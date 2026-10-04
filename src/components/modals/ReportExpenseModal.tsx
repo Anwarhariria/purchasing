@@ -130,11 +130,12 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
           {/* Upload Foto Bon/Nota */}
           <div>
             <label className="block text-xs font-bold text-foreground mb-1">
-              Unggah Foto Bon / Nota Belanja <span className="text-red-500">*</span>
+              Unggah Foto Bon / Nota Belanja <span className="text-red-500">* (Wajib)</span>
             </label>
             <Input
               type="file"
               accept="image/*"
+              required={!reportReceiptImg && (!reportingItem.receiptImages || reportingItem.receiptImages.length === 0)}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
@@ -145,9 +146,9 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
                   reader.readAsDataURL(file);
                 }
               }}
-              className="h-9 text-xs"
+              className="h-9 text-xs cursor-pointer"
             />
-            {reportReceiptImg && (
+            {reportReceiptImg ? (
               <div className="mt-2">
                 <span className="text-[10px] text-muted-foreground block mb-1">
                   Pratinjau Foto Bon:
@@ -158,6 +159,21 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
                   className="h-28 w-40 object-cover rounded-md border border-border shadow-xs"
                 />
               </div>
+            ) : reportingItem.receiptImages && reportingItem.receiptImages.length > 0 ? (
+              <div className="mt-2">
+                <span className="text-[10px] text-muted-foreground block mb-1">
+                  Foto Bon Tersimpan Sebelumnya:
+                </span>
+                <img
+                  src={reportingItem.receiptImages[0]}
+                  alt="Bon Tersimpan"
+                  className="h-28 w-40 object-cover rounded-md border border-border shadow-xs"
+                />
+              </div>
+            ) : (
+              <p className="mt-1 text-[11px] font-semibold text-red-600 dark:text-red-400">
+                * Foto fisik bon wajib dilampirkan agar status dapat diperbarui ke pesanan selesai / LPJ diajukan.
+              </p>
             )}
           </div>
 
@@ -172,7 +188,13 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md w-full sm:w-auto cursor-pointer"
+              disabled={!reportReceiptImg && (!reportingItem.receiptImages || reportingItem.receiptImages.length === 0)}
+              className="gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md w-full sm:w-auto cursor-pointer"
+              title={
+                !reportReceiptImg && (!reportingItem.receiptImages || reportingItem.receiptImages.length === 0)
+                  ? "Wajib unggah foto bon belanja terlebih dahulu"
+                  : "Kirim Laporan ke Keuangan"
+              }
             >
               <Send className="size-4" /> Kirim Laporan ke Keuangan
             </Button>

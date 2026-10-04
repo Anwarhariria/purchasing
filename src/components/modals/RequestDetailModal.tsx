@@ -540,8 +540,9 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                       onClose();
                     }}
                     className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer"
+                    title="Barang sudah sampai / belanja selesai: wajib unggah foto bon belanja"
                   >
-                    <Receipt className="size-3.5" /> Input Laporan Bon & Selisih Uang
+                    <Receipt className="size-3.5" /> Barang Sampai & Lapor Bon
                   </Button>
                 )}
 

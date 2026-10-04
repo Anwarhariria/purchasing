@@ -11,11 +11,10 @@ import {
   Info,
   Eye,
   Calendar,
-  ChevronDown,
-  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/common/MetricCard";
+import { FilterPeriode, MONTH_NAMES, PeriodFilterValues } from "@/components/dashboard/FilterPeriode";
 import { money } from "@/lib/algorithms/saw";
 import type { RequestItem } from "@/types/procurement";
 
@@ -30,22 +29,6 @@ interface MonthlyReportViewProps {
   exportSingleExcel: (r: RequestItem) => void;
   exportSinglePdf?: (r: RequestItem) => void;
 }
-
-const MONTH_OPTIONS = [
-  { value: "all", label: "Semua Bulan" },
-  { value: "1", label: "Januari" },
-  { value: "2", label: "Februari" },
-  { value: "3", label: "Maret" },
-  { value: "4", label: "April" },
-  { value: "5", label: "Mei" },
-  { value: "6", label: "Juni" },
-  { value: "7", label: "Juli" },
-  { value: "8", label: "Agustus" },
-  { value: "9", label: "September" },
-  { value: "10", label: "Oktober" },
-  { value: "11", label: "November" },
-  { value: "12", label: "Desember" },
-];
 
 const MONTH_MAP: Record<string, number> = {
   jan: 1, januari: 1, january: 1,
@@ -114,7 +97,7 @@ function parseRequestDate(dateStr?: string): { month: number; year: number } | n
 }
 
 export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
-  section,
+  section: _section,
   requests,
   setSelectedId,
   exportExcel,
@@ -122,87 +105,19 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
   exportSingleExcel,
   exportSinglePdf,
 }) => {
-  // State Filter Dropdown Bulan & Tahun
-  const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [selectedYear, setSelectedYear] = useState<string>("2026");
-
-  // RENDER GENERAL REPORT
-  if (section.includes("Laporan") && section !== "Report Bulanan") {
-    return (
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <MetricCard
-            label="Total Belanja Terealisasi"
-            value={money(
-              requests
-                .filter((r) => r.status === "Selesai")
-                .reduce((s, r) => s + r.price, 0)
-            )}
-            foot="Transaksi resmi ditutup"
-            icon={Wallet}
-            kind="success"
-            className="animate-slide-up-fade stagger-1"
-          />
-          <MetricCard
-            label="Permohonan Berjalan"
-            value={String(
-              requests.filter((r) => !["Selesai", "Ditolak"].includes(r.status))
-                .length
-            ).padStart(2, "0")}
-            foot="Masih dalam tahapan siklus"
-            icon={Activity}
-            kind="warning"
-            className="animate-slide-up-fade stagger-2"
-          />
-          <MetricCard
-            label="Tingkat Pemenuhan"
-            value={`${Math.round(
-              (requests.filter((r) => r.status === "Selesai").length /
-                (requests.length || 1)) *
-                100
-            )}%`}
-            foot="Rasio permohonan selesai"
-            icon={ShieldCheck}
-            kind="primary"
-            className="animate-slide-up-fade stagger-3"
-          />
-        </div>
-
-        <div className="animate-slide-up-fade stagger-4 rounded-xl border border-border bg-card p-6 shadow-xs">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h3 className="text-base font-bold text-foreground">
-                Unduh Rekap Laporan Pengadaan
-              </h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Laporan data pengadaan mencakup ID, nama pemohon, estimasi biaya, dan status pengadaan terkini.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => exportExcel(requests)}
-                variant="outline"
-                className="h-10 gap-2 font-bold text-xs cursor-pointer"
-              >
-                <Download className="size-4" /> Unduh Excel
-              </Button>
-              <Button
-                onClick={() => exportPdf(requests)}
-                className="h-10 gap-2 bg-primary text-primary-foreground font-bold text-xs cursor-pointer"
-              >
-                <FileText className="size-4" /> Unduh PDF
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // State Filter Rentang Periode (Month-Year Range)
+  const [filterValues, setFilterValues] = useState<PeriodFilterValues>({
+    startMonth: "1",
+    startYear: "2026",
+    endMonth: "12",
+    endYear: "2026",
+  });
 
   // Hitung daftar tahun yang tersedia dari dataset requests
   const availableYears = useMemo(() => {
     const years = new Set<string>();
     years.add("2026");
+    years.add("2025");
     requests.forEach((r) => {
       const p = parseRequestDate(r.date) || parseRequestDate(r.needBy) || parseRequestDate(r.deadline);
       if (p) years.add(String(p.year));
@@ -210,28 +125,46 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
     return Array.from(years).sort((a, b) => b.localeCompare(a));
   }, [requests]);
 
-  // Filter requests berdasarkan Bulan & Tahun yang dipilih
+  // Handler Terapkan & Reset Filter
+  const handleApplyFilter = (newFilter: PeriodFilterValues) => {
+    setFilterValues(newFilter);
+  };
+
+  const handleResetFilter = () => {
+    setFilterValues({
+      startMonth: "1",
+      startYear: "2026",
+      endMonth: "12",
+      endYear: "2026",
+    });
+  };
+
+  // Filter requests berdasarkan rentang start_month/start_year s/d end_month/end_year
   const filteredPeriodRequests = useMemo(() => {
+    const sMonth = parseInt(filterValues.startMonth, 10);
+    const sYear = parseInt(filterValues.startYear, 10);
+    const eMonth = parseInt(filterValues.endMonth, 10);
+    const eYear = parseInt(filterValues.endYear, 10);
+
+    const minOrder = Math.min(sYear * 12 + sMonth, eYear * 12 + eMonth);
+    const maxOrder = Math.max(sYear * 12 + sMonth, eYear * 12 + eMonth);
+
     return requests.filter((r) => {
       const p = parseRequestDate(r.date) || parseRequestDate(r.needBy) || parseRequestDate(r.deadline);
       if (!p) {
-        return selectedMonth === "all";
+        return true;
       }
-
-      if (selectedYear !== "all" && String(p.year) !== selectedYear) {
-        return false;
-      }
-
-      if (selectedMonth !== "all" && String(p.month) !== selectedMonth) {
-        return false;
-      }
-
-      return true;
+      const itemOrder = p.year * 12 + p.month;
+      return itemOrder >= minOrder && itemOrder <= maxOrder;
     });
-  }, [requests, selectedMonth, selectedYear]);
+  }, [requests, filterValues]);
 
-  const selectedMonthLabel =
-    MONTH_OPTIONS.find((m) => m.value === selectedMonth)?.label || "Semua Bulan";
+  const startMonthName =
+    MONTH_NAMES.find((m) => m.value === filterValues.startMonth)?.label || "Januari";
+  const endMonthName =
+    MONTH_NAMES.find((m) => m.value === filterValues.endMonth)?.label || "Desember";
+
+  const periodLabel = `${startMonthName} ${filterValues.startYear} s/d ${endMonthName} ${filterValues.endYear}`;
 
   const totalCair = filteredPeriodRequests.reduce(
     (sum, r) => sum + (r.disbursedAmount || 0),
@@ -257,89 +190,40 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-extrabold text-primary uppercase">
-                Laporan Keuangan Asdos
+                Modul Laporan
               </span>
               <h2 className="text-lg font-black text-foreground">
-                Rekap Belanja Bahan Praktikum & Kas Lab
+                Rekap Laporan Belanja & Realisasi Pengadaan
               </h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Laporan periodik dana dicairkan, realisasi nota belanja, sisa uang kembalian di Asdos, dan penggantian kekurangan belanja.
+              Laporan data pencairan dana, nota/bon belanja fisik riil, sisa kas kembalian di Asdos, dan penggantian kekurangan belanja.
             </p>
           </div>
 
-          {/* Filter Periode: Dropdown Bulan & Tahun */}
-          <div className="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-card/70 border border-border p-1.5 sm:p-2 rounded-xl shadow-xs">
-            <div className="flex items-center gap-1.5 px-1.5 text-xs font-bold text-muted-foreground">
-              <Calendar className="size-3.5 text-primary" />
-              <span>Periode:</span>
-            </div>
-
-            {/* Dropdown Pilihan Bulan (Januari - Desember + Semua Bulan) */}
-            <div className="relative">
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                aria-label="Pilih Bulan"
-                className="h-8.5 rounded-lg border border-input bg-card pl-3 pr-8 text-xs font-semibold text-foreground shadow-xs hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer appearance-none transition-colors"
-              >
-                {MONTH_OPTIONS.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            </div>
-
-            {/* Dropdown Pemilih Tahun */}
-            <div className="relative">
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                aria-label="Pilih Tahun"
-                className="h-8.5 rounded-lg border border-input bg-card pl-3 pr-8 text-xs font-semibold text-foreground shadow-xs hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer appearance-none transition-colors"
-              >
-                {availableYears.map((yr) => (
-                  <option key={yr} value={yr}>
-                    {yr}
-                  </option>
-                ))}
-                <option value="all">Semua Tahun</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            </div>
-
-            {/* Tombol Reset Filter jika bukan default */}
-            {(selectedMonth !== "all" || selectedYear !== "2026") && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedMonth("all");
-                  setSelectedYear("2026");
-                }}
-                className="h-8.5 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer gap-1"
-                title="Reset ke Semua Bulan (2026)"
-              >
-                <RotateCcw className="size-3" />
-                <span className="hidden sm:inline">Reset</span>
-              </Button>
-            )}
-          </div>
+          {/* Komponen Filter Periode Reusable Rentang Bulan-Tahun (start_month & start_year s/d end_month & end_year) */}
+          <FilterPeriode
+            startMonth={filterValues.startMonth}
+            startYear={filterValues.startYear}
+            endMonth={filterValues.endMonth}
+            endYear={filterValues.endYear}
+            availableYears={availableYears}
+            onApply={handleApplyFilter}
+            onReset={handleResetFilter}
+          />
         </div>
 
-        {/* Summary Metric Cards for Report Bulanan */}
+        {/* Summary Metric Cards */}
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
-            label="Total Dana Ditransfer Keuangan"
+            label="Total Dana Dicairkan"
             value={money(totalCair)}
             foot={`${
               filteredPeriodRequests.filter((r) => r.disbursedAmount).length
             } transaksi dicairkan ke rekening Asdos`}
             icon={Wallet}
             kind="primary"
-            className="animate-slide-up-fade stagger-2"
+            className="animate-slide-up-fade stagger-1"
           />
           <MetricCard
             label="Realisasi Belanja (Nota / Bon)"
@@ -347,7 +231,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             foot="Total fisik belanja riil bahan masakan"
             icon={ShoppingBag}
             kind="info"
-            className="animate-slide-up-fade stagger-3"
+            className="animate-slide-up-fade stagger-2"
           />
           <MetricCard
             label="Sisa Kembalian (Dipegang Asdos)"
@@ -356,7 +240,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             icon={CheckCircle2}
             trend="Kas di Asdos"
             kind="success"
-            className="animate-slide-up-fade stagger-4"
+            className="animate-slide-up-fade stagger-3"
           />
           <MetricCard
             label="Total Uang Kurang"
@@ -365,33 +249,36 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             icon={Clock3}
             trend={totalKurang > 0 ? "Perlu Reimburse" : "Aman"}
             kind={totalKurang > 0 ? "danger" : "success"}
-            className="animate-slide-up-fade stagger-5"
+            className="animate-slide-up-fade stagger-4"
           />
         </div>
 
-        {/* Financial Note Rule Box */}
+        {/* Financial Policy Note Box */}
         <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50/70 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
           <p className="font-bold flex items-center gap-1.5">
             <Info className="size-4 shrink-0 text-blue-700 dark:text-blue-400" />
-            Kebijakan Saldo Kas Belanja Laboratorium Masak:
+            Ketentuan Laporan & Saldo Kas Belanja Laboratorium Masak:
           </p>
           <ul className="mt-1 list-disc list-inside space-y-0.5 text-[11px] leading-relaxed text-blue-800 dark:text-blue-300">
             <li>
-              <strong>Jika ada sisa uang kembalian:</strong> Asdos tetap wajib melaporkan nominalnya pada LPJ, namun uang kembalian <u>tetap dipegang oleh Asdos</u> untuk operasional dan cadangan belanja bahan berikutnya.
+              <strong>Wajib Mengunggah Bon:</strong> Asdos wajib melampirkan foto fisik nota/bon belanja asli agar pesanan dapat diselesaikan dan diverifikasi oleh Keuangan.
             </li>
             <li>
-              <strong>Jika dana belanja kurang:</strong> Asdos melaporkan nominal defisit belanja beserta foto nota agar <u>Bagian Keuangan dapat mengganti (reimburse)</u> kekurangan tersebut.
+              <strong>Sisa Uang Kembalian:</strong> Asdos melaporkan nominalnya pada LPJ, namun sisa uang kembalian <u>tetap dipegang oleh Asdos</u> untuk operasional kas laboratorium.
+            </li>
+            <li>
+              <strong>Kekurangan Belanja:</strong> Asdos melaporkan nominal defisit belanja beserta bukti bon agar <u>Bagian Keuangan mengganti (reimburse)</u> kekurangan tersebut.
             </li>
           </ul>
         </div>
 
-        {/* Table of Monthly Reports */}
+        {/* Table of Period Reports */}
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[840px] text-left text-xs">
             <thead className="bg-surface text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Kode PR & Menu Masak</th>
-                <th className="px-4 py-3">Matakuliah & Semester</th>
+                <th className="px-4 py-3">Matakuliah & Pemohon</th>
                 <th className="px-4 py-3 text-right">Dana Dicairkan</th>
                 <th className="px-4 py-3 text-right">Realisasi (Bon)</th>
                 <th className="px-4 py-3 text-center">Status Selisih Kas</th>
@@ -409,21 +296,18 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                       </div>
                       <p className="font-bold text-sm text-foreground">Tidak Ada Transaksi</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Tidak ditemukan catatan belanja bahan untuk periode{" "}
+                        Tidak ditemukan catatan belanja bahan untuk rentang periode{" "}
                         <span className="font-semibold text-foreground">
-                          {selectedMonthLabel} {selectedYear !== "all" ? selectedYear : ""}
+                          {periodLabel}
                         </span>.
                       </p>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          setSelectedMonth("all");
-                          setSelectedYear("2026");
-                        }}
+                        onClick={handleResetFilter}
                         className="mt-3.5 h-8 text-xs font-bold cursor-pointer"
                       >
-                        Lihat Semua Transaksi
+                        Reset Filter Periode
                       </Button>
                     </div>
                   </td>
@@ -442,7 +326,9 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                     </td>
                     <td className="px-4 py-3.5">
                       <p className="font-semibold text-foreground">{r.course || "Praktik Masak"}</p>
-                      <p className="text-[10px] text-muted-foreground">{r.prodi} · Smt {r.semester}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {r.applicant} ({r.prodi} · Smt {r.semester})
+                      </p>
                     </td>
                     <td className="px-4 py-3.5 text-right font-semibold text-foreground">
                       {r.disbursedAmount ? (
@@ -490,7 +376,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => setSelectedId(r.id)}
-                          className="h-7 px-2.5 text-xs font-semibold"
+                          className="h-7 px-2.5 text-xs font-semibold cursor-pointer"
                         >
                           <Eye className="size-3 mr-1" /> Detail
                         </Button>
@@ -498,7 +384,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => exportSingleExcel(r)}
-                          className="h-7 px-2 text-xs text-foreground font-bold hover:bg-slate-100"
+                          className="h-7 px-2 text-xs text-foreground font-bold hover:bg-slate-100 cursor-pointer"
                           title="Unduh Excel Laporan PR & Bon"
                         >
                           <Download className="size-3" />
@@ -508,7 +394,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => exportSinglePdf(r)}
-                            className="h-7 px-2 text-xs text-[#0f172a] font-bold hover:bg-slate-100"
+                            className="h-7 px-2 text-xs text-[#0f172a] font-bold hover:bg-slate-100 cursor-pointer"
                             title="Unduh PDF Formulir PR"
                           >
                             <FileText className="size-3" />
@@ -526,9 +412,9 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
         {/* Export Buttons */}
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <p className="text-xs text-muted-foreground">
-            Menampilkan data belanja bahan:{" "}
+            Menampilkan data belanja bahan periode:{" "}
             <span className="font-bold text-foreground">
-              {selectedMonthLabel} {selectedYear !== "all" ? selectedYear : "(Semua Tahun)"}
+              {periodLabel}
             </span>{" "}
             <span className="text-muted-foreground">({filteredPeriodRequests.length} transaksi ditemukan)</span>
           </p>
@@ -542,7 +428,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             </Button>
             <Button
               onClick={() => exportPdf(filteredPeriodRequests)}
-              className="h-9 gap-1.5 bg-primary hover:bg-blue-900 text-white text-xs font-bold cursor-pointer"
+              className="h-9 gap-1.5 bg-primary hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
             >
               <FileText className="size-3.5" /> Unduh Laporan PDF
             </Button>

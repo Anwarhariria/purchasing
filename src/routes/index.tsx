@@ -503,6 +503,12 @@ function Dashboard() {
     const targetItem = requests.find((r) => r.id === reportingRequestId);
     if (!targetItem) return;
 
+    const receiptImgs = reportReceiptImg ? [reportReceiptImg] : targetItem.receiptImages || [];
+    if (receiptImgs.length === 0) {
+      notify("Wajib melampirkan foto bon / nota belanja fisik! Tanpa foto bon, laporan tidak dapat diproses.");
+      return;
+    }
+
     const disbursed = targetItem.disbursedAmount || targetItem.price;
     const spent = reportSpentAmount;
     let refund = 0;
@@ -516,8 +522,6 @@ function Dashboard() {
       deficit = spent - disbursed;
       reimbursementStatus = "Perlu Diganti Keuangan";
     }
-
-    const receiptImgs = reportReceiptImg ? [reportReceiptImg] : targetItem.receiptImages || [];
 
     updateStatus(
       reportingRequestId,
@@ -535,6 +539,7 @@ function Dashboard() {
     setReportingRequestId(null);
     setReportSpentAmount(0);
     setReportReceiptImg("");
+    notify(`Laporan belanja untuk ${reportingRequestId} dan bukti bon berhasil dikirim.`);
   }
 
   function handleCreateRequest(e: FormEvent<HTMLFormElement>) {
@@ -968,7 +973,7 @@ function Dashboard() {
             count: Object.keys(labStock).length,
           },
           { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
-          { label: "Report Bulanan", icon: FileText },
+          { label: "Laporan", icon: FileText },
         ];
       case "Koordinator":
         return [
@@ -1016,7 +1021,7 @@ function Dashboard() {
           { label: "Master Permohonan", icon: ClipboardList },
           { label: "Master Prodi & Matakuliah", icon: Building2 },
           { label: "Pengguna & Peran", icon: Users, count: users.length },
-          { label: "Laporan Sistem", icon: FileText },
+          { label: "Laporan", icon: FileText },
         ];
     }
   }, [role, requests, users, labStock]);
