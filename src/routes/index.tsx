@@ -1208,8 +1208,8 @@ function Dashboard() {
 
       {/* MAIN CONTENT AREA */}
       <div
-        className={`flex flex-1 flex-col min-w-0 overflow-x-hidden transition-[padding] duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          sidebarCollapsed ? "lg:pl-0" : "lg:pl-[265px]"
+        className={`flex flex-1 flex-col min-w-0 overflow-x-hidden transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-[265px]"
         }`}
       >
         {/* TOP NAVBAR HEADER */}

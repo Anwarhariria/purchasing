@@ -49,19 +49,17 @@ export function DashboardHeader({
         >
           <Menu className="size-5" />
         </Button>
-        {/* Desktop: tombol buka sidebar (hanya muncul saat sidebar diciutkan / tertutup) */}
-        {sidebarCollapsed && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden lg:flex shrink-0 size-9 text-muted-foreground hover:text-foreground cursor-pointer"
-            onClick={() => setSidebarCollapsed(false)}
-            title="Buka Menu"
-            aria-label="Buka Menu"
-          >
-            <Menu className="size-5" />
-          </Button>
-        )}
+        {/* Desktop: tombol toggle mini / full sidebar */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden lg:flex shrink-0 size-9 text-muted-foreground hover:text-foreground cursor-pointer"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar (Mode Mini)"}
+          aria-label={sidebarCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar (Mode Mini)"}
+        >
+          <Menu className="size-5" />
+        </Button>
         <div className="font-black text-primary sm:hidden text-base tracking-tight truncate">
           SPAKE
         </div>
