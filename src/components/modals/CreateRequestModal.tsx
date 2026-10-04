@@ -1,5 +1,5 @@
-import React from "react";
-import { Utensils, Sliders, Box, Plus, Trash2, CheckCircle2, Send } from "lucide-react";
+import React, { useMemo } from "react";
+import { Utensils, Sliders, Box, Plus, Trash2, CheckCircle2, Send, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,69 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { money } from "@/lib/algorithms/saw";
 import type { ProdiCurriculum, RequestDetail, LabStockItem } from "@/types/procurement";
+
+// Master Preset Bahan Dapur untuk Autocomplete & Standar Unit/Harga
+const INGREDIENT_MASTER_PRESETS: Record<string, { unit: string; price: number }> = {
+  "telur ayam negeri": { unit: "butir", price: 2500 },
+  "telur bebek": { unit: "butir", price: 3500 },
+  "tepung terigu protein tinggi (cakra)": { unit: "kg", price: 15000 },
+  "tepung terigu protein sedang (segitiga biru)": { unit: "kg", price: 13500 },
+  "tepung terigu protein rendah (kunci)": { unit: "kg", price: 14000 },
+  "tepung maizena": { unit: "kg", price: 18000 },
+  "tepung tapioka": { unit: "kg", price: 12000 },
+  "tepung beras": { unit: "kg", price: 14000 },
+  "tepung ketan": { unit: "kg", price: 16000 },
+  "tepung panir / panko": { unit: "kg", price: 22000 },
+  "beras putih premium": { unit: "kg", price: 16000 },
+  "beras ketan putih": { unit: "kg", price: 18000 },
+  "daging sapi tenderloin": { unit: "kg", price: 165000 },
+  "daging sapi sirloin": { unit: "kg", price: 145000 },
+  "daging sapi gandik": { unit: "kg", price: 135000 },
+  "daging sapi giling": { unit: "kg", price: 125000 },
+  "ayam broiler utuh": { unit: "ekor", price: 38000 },
+  "ayam kampung": { unit: "ekor", price: 65000 },
+  "daging ayam fillet (dada)": { unit: "kg", price: 55000 },
+  "daging ayam fillet (paha)": { unit: "kg", price: 58000 },
+  "minyak goreng sawit": { unit: "liter", price: 18500 },
+  "minyak wijen": { unit: "botol", price: 32000 },
+  "olive oil (extra virgin)": { unit: "botol", price: 85000 },
+  "butter elle & vire": { unit: "kg", price: 185000 },
+  "butter dry sheet (laminasi)": { unit: "kg", price: 195000 },
+  "butter anchor unsalted": { unit: "kg", price: 175000 },
+  "margarin blue band": { unit: "kg", price: 42000 },
+  "susu uht full cream": { unit: "liter", price: 21000 },
+  "cooking cream": { unit: "liter", price: 68000 },
+  "heavy cream elle & vire": { unit: "liter", price: 85000 },
+  "gula pasir kristal": { unit: "kg", price: 17500 },
+  "gula halus / icing sugar": { unit: "kg", price: 22000 },
+  "gula merah / aren": { unit: "kg", price: 28000 },
+  "garam halus": { unit: "bungkus", price: 5000 },
+  "bawang merah & putih": { unit: "kg", price: 45000 },
+  "bawang merah brebes": { unit: "kg", price: 42000 },
+  "bawang putih kating": { unit: "kg", price: 40000 },
+  "bawang bombay": { unit: "kg", price: 35000 },
+  "cabai merah keriting": { unit: "kg", price: 52000 },
+  "cabai rawit merah": { unit: "kg", price: 65000 },
+  "keju cheddar blok": { unit: "blok", price: 26000 },
+  "keju parmesan bubuk": { unit: "botol", price: 48000 },
+  "keju mozzarella": { unit: "kg", price: 110000 },
+  "pasta spaghetti la fonte": { unit: "pack", price: 19500 },
+  "pasta fettuccine": { unit: "pack", price: 21000 },
+  "ragi instan (yeast)": { unit: "sachet", price: 6000 },
+  "santan kelapa kental": { unit: "liter", price: 24000 },
+  "santan kental murni": { unit: "liter", price: 25000 },
+  "kentang russet import": { unit: "kg", price: 35000 },
+  "soun kering": { unit: "bungkus", price: 8000 },
+  "tauge segar": { unit: "kg", price: 12000 },
+  "kol segar": { unit: "kg", price: 10000 },
+  "daun bawang & seledri": { unit: "ikat", price: 8000 },
+  "serai & daun pandan": { unit: "ikat", price: 6000 },
+  "lengkuas, jahe & serai": { unit: "kg", price: 30000 },
+  "jeruk nipis": { unit: "kg", price: 20000 },
+  "kecap manis": { unit: "botol", price: 24000 },
+  "kecap asin": { unit: "botol", price: 18000 },
+  "saus tiram": { unit: "botol", price: 22000 },
+};
 
 interface CreateRequestModalProps {
   open: boolean;
@@ -49,6 +112,77 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
   handleCreateRequest,
   labStockInventory,
 }) => {
+  // Kumpulan Master Bahan untuk Autocomplete & Pencarian Cepat (<datalist>)
+  const masterIngredientOptions = useMemo(() => {
+    const map = new Map<string, { name: string; extra?: string }>();
+
+    // 1. Dari preset standar dapur
+    Object.entries(INGREDIENT_MASTER_PRESETS).forEach(([key, val]) => {
+      const title = key
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+      map.set(key, { name: title, extra: `${val.unit} · ${money(val.price)}` });
+    });
+
+    // 2. Dari stok inventaris laboratorium
+    if (labStockInventory) {
+      Object.entries(labStockInventory).forEach(([name, item]) => {
+        const key = name.toLowerCase().trim();
+        map.set(key, {
+          name,
+          extra: `Stok Lab: ${item.stock} ${item.unit}`,
+        });
+      });
+    }
+
+    // 3. Dari seluruh resep kurikulum masakan
+    if (curriculum) {
+      curriculum.forEach((p) => {
+        p.semesters?.forEach((s) => {
+          s.courses?.forEach((c) => {
+            c.menus?.forEach((m) => {
+              m.ingredients?.forEach((ing) => {
+                const key = ing.name.toLowerCase().trim();
+                if (!map.has(key)) {
+                  map.set(key, {
+                    name: ing.name,
+                    extra: `${ing.unit} · ${money(ing.price)}`,
+                  });
+                }
+              });
+            });
+          });
+        });
+      });
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [labStockInventory, curriculum]);
+
+  // Handler update nama bahan dengan auto-fill satuan & estimasi harga jika cocok master data
+  const handleDetailNameChange = (index: number, value: string) => {
+    const newArr = [...newDetails];
+    newArr[index].name = value;
+
+    const normalized = value.toLowerCase().trim();
+    const preset = INGREDIENT_MASTER_PRESETS[normalized];
+    if (preset) {
+      if (!newArr[index].unit || newArr[index].unit === "kg/liter") {
+        newArr[index].unit = preset.unit;
+      }
+      if (!newArr[index].price || newArr[index].price === 0) {
+        newArr[index].price = preset.price;
+      }
+    } else if (labStockInventory && labStockInventory[value]) {
+      if (!newArr[index].unit || newArr[index].unit === "kg/liter") {
+        newArr[index].unit = labStockInventory[value].unit;
+      }
+    }
+
+    setNewDetails(newArr);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] w-[95vw] sm:max-w-2xl overflow-y-auto rounded-xl border-border p-0 shadow-2xl">
@@ -311,24 +445,38 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
 
           {/* Dynamic Items: Mobile Cards (<sm) + Desktop Table (sm+) */}
           <div className="mt-4">
+            {/* HTML5 Datalist untuk Autocomplete / Saran Pencarian Bahan Cepat */}
+            <datalist id="master-ingredients-datalist">
+              {masterIngredientOptions.map((opt) => (
+                <option key={opt.name} value={opt.name}>
+                  {opt.extra ? `${opt.name} (${opt.extra})` : opt.name}
+                </option>
+              ))}
+            </datalist>
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-foreground">
-                  Rincian Bahan yang Harus Dibeli
-                </h4>
-                <p className="text-[11px] text-muted-foreground">
-                  Daftar kekurangan bahan dari resep. Anda dapat menyesuaikan harga satuan atau menambah item bila diperlukan.
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs sm:text-sm font-bold text-foreground">
+                    Rincian Bahan yang Harus Dibeli
+                  </h4>
+                  <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2 py-0.5 text-[10px] font-bold border border-amber-500/20">
+                    <Sparkles className="size-2.5" /> Autocomplete Aktif
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Ketik huruf awal (misal: "Te...") pada kolom <strong>Nama Barang</strong> untuk memilih bahan otomatis dari master dapur.
                 </p>
               </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1 self-start sm:self-auto shrink-0 font-bold"
+                className="h-7 text-xs gap-1 self-start sm:self-auto shrink-0 font-bold cursor-pointer"
                 onClick={() =>
                   setNewDetails([
                     ...newDetails,
-                    { id: "D-" + Date.now(), name: "", qty: 1, unit: "kg", price: 0 },
+                    { id: "D-" + Date.now(), name: "", qty: 1, unit: "", price: 0 },
                   ])
                 }
               >
@@ -373,18 +521,15 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                       </div>
                       <div>
                         <label className="text-[10px] font-semibold text-foreground block mb-1">
-                          Nama Bahan
+                          Nama Barang / Bahan (Autocomplete)
                         </label>
                         <Input
                           required
+                          list="master-ingredients-datalist"
                           className="h-8 text-xs font-semibold"
-                          placeholder="Nama bahan masakan..."
+                          placeholder="Ketik nama bahan (contoh: Telur, Tepung)..."
                           value={detail.name}
-                          onChange={(e) => {
-                            const newArr = [...newDetails];
-                            newArr[index].name = e.target.value;
-                            setNewDetails(newArr);
-                          }}
+                          onChange={(e) => handleDetailNameChange(index, e.target.value)}
                         />
                       </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -456,7 +601,14 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                   <table className="w-full text-left text-xs">
                     <thead className="bg-surface text-muted-foreground">
                       <tr>
-                        <th className="px-3 py-2 font-semibold">Nama Barang</th>
+                        <th className="px-3 py-2 font-semibold">
+                          <span className="inline-flex items-center gap-1.5">
+                            Nama Barang
+                            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-extrabold text-primary">
+                              Pencarian Cepat
+                            </span>
+                          </span>
+                        </th>
                         <th className="px-3 py-2 font-semibold w-20">Jml</th>
                         <th className="px-3 py-2 font-semibold w-24">Satuan</th>
                         <th className="px-3 py-2 font-semibold w-32">Harga Satuan</th>
@@ -469,14 +621,11 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                           <td className="px-2 py-2">
                             <Input
                               required
+                              list="master-ingredients-datalist"
                               className="h-8 text-xs font-semibold"
-                              placeholder="Nama bahan masakan..."
+                              placeholder="Ketik nama bahan (contoh: Telur, Tepung)..."
                               value={detail.name}
-                              onChange={(e) => {
-                                const newArr = [...newDetails];
-                                newArr[index].name = e.target.value;
-                                setNewDetails(newArr);
-                              }}
+                              onChange={(e) => handleDetailNameChange(index, e.target.value)}
                             />
                           </td>
                           <td className="px-2 py-2">
