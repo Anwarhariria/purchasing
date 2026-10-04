@@ -1448,11 +1448,9 @@ function Dashboard() {
             <MonthlyReportView
               section={section}
               requests={requests}
-              reportPeriodMonths={reportPeriodMonths}
-              setReportPeriodMonths={setReportPeriodMonths}
               setSelectedId={(id) => setSelectedId(id)}
-              exportExcel={() => exportExcel(requests)}
-              exportPdf={() => exportPdf(requests)}
+              exportExcel={(items) => exportExcel(items || requests)}
+              exportPdf={(items) => exportPdf(items || requests)}
               exportSingleExcel={(r) => exportSingleExcel(r, notify)}
               exportSinglePdf={(r) => exportSinglePdf(r, notify)}
             />
