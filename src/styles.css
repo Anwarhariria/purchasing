@@ -134,6 +134,22 @@
   will-change: transform, opacity;
 }
 
+/* 1b. Sidebar Item Staggered Slide-in & Fade-in */
+@keyframes sidebarItemSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-sidebar-item {
+  animation: sidebarItemSlideIn 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* 2. Staggered Card & Container Entrance: Slide-up (16px -> 0) + Fade-in (0% -> 100%) */
 @keyframes slideUpFade {
   0% {
