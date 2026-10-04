@@ -46,6 +46,7 @@ interface SidebarProps {
   onOpenAddCourse?: () => void;
   onOpenAddMenu?: () => void;
   onQuickReviewFinance?: () => void;
+  onOpenFifoPriority?: () => void;
   onOpenSawPriority?: () => void;
   onOpenVerify?: () => void;
 }
@@ -70,9 +71,15 @@ export function Sidebar({
   onOpenAddCourse,
   onOpenAddMenu,
   onQuickReviewFinance,
+  onOpenFifoPriority,
   onOpenSawPriority,
   onOpenVerify,
 }: SidebarProps) {
+  const handleOpenFifo = () => {
+    if (onOpenFifoPriority) onOpenFifoPriority();
+    else if (onOpenSawPriority) onOpenSawPriority();
+  };
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -127,7 +134,7 @@ export function Sidebar({
 
         {/* Nav Items & Fitur Input */}
         <div className="flex-1 overflow-y-auto px-3 py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-          {/* Fitur Input · Sesuai Dashboard Peran (Tanpa emot / sparkle) */}
+          {/* Fitur Input · Sesuai Dashboard Peran */}
           <div className="mb-4 space-y-2">
             <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/80">
               Fitur Input · {role}
@@ -141,18 +148,17 @@ export function Sidebar({
                     onOpenCreateRequest?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  <Plus className="size-4 stroke-[3] text-blue-700 shrink-0" />
+                  <Plus className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Ajukan Bahan Praktik</span>
                 </Button>
                 <Button
-                  variant="ghost"
                   onClick={() => {
                     onOpenAddStock?.();
                     setMobileOpen(false);
                   }}
-                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <PackageCheck className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Stok Barang Lab</span>
@@ -165,21 +171,20 @@ export function Sidebar({
               <div className="space-y-1.5">
                 <Button
                   onClick={() => {
-                    onOpenSawPriority?.();
+                    handleOpenFifo();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  <Scale className="size-4 stroke-[2.5] text-blue-700 shrink-0" />
-                  <span className="truncate">Input Evaluasi SAW</span>
+                  <Scale className="size-4 text-sky-300 shrink-0" />
+                  <span className="truncate">Prioritas FIFO Belanja</span>
                 </Button>
                 <Button
-                  variant="ghost"
                   onClick={() => {
                     onOpenVerify?.();
                     setMobileOpen(false);
                   }}
-                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <ClipboardCheck className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Verifikasi Berkas</span>
@@ -195,21 +200,20 @@ export function Sidebar({
                     onOpenAddMenu?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  <ChefHat className="size-4 stroke-[2.5] text-purple-700 shrink-0" />
+                  <ChefHat className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Menu &amp; Resep</span>
                 </Button>
                 <Button
-                  variant="ghost"
                   onClick={() => {
-                    onOpenSawPriority?.();
+                    handleOpenFifo();
                     setMobileOpen(false);
                   }}
-                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Scale className="size-4 text-sky-300 shrink-0" />
-                  <span className="truncate">Input Rekomendasi SAW</span>
+                  <span className="truncate">Prioritas FIFO Belanja</span>
                 </Button>
               </div>
             )}
@@ -222,18 +226,17 @@ export function Sidebar({
                     onQuickReviewFinance?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  <Banknote className="size-4 stroke-[2.5] text-emerald-600 shrink-0" />
+                  <Banknote className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Pencairan Dana</span>
                 </Button>
                 <Button
-                  variant="ghost"
                   onClick={() => {
                     onOpenVerify?.();
                     setMobileOpen(false);
                   }}
-                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Receipt className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Verifikasi LPJ</span>
@@ -249,29 +252,27 @@ export function Sidebar({
                     onOpenAddUser?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  <UserPlus className="size-4 stroke-[2.5] text-blue-700 shrink-0" />
+                  <UserPlus className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Pengguna Baru</span>
                 </Button>
                 <Button
-                  variant="ghost"
                   onClick={() => {
                     onOpenAddCourse?.();
                     setMobileOpen(false);
                   }}
-                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Plus className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Mata Kuliah</span>
                 </Button>
                 <Button
-                  variant="ghost"
                   onClick={() => {
                     onOpenAddProdi?.();
                     setMobileOpen(false);
                   }}
-                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Building2 className="size-4 text-sky-300 shrink-0" />
                   <span className="truncate">Input Program Studi</span>
@@ -305,7 +306,7 @@ export function Sidebar({
                   <Icon className={`size-[18px] shrink-0 ${isActive ? "text-sky-300" : "text-blue-200"}`} />
                   <span className="truncate">{label}</span>
                   {count !== undefined && count > 0 && (
-                    <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs">
+                    <span className="ml-auto rounded-full bg-white/20 text-white border border-white/25 px-2 py-0.5 text-[10px] font-extrabold shadow-xs">
                       {count}
                     </span>
                   )}

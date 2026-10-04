@@ -164,8 +164,8 @@ export function LandingPage({ onGoToLogin, onQuickRoleLogin, initialUsers }: Lan
               <p className="text-[10px] sm:text-xs text-muted-foreground font-semibold mt-0.5 leading-snug">Hak Akses Terintegrasi</p>
             </div>
             <div className="min-w-0">
-              <p className="text-xl sm:text-2xl md:text-3xl font-black text-primary">SAW Model</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground font-semibold mt-0.5 leading-snug">Prioritas Belanja Objektif</p>
+              <p className="text-xl sm:text-2xl md:text-3xl font-black text-primary">FIFO Model</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground font-semibold mt-0.5 leading-snug">Prioritas Antrean Transparan</p>
             </div>
             <div className="min-w-0">
               <p className="text-xl sm:text-2xl md:text-3xl font-black text-primary">Real-Time</p>

@@ -158,6 +158,10 @@ export const SpakeApi = {
     return request<{ status: string; data: any }>("/requests/kpis");
   },
 
+  async getFifoRanking() {
+    return request<{ status: string; data: any[] }>("/requests/fifo-ranking");
+  },
+
   async getSawRanking() {
     return request<{ status: string; data: any[] }>("/requests/saw-ranking");
   },

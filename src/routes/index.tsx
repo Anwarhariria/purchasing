@@ -46,7 +46,7 @@ import {
 } from "@/data/procurement-data";
 
 // Algorithms & Export Utilities
-import { calculateSAW, money } from "@/lib/algorithms/saw";
+import { calculateFIFO, money } from "@/lib/algorithms/fifo";
 import { exportExcel, exportPdf, exportSingleExcel, exportSinglePdf } from "@/lib/export-utils";
 
 // Views & Pages
@@ -56,7 +56,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { RoleKpiCards, type RoleMetrics } from "@/components/dashboard/RoleKpiCards";
 import { ForecastingView } from "@/components/dashboard/ForecastingView";
-import { SawPriorityView } from "@/components/dashboard/SawPriorityView";
+import { FifoPriorityView } from "@/components/dashboard/FifoPriorityView";
 import { UserManagementView } from "@/components/dashboard/UserManagementView";
 import { CurriculumMasterView } from "@/components/dashboard/CurriculumMasterView";
 import { RecipeMenuView } from "@/components/dashboard/RecipeMenuView";
@@ -980,7 +980,7 @@ function Dashboard() {
             icon: ClipboardCheck,
             count: requests.filter((r) => r.status === "Diajukan").length,
           },
-          { label: "Prioritas Belanja", icon: Sliders },
+          { label: "Prioritas Belanja (FIFO)", icon: Clock3 },
           { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
           { label: "Laporan", icon: FileText },
         ];
@@ -993,7 +993,7 @@ function Dashboard() {
             count: requests.filter((r) => r.status === "Diverifikasi Koordinator").length,
           },
           { label: "Kelola Menu & Bahan", icon: ChefHat },
-          { label: "Prioritas Belanja", icon: Award },
+          { label: "Prioritas Belanja (FIFO)", icon: Clock3 },
           { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
           { label: "Laporan", icon: FileText },
         ];
@@ -1085,7 +1085,7 @@ function Dashboard() {
     };
   }, [requests, role, currentUser, users]);
 
-  const sawRankings = useMemo(() => calculateSAW(requests), [requests]);
+  const fifoRankings = useMemo(() => calculateFIFO(requests), [requests]);
 
   const financeUrgentItem = useMemo(() => {
     return requests.find(
@@ -1191,12 +1191,11 @@ function Dashboard() {
             setSection("Perlu Tindakan Dana");
           }
         }}
+        onOpenFifoPriority={() => {
+          setSection("Prioritas Belanja (FIFO)");
+        }}
         onOpenSawPriority={() => {
-          if (role === "Koordinator") {
-            setSection("Prioritas SAW (Koor)");
-          } else if (role === "Kaprodi") {
-            setSection("Prioritas SAW (Kaprodi)");
-          }
+          setSection("Prioritas Belanja (FIFO)");
         }}
         onOpenVerify={() => {
           if (role === "Koordinator") {
@@ -1362,9 +1361,9 @@ function Dashboard() {
             />
           )}
 
-          {section === "Prioritas Belanja" && (
-            <SawPriorityView
-              sawRankings={sawRankings}
+          {(section === "Prioritas Belanja" || section === "Prioritas Belanja (FIFO)") && (
+            <FifoPriorityView
+              fifoRankings={fifoRankings}
               role={role}
               exportCsv={() => exportExcel(requests)}
               setQuickReviewId={(id) => setQuickReviewId(id)}
