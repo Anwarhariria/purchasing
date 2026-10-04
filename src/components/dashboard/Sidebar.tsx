@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mark } from "@/components/common/Mark";
@@ -75,6 +76,32 @@ export function Sidebar({
   onOpenSawPriority,
   onOpenVerify,
 }: SidebarProps) {
+  const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    window.addEventListener("resize", handleResize);
+
+    const raf = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const isOpen = mounted && (isDesktop ? !sidebarCollapsed : mobileOpen);
+
   const handleOpenFifo = () => {
     if (onOpenFifoPriority) onOpenFifoPriority();
     else if (onOpenSawPriority) onOpenSawPriority();
@@ -83,29 +110,23 @@ export function Sidebar({
   return (
     <>
       {/* Mobile backdrop */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-xs lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      <div
+        className={`fixed inset-0 z-40 bg-foreground/30 backdrop-blur-xs lg:hidden transition-opacity duration-300 ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileOpen(false)}
+      />
 
       {/* ====== SIDEBAR (FIXED) ====== */}
       <aside
-        className={[
-          "fixed inset-y-0 left-0 z-50 w-[265px] flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white overflow-hidden shadow-2xl sidebar-transition animate-sidebar-enter",
-          mobileOpen
-            ? "translate-x-0 opacity-100 pointer-events-auto"
-            : "-translate-x-full opacity-0 pointer-events-none lg:pointer-events-auto",
-          sidebarCollapsed
-            ? "lg:-translate-x-full lg:opacity-0 lg:pointer-events-none"
-            : "lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto",
-        ].join(" ")}
+        className={`fixed inset-y-0 left-0 z-50 w-[265px] flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white overflow-hidden shadow-2xl sidebar-container ${
+          isOpen ? "open" : ""
+        }`}
       >
         {/* Logo Brand */}
         <div
-          className="animate-sidebar-item flex h-[84px] shrink-0 items-center gap-3 border-b border-white/10 px-5"
-          style={{ animationDelay: "50ms" }}
+          className="sidebar-nav-item flex h-[84px] shrink-0 items-center gap-3 border-b border-white/10 px-5"
+          style={{ transitionDelay: "40ms" }}
         >
           <Mark />
           <div className="min-w-0 flex-1">
@@ -144,8 +165,8 @@ export function Sidebar({
           {/* Fitur Input · Sesuai Dashboard Peran */}
           <div className="mb-4 space-y-2">
             <div
-              className="animate-sidebar-item px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/80"
-              style={{ animationDelay: "80ms" }}
+              className="sidebar-nav-item px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/80"
+              style={{ transitionDelay: "80ms" }}
             >
               Fitur Input · {role}
             </div>
@@ -159,8 +180,8 @@ export function Sidebar({
                     onOpenCreateRequest?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "130ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "130ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <Plus className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Ajukan Bahan Praktik</span>
@@ -171,8 +192,8 @@ export function Sidebar({
                     onOpenAddStock?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "190ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "190ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <PackageCheck className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Stok Barang Lab</span>
@@ -189,8 +210,8 @@ export function Sidebar({
                     handleOpenFifo();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "130ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "130ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <Scale className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Prioritas FIFO Belanja</span>
@@ -201,8 +222,8 @@ export function Sidebar({
                     onOpenVerify?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "190ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "190ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <ClipboardCheck className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Verifikasi Berkas</span>
@@ -219,8 +240,8 @@ export function Sidebar({
                     onOpenAddMenu?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "130ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "130ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <ChefHat className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Menu &amp; Resep</span>
@@ -231,8 +252,8 @@ export function Sidebar({
                     handleOpenFifo();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "190ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "190ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <Scale className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Prioritas FIFO Belanja</span>
@@ -249,8 +270,8 @@ export function Sidebar({
                     onQuickReviewFinance?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "130ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "130ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <Banknote className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Pencairan Dana</span>
@@ -261,8 +282,8 @@ export function Sidebar({
                     onOpenVerify?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "190ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "190ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <Receipt className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Verifikasi LPJ</span>
@@ -279,8 +300,8 @@ export function Sidebar({
                     onOpenAddUser?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "130ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "130ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <UserPlus className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Pengguna Baru</span>
@@ -291,8 +312,8 @@ export function Sidebar({
                     onOpenAddCourse?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "190ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "190ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <Plus className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Mata Kuliah</span>
@@ -303,8 +324,8 @@ export function Sidebar({
                     onOpenAddProdi?.();
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: "250ms" }}
-                  className="animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
+                  style={{ transitionDelay: "250ms" }}
+                  className="sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
                   <Building2 className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Program Studi</span>
@@ -314,20 +335,20 @@ export function Sidebar({
           </div>
 
           <div
-            className="animate-sidebar-item h-px bg-white/10 my-3"
-            style={{ animationDelay: "220ms" }}
+            className="sidebar-nav-item h-px bg-white/10 my-3"
+            style={{ transitionDelay: "220ms" }}
           />
 
           <div
-            className="animate-sidebar-item px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75"
-            style={{ animationDelay: "250ms" }}
+            className="sidebar-nav-item px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75"
+            style={{ transitionDelay: "250ms" }}
           >
             Menu Utama · {role}
           </div>
           <nav className="space-y-1">
             {sidebarNav.map(({ label, icon: Icon, count }, idx) => {
               const isActive = section === label;
-              const itemDelay = 290 + idx * 70;
+              const itemDelay = 280 + idx * 60;
               return (
                 <Button
                   key={label}
@@ -336,8 +357,8 @@ export function Sidebar({
                     setSection(label);
                     setMobileOpen(false);
                   }}
-                  style={{ animationDelay: `${itemDelay}ms` }}
-                  className={`animate-sidebar-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold transition-colors cursor-pointer rounded-lg ${
+                  style={{ transitionDelay: `${itemDelay}ms` }}
+                  className={`sidebar-nav-item h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold transition-colors cursor-pointer rounded-lg ${
                     isActive
                       ? "bg-white/20 text-white font-bold shadow-xs hover:bg-white/25 border border-white/20"
                       : "text-blue-100/80 hover:bg-white/10 hover:text-white"
@@ -356,8 +377,8 @@ export function Sidebar({
           </nav>
 
           <div
-            className="animate-sidebar-item mt-7 px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75"
-            style={{ animationDelay: `${290 + sidebarNav.length * 70}ms` }}
+            className="sidebar-nav-item mt-7 px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75"
+            style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 20}ms` }}
           >
             Utilitas
           </div>
@@ -365,24 +386,24 @@ export function Sidebar({
             <Button
               variant="ghost"
               onClick={exportExcel}
-              style={{ animationDelay: `${290 + sidebarNav.length * 70 + 60}ms` }}
-              className="animate-sidebar-item h-10 w-full justify-start gap-3 px-3.5 text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg"
+              style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 70}ms` }}
+              className="sidebar-nav-item h-10 w-full justify-start gap-3 px-3.5 text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg"
             >
               <Download className="size-[17px] shrink-0 text-blue-200" /> Rekap (Excel)
             </Button>
             <Button
               variant="ghost"
               onClick={exportPdf}
-              style={{ animationDelay: `${290 + sidebarNav.length * 70 + 120}ms` }}
-              className="animate-sidebar-item h-10 w-full justify-start gap-3 px-3.5 text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg"
+              style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 120}ms` }}
+              className="sidebar-nav-item h-10 w-full justify-start gap-3 px-3.5 text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg"
             >
               <FileText className="size-[17px] shrink-0 text-blue-200" /> Rekap (PDF)
             </Button>
             <Button
               variant="ghost"
               onClick={() => notify("SPAKE Demo - Dokumentasi dan Alur Siklus 6 Tahap Pengadaan ASAINDO.")}
-              style={{ animationDelay: `${290 + sidebarNav.length * 70 + 180}ms` }}
-              className="animate-sidebar-item h-10 w-full justify-start gap-3 px-3.5 text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg"
+              style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 170}ms` }}
+              className="sidebar-nav-item h-10 w-full justify-start gap-3 px-3.5 text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg"
             >
               <CircleHelp className="size-[17px] shrink-0 text-blue-200" /> Bantuan &amp; Alur
             </Button>
@@ -391,8 +412,8 @@ export function Sidebar({
 
         {/* User profile footer */}
         <div
-          className="animate-sidebar-item border-t border-white/10 p-4 bg-black/15 shrink-0"
-          style={{ animationDelay: `${290 + sidebarNav.length * 70 + 240}ms` }}
+          className="sidebar-nav-item border-t border-white/10 p-4 bg-black/15 shrink-0"
+          style={{ transitionDelay: `${280 + sidebarNav.length * 60 + 220}ms` }}
         >
           <div className="rounded-lg border border-white/15 bg-white/10 p-3 shadow-xs backdrop-blur-xs">
             <div className="flex items-center gap-2.5">
