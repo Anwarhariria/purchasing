@@ -54,7 +54,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
       <DialogContent className="max-h-[92vh] w-[95vw] sm:max-w-2xl overflow-y-auto rounded-xl border-border p-0 shadow-2xl">
         <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
           <div className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-[#800000] text-white">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
               <ChefHat className="size-4" />
             </span>
             <div>
@@ -71,8 +71,8 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
         <form onSubmit={handleCreateRequest} className="space-y-4 px-4 sm:px-6 py-4 sm:py-5">
           {/* CASCADING DROPDOWNS: Prodi -> Semester -> Matakuliah -> Menu Masak */}
           <div className="rounded-xl border border-border/80 bg-surface/80 p-4 space-y-3">
-            <div className="flex items-center gap-1.5 text-xs font-black text-primary uppercase tracking-wide">
-              <Sliders className="size-4" />
+            <div className="flex items-center gap-1.5 text-xs font-black text-foreground uppercase tracking-wide">
+              <Sliders className="size-4 text-muted-foreground" />
               <span>Pilih Kurikulum & Menu Praktik Memasak:</span>
             </div>
 
@@ -188,7 +188,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                 <select
                   value={selectedMenu}
                   onChange={(e) => onSelectMenuRecipe(e.target.value)}
-                  className="h-9 w-full rounded-md border border-primary bg-card px-2.5 text-xs font-bold text-primary focus:ring-2 focus:ring-primary/30"
+                  className="h-9 w-full rounded-md border border-input bg-card px-2.5 text-xs font-medium text-foreground focus:ring-2 focus:ring-primary/30"
                 >
                   {(() => {
                     const prodiObj = curriculum.find((p) => p.prodiName === selectedProdi);
@@ -225,7 +225,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                 <div className="mt-2.5 pt-2.5 border-t border-border/70">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-                      <Box className="size-3.5 text-primary" />
+                      <Box className="size-3.5 text-muted-foreground" />
                       Kebutuhan Resep ({selectedMenu}) vs Ketersediaan Stok Lab:
                     </span>
                     <span className="text-[10px] text-muted-foreground font-medium">
@@ -275,7 +275,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
             })()}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs font-bold text-foreground">
               Tenggat Praktikum <span className="text-red-500">*</span>
               <Input
@@ -285,17 +285,6 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                 defaultValue={new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]}
                 className="mt-1.5 h-10 font-normal"
               />
-            </label>
-
-            <label className="text-xs font-bold text-foreground">
-              Tingkat Urgensi
-              <select
-                name="urgency"
-                className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-xs font-normal focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
-              >
-                <option value="Mendesak">Mendesak (Jadwal Praktik &lt; 3 Hari)</option>
-                <option value="Normal">Normal (Sesuai Jadwal Semester)</option>
-              </select>
             </label>
 
             <label className="text-xs font-bold text-foreground">
@@ -310,7 +299,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
               </select>
             </label>
 
-            <label className="sm:col-span-3 text-xs font-bold text-foreground">
+            <label className="sm:col-span-2 text-xs font-bold text-foreground">
               Tujuan / Keterangan Sesi Praktikum
               <Input
                 name="purpose"
@@ -408,7 +397,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                             required
                             min="0.1"
                             step="any"
-                            className="h-8 text-xs font-bold text-primary"
+                            className="h-8 text-xs font-bold text-foreground"
                             value={detail.qty || ""}
                             onChange={(e) => {
                               const newArr = [...newDetails];
@@ -496,7 +485,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                               required
                               min="0.1"
                               step="any"
-                              className="h-8 text-xs font-bold text-primary"
+                              className="h-8 text-xs font-bold text-foreground"
                               value={detail.qty || ""}
                               onChange={(e) => {
                                 const newArr = [...newDetails];
@@ -574,7 +563,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-[#800000] hover:bg-[#660000] text-white font-bold w-full sm:w-auto"
+              className="gap-2 bg-primary hover:bg-blue-900 text-white font-bold w-full sm:w-auto cursor-pointer"
             >
               <Send className="size-4" /> Ajukan ke Koordinator Lab
             </Button>

@@ -104,7 +104,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
       <DialogContent className="w-[95vw] sm:max-w-md rounded-xl border-border p-0 shadow-2xl">
         <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
           <div className="flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-[#800000] text-white">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-white">
               <BookOpen className="size-4" />
             </span>
             <div>
@@ -143,7 +143,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-[#800000] hover:bg-[#660000] text-white font-bold text-xs w-full sm:w-auto"
+              className="gap-2 bg-primary hover:bg-blue-900 text-white font-bold text-xs w-full sm:w-auto cursor-pointer"
             >
               <Check className="size-4" />{" "}
               {editingCourseName ? "Simpan Perubahan" : "Tambah Mata Kuliah"}

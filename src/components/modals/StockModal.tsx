@@ -39,7 +39,7 @@ export const StockModal: React.FC<StockModalProps> = ({
       <DialogContent className="w-[95vw] sm:max-w-md rounded-xl border-border p-0 shadow-2xl">
         <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
           <div className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-[#800000] text-white">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
               <PackageCheck className="size-4" />
             </span>
             <div>
@@ -164,7 +164,7 @@ export const StockModal: React.FC<StockModalProps> = ({
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-[#800000] hover:bg-[#660000] text-white font-bold text-xs w-full sm:w-auto cursor-pointer"
+              className="gap-2 bg-primary hover:bg-blue-900 text-white font-bold text-xs w-full sm:w-auto cursor-pointer"
             >
               <Check className="size-4" />
               {editingStockItem ? "Simpan Perubahan" : "Simpan Stok Barang Lab"}

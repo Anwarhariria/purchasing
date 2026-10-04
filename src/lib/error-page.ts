@@ -73,11 +73,11 @@ export function renderErrorPage(): string {
         transition: all 0.2s;
       }
       .primary {
-        background: #800000;
+        background: #1e3a8a;
         color: #ffffff;
       }
       .primary:hover {
-        background: #660000;
+        background: #172554;
       }
       .secondary {
         background: #ffffff;

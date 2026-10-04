@@ -146,7 +146,7 @@ export function CurriculumMasterView({
             <Button
               size="sm"
               onClick={() => onOpenAddCourse(adminSelectedSem)}
-              className="h-8 gap-1.5 bg-[#800000] hover:bg-[#660000] text-white text-xs font-bold shadow-xs cursor-pointer"
+              className="h-8 gap-1.5 bg-primary hover:bg-blue-900 text-white text-xs font-bold shadow-xs cursor-pointer"
             >
               <Plus className="size-3.5" />
               + Tambah Mata Kuliah (Sem {adminSelectedSem})

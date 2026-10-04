@@ -655,7 +655,7 @@ export function ForecastingView({
                   price: estPrice,
                 });
               }}
-              className="w-full gap-2 bg-[#800000] hover:bg-[#660000] text-white font-bold text-xs shadow-md cursor-pointer"
+              className="w-full gap-2 bg-primary hover:bg-blue-900 text-white font-bold text-xs shadow-md cursor-pointer"
             >
               <Plus className="size-4" /> Buat Pengajuan Bahan
             </Button>

@@ -541,9 +541,7 @@ function Dashboard() {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const deadline = String(data.get("deadline") || "");
-    const urgency = (
-      data.get("urgency") === "Mendesak" ? "Mendesak" : "Normal"
-    ) as RequestItem["urgency"];
+    const urgency = "Normal" as RequestItem["urgency"];
     const academicImportance = (data.get("academicImportance") ||
       "Tinggi") as RequestItem["academicImportance"];
     const purpose = String(data.get("purpose") || "");
@@ -1321,7 +1319,7 @@ function Dashboard() {
                   <Button
                     size="sm"
                     onClick={() => setQuickReviewId(financeUrgentItem.id)}
-                    className="h-9 gap-1.5 bg-[#800000] hover:bg-[#660000] text-white font-bold px-4 text-xs shadow-xs"
+                    className="h-9 gap-1.5 bg-primary hover:bg-blue-900 text-white font-bold px-4 text-xs shadow-xs cursor-pointer"
                   >
                     <Check className="size-3.5" />{" "}
                     {financeUrgentItem.status === "Disetujui Kaprodi"

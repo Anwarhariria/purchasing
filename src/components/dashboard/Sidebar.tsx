@@ -142,25 +142,27 @@ export function Sidebar({
 
             {/* STAF / ASDOS */}
             {role === "Staf / Asdos" && (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenCreateRequest?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <Plus className="size-4 text-sky-300 shrink-0" />
+                  <Plus className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Ajukan Bahan Praktik</span>
                 </Button>
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenAddStock?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <PackageCheck className="size-4 text-sky-300 shrink-0" />
+                  <PackageCheck className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Stok Barang Lab</span>
                 </Button>
               </div>
@@ -168,25 +170,27 @@ export function Sidebar({
 
             {/* KOORDINATOR LAB */}
             {role === "Koordinator" && (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     handleOpenFifo();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <Scale className="size-4 text-sky-300 shrink-0" />
+                  <Scale className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Prioritas FIFO Belanja</span>
                 </Button>
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenVerify?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <ClipboardCheck className="size-4 text-sky-300 shrink-0" />
+                  <ClipboardCheck className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Verifikasi Berkas</span>
                 </Button>
               </div>
@@ -194,25 +198,27 @@ export function Sidebar({
 
             {/* KAPRODI */}
             {role === "Kaprodi" && (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenAddMenu?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <ChefHat className="size-4 text-sky-300 shrink-0" />
+                  <ChefHat className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Menu &amp; Resep</span>
                 </Button>
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     handleOpenFifo();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <Scale className="size-4 text-sky-300 shrink-0" />
+                  <Scale className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Prioritas FIFO Belanja</span>
                 </Button>
               </div>
@@ -220,25 +226,27 @@ export function Sidebar({
 
             {/* BAGIAN KEUANGAN */}
             {role === "Bagian Keuangan" && (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onQuickReviewFinance?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <Banknote className="size-4 text-sky-300 shrink-0" />
+                  <Banknote className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Pencairan Dana</span>
                 </Button>
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenVerify?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <Receipt className="size-4 text-sky-300 shrink-0" />
+                  <Receipt className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Verifikasi LPJ</span>
                 </Button>
               </div>
@@ -246,35 +254,38 @@ export function Sidebar({
 
             {/* SUPER ADMIN */}
             {role === "Super Admin" && (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenAddUser?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <UserPlus className="size-4 text-sky-300 shrink-0" />
+                  <UserPlus className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Pengguna Baru</span>
                 </Button>
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenAddCourse?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <Plus className="size-4 text-sky-300 shrink-0" />
+                  <Plus className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Mata Kuliah</span>
                 </Button>
                 <Button
+                  variant="ghost"
                   onClick={() => {
                     onOpenAddProdi?.();
                     setMobileOpen(false);
                   }}
-                  className="h-10 w-full justify-start gap-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 rounded-lg shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  className="h-11 w-full justify-start gap-3 px-3.5 text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg"
                 >
-                  <Building2 className="size-4 text-sky-300 shrink-0" />
+                  <Building2 className="size-[18px] shrink-0 text-blue-200" />
                   <span className="truncate">Input Program Studi</span>
                 </Button>
               </div>

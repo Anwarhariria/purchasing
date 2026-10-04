@@ -169,7 +169,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                 onClick={() => setReportPeriodMonths(p.months)}
                 className={`h-8 text-xs font-bold ${
                   reportPeriodMonths === p.months
-                    ? "bg-[#800000] text-white hover:bg-[#660000]"
+                    ? "bg-primary text-white hover:bg-blue-900"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -344,7 +344,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
             <Button onClick={exportExcel} variant="outline" className="h-9 gap-1.5 text-xs font-bold">
               <Download className="size-3.5" /> Unduh Rekap Excel
             </Button>
-            <Button onClick={exportPdf} className="h-9 gap-1.5 bg-[#800000] hover:bg-[#660000] text-white text-xs font-bold">
+            <Button onClick={exportPdf} className="h-9 gap-1.5 bg-primary hover:bg-blue-900 text-white text-xs font-bold cursor-pointer">
               <FileText className="size-3.5" /> Unduh Laporan PDF
             </Button>
           </div>

@@ -151,7 +151,7 @@ export function InventoryStockView({
                 onClick={() => setStockFilterStatus(st)}
                 className={`h-8 text-xs font-bold cursor-pointer ${
                   stockFilterStatus === st
-                    ? "bg-[#800000] text-white hover:bg-[#660000]"
+                    ? "bg-primary text-white hover:bg-blue-900"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
