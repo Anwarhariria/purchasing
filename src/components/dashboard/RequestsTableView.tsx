@@ -136,7 +136,7 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
               <th className="px-5 py-3.5">Menu Praktik & Matakuliah</th>
               <th className="px-5 py-3.5">Tenggat Waktu</th>
               <th className="px-5 py-3.5">Estimasi Biaya</th>
-              <th className="px-5 py-3.5">Status Alur</th>
+              <th className="px-5 py-3.5 text-center">Status Alur</th>
               <th className="px-5 py-3.5 text-right">Aksi</th>
             </tr>
           </thead>
@@ -186,8 +186,10 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
                 </td>
 
                 {/* Status Badge */}
-                <td className="px-5 py-4 whitespace-nowrap">
-                  <StatusBadge status={r.status} />
+                <td className="px-5 py-4 whitespace-nowrap text-center align-middle">
+                  <div className="flex items-center justify-center">
+                    <StatusBadge status={r.status} />
+                  </div>
                 </td>
 
                 {/* Aksi Berdasarkan Peran */}

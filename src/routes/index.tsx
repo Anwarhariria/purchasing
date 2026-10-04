@@ -978,7 +978,7 @@ function Dashboard() {
             icon: ClipboardCheck,
             count: requests.filter((r) => r.status === "Diajukan").length,
           },
-          { label: "Prioritas Belanja (FIFO)", icon: Clock3 },
+          { label: "Antrean Belanja (FIFO)", icon: Clock3 },
           { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
           { label: "Laporan", icon: FileText },
         ];
@@ -991,7 +991,7 @@ function Dashboard() {
             count: requests.filter((r) => r.status === "Diverifikasi Koordinator").length,
           },
           { label: "Kelola Menu & Bahan", icon: ChefHat },
-          { label: "Prioritas Belanja (FIFO)", icon: Clock3 },
+          { label: "Antrean Belanja (FIFO)", icon: Clock3 },
           { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
           { label: "Laporan", icon: FileText },
         ];
@@ -1190,10 +1190,10 @@ function Dashboard() {
           }
         }}
         onOpenFifoPriority={() => {
-          setSection("Prioritas Belanja (FIFO)");
+          setSection("Antrean Belanja (FIFO)");
         }}
         onOpenSawPriority={() => {
-          setSection("Prioritas Belanja (FIFO)");
+          setSection("Antrean Belanja (FIFO)");
         }}
         onOpenVerify={() => {
           if (role === "Koordinator") {
@@ -1359,7 +1359,9 @@ function Dashboard() {
             />
           )}
 
-          {(section === "Prioritas Belanja" || section === "Prioritas Belanja (FIFO)") && (
+          {(section === "Antrean Belanja (FIFO)" ||
+            section === "Prioritas Belanja" ||
+            section === "Prioritas Belanja (FIFO)") && (
             <FifoPriorityView
               fifoRankings={fifoRankings}
               role={role}

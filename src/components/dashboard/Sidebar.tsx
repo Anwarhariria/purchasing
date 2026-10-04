@@ -336,7 +336,7 @@ export function Sidebar({
             {role === "Koordinator" && (
               <div className="space-y-1">
                 <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
-                  <SidebarTooltip label="Prioritas FIFO Belanja" enabled={isMini}>
+                  <SidebarTooltip label="Kelola Antrean" enabled={isMini}>
                     <Button
                       variant="ghost"
                       onClick={() => {
@@ -353,7 +353,7 @@ export function Sidebar({
                           isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
                         }`}
                       >
-                        Prioritas FIFO Belanja
+                        Kelola Antrean
                       </span>
                     </Button>
                   </SidebarTooltip>
@@ -411,7 +411,7 @@ export function Sidebar({
                   </SidebarTooltip>
                 </div>
                 <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
-                  <SidebarTooltip label="Prioritas FIFO Belanja" enabled={isMini}>
+                  <SidebarTooltip label="Kelola Antrean" enabled={isMini}>
                     <Button
                       variant="ghost"
                       onClick={() => {
@@ -428,7 +428,7 @@ export function Sidebar({
                           isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
                         }`}
                       >
-                        Prioritas FIFO Belanja
+                        Kelola Antrean
                       </span>
                     </Button>
                   </SidebarTooltip>

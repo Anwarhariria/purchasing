@@ -81,7 +81,7 @@ export function FifoPriorityView({
                 Metode FIFO (First-In, First-Out)
               </span>
               <h2 className="text-lg font-black text-foreground">
-                Peringkat Prioritas Belanja (FIFO)
+                Antrean Belanja (FIFO)
               </h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -158,18 +158,20 @@ export function FifoPriorityView({
                   <td className="px-4 py-3.5 text-xs font-bold text-foreground">
                     {money(item.price)}
                   </td>
-                  <td className="px-4 py-3.5 text-center">
-                    <span
-                      className={`inline-block rounded-md px-2.5 py-1 text-xs font-black border ${
-                        idx === 0
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : idx <= 2
-                            ? "bg-blue-50 text-blue-800 border-blue-200"
-                            : "bg-slate-100 text-slate-700 border-slate-200"
-                      }`}
-                    >
-                      {item.fifoPriorityLabel}
-                    </span>
+                  <td className="px-4 py-3.5 text-center whitespace-nowrap align-middle">
+                    <div className="flex items-center justify-center">
+                      <span
+                        className={`inline-flex items-center justify-center whitespace-nowrap font-medium text-xs px-2.5 py-1 rounded-full border shadow-2xs ${
+                          idx === 0
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
+                            : idx <= 2
+                              ? "bg-sky-50 text-sky-800 border-sky-200/60 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/40"
+                              : "bg-slate-100 text-slate-700 border-slate-200/70 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700/60"
+                        }`}
+                      >
+                        {item.fifoPriorityLabel}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3.5 text-right">
                     {role === "Bagian Keuangan" && item.status === "Disetujui Kaprodi" ? (
