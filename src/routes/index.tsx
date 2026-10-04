@@ -1016,7 +1016,6 @@ function Dashboard() {
           { label: "Master Permohonan", icon: ClipboardList },
           { label: "Master Prodi & Matakuliah", icon: Building2 },
           { label: "Pengguna & Peran", icon: Users, count: users.length },
-          { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
           { label: "Laporan Sistem", icon: FileText },
         ];
     }
@@ -1214,8 +1213,6 @@ function Dashboard() {
       >
         {/* TOP NAVBAR HEADER */}
         <DashboardHeader
-          sidebarCollapsed={sidebarCollapsed}
-          setSidebarCollapsed={setSidebarCollapsed}
           setMobileOpen={setMobileOpen}
           role={role}
           handleRoleChange={handleRoleChange}
@@ -1337,7 +1334,7 @@ function Dashboard() {
           )}
 
           {/* DYNAMIC VIEWS ACCORDING TO CURRENT TAB/SECTION */}
-          {section === "Peramalan Bahan (Forecasting)" && (
+          {section === "Peramalan Bahan (Forecasting)" && role !== "Super Admin" && (
             <ForecastingView
               labStock={labStock}
               onCreateRequestFromForecast={(detail) => {

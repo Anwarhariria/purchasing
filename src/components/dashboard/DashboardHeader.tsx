@@ -4,8 +4,6 @@ import { Menu, Bell, LogOut, LogIn, ArrowRight } from "lucide-react";
 import type { Role, UserAccount, NotificationItem } from "@/types/procurement";
 
 interface DashboardHeaderProps {
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (v: boolean) => void;
   setMobileOpen: (v: boolean) => void;
   role: Role;
   handleRoleChange: (r: Role) => void;
@@ -21,8 +19,6 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({
-  sidebarCollapsed,
-  setSidebarCollapsed,
   setMobileOpen,
   role,
   handleRoleChange,
@@ -39,24 +35,13 @@ export function DashboardHeader({
   return (
     <header className="sticky top-0 z-30 flex h-[64px] sm:h-[72px] items-center justify-between border-b border-border bg-card/95 backdrop-blur px-3 sm:px-5 xl:px-8 w-full max-w-full">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        {/* Mobile hamburger */}
+        {/* Mobile hamburger (hanya tampil di layar HP/tablet saat sidebar tersembunyi) */}
         <Button
           variant="ghost"
           size="icon"
           className="lg:hidden shrink-0 size-9 cursor-pointer"
           onClick={() => setMobileOpen(true)}
           aria-label="Buka navigasi"
-        >
-          <Menu className="size-5" />
-        </Button>
-        {/* Desktop: tombol toggle mini / full sidebar */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden lg:flex shrink-0 size-9 text-muted-foreground hover:text-foreground cursor-pointer"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          title={sidebarCollapsed ? "Buka Menu" : "Tutup Menu"}
-          aria-label={sidebarCollapsed ? "Buka Menu" : "Tutup Menu"}
         >
           <Menu className="size-5" />
         </Button>
