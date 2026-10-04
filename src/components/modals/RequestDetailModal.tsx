@@ -398,7 +398,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                         decisionNote || "Standar bahan belum sesuai alokasi praktikum"
                       )
                     }
-                    className="gap-1.5 font-bold text-xs w-full sm:w-auto"
+                    className="gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs w-full sm:w-auto shadow-xs cursor-pointer"
                   >
                     <X className="size-3.5" /> Tolak
                   </Button>
@@ -441,7 +441,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                         decisionNote || "Kurikulum belum sesuai jadwal akademik"
                       )
                     }
-                    className="gap-1.5 font-bold text-xs w-full sm:w-auto"
+                    className="gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs w-full sm:w-auto shadow-xs cursor-pointer"
                   >
                     <X className="size-3.5" /> Tolak
                   </Button>
