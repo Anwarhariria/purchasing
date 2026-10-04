@@ -93,9 +93,13 @@ export function Sidebar({
       {/* ====== SIDEBAR (FIXED) ====== */}
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-50 w-[265px] flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white overflow-hidden transition-transform duration-300 ease-in-out shadow-xl animate-sidebar-enter",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
-          sidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-[265px] flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white overflow-hidden shadow-2xl sidebar-transition animate-sidebar-enter",
+          mobileOpen
+            ? "translate-x-0 opacity-100 pointer-events-auto"
+            : "-translate-x-full opacity-0 pointer-events-none lg:pointer-events-auto",
+          sidebarCollapsed
+            ? "lg:-translate-x-full lg:opacity-0 lg:pointer-events-none"
+            : "lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto",
         ].join(" ")}
       >
         {/* Logo Brand */}
