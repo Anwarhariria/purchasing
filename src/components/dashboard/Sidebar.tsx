@@ -6,9 +6,6 @@ import {
   ChevronLeft,
   Menu,
   X,
-  Download,
-  FileText,
-  CircleHelp,
   Plus,
   PackageCheck,
   UserPlus,
@@ -95,9 +92,9 @@ export function Sidebar({
   section,
   setSection,
   sidebarNav,
-  exportExcel,
-  exportPdf,
-  notify,
+  exportExcel: _exportExcel,
+  exportPdf: _exportPdf,
+  notify: _notify,
   currentUser,
   onOpenCreateRequest,
   onOpenAddStock,
@@ -625,84 +622,6 @@ export function Sidebar({
               );
             })}
           </nav>
-
-          {!isMini ? (
-            <div
-              className={`mt-6 px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75 ${
-                firstLoad ? "animate-first-load" : ""
-              }`}
-              style={firstLoad ? { animationDelay: "420ms" } : undefined}
-            >
-              Utilitas
-            </div>
-          ) : (
-            <div className="h-px bg-white/10 my-3 mx-2" />
-          )}
-
-          <div className="space-y-1">
-            <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "460ms" } : undefined}>
-              <SidebarTooltip label="Rekap (Excel)" enabled={isMini}>
-                <Button
-                  variant="ghost"
-                  onClick={exportExcel}
-                  className={`h-10 ${
-                    isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                  } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
-                >
-                  <Download className="size-[17px] shrink-0 text-blue-200" />
-                  <span
-                    className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                      isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                    }`}
-                  >
-                    Rekap (Excel)
-                  </span>
-                </Button>
-              </SidebarTooltip>
-            </div>
-
-            <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "500ms" } : undefined}>
-              <SidebarTooltip label="Rekap (PDF)" enabled={isMini}>
-                <Button
-                  variant="ghost"
-                  onClick={exportPdf}
-                  className={`h-10 ${
-                    isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                  } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
-                >
-                  <FileText className="size-[17px] shrink-0 text-blue-200" />
-                  <span
-                    className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                      isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                    }`}
-                  >
-                    Rekap (PDF)
-                  </span>
-                </Button>
-              </SidebarTooltip>
-            </div>
-
-            <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "540ms" } : undefined}>
-              <SidebarTooltip label="Bantuan & Alur Siklus" enabled={isMini}>
-                <Button
-                  variant="ghost"
-                  onClick={() => notify("SPAKE Demo - Dokumentasi dan Alur Siklus 6 Tahap Pengadaan ASAINDO.")}
-                  className={`h-10 ${
-                    isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                  } text-[13px] font-medium text-blue-100/80 hover:bg-white/10 hover:text-white cursor-pointer rounded-lg`}
-                >
-                  <CircleHelp className="size-[17px] shrink-0 text-blue-200" />
-                  <span
-                    className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                      isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                    }`}
-                  >
-                    Bantuan &amp; Alur
-                  </span>
-                </Button>
-              </SidebarTooltip>
-            </div>
-          </div>
         </div>
 
         {/* User profile footer */}
