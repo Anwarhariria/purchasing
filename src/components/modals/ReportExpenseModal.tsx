@@ -48,7 +48,7 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
       <DialogContent className="max-h-[92vh] w-[95vw] sm:max-w-lg overflow-y-auto rounded-xl border-border p-0 shadow-2xl">
         <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
           <div className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
               <Receipt className="size-4" />
             </span>
             <div>
@@ -172,7 +172,7 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md w-full sm:w-auto"
+              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md w-full sm:w-auto cursor-pointer"
             >
               <Send className="size-4" /> Kirim Laporan ke Keuangan
             </Button>

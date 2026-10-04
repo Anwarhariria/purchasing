@@ -39,7 +39,7 @@ export function FifoPriorityView({
               <Layers className="size-5" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-muted-foreground">Total Antrean FIFO</p>
+              <p className="text-xs font-semibold text-muted-foreground">Total Antrean Belanja</p>
               <p className="text-xl font-black text-foreground">{fifoRankings.length} Permohonan</p>
             </div>
           </div>
@@ -72,16 +72,16 @@ export function FifoPriorityView({
         </div>
       </div>
 
-      {/* FIFO Main Table View */}
+      {/* Main Table View */}
       <div className="rounded-xl border border-border bg-card p-6 shadow-xs animate-slide-up-fade stagger-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border pb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-extrabold text-primary">
-                Metode FIFO (First-In, First-Out)
+                Urutan Prioritas Belanja
               </span>
               <h2 className="text-lg font-black text-foreground">
-                Antrean Belanja (FIFO)
+                Antrean Belanja
               </h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -93,7 +93,7 @@ export function FifoPriorityView({
             variant="outline"
             className="h-9 gap-2 text-xs font-bold self-start md:self-center cursor-pointer"
           >
-            <Download className="size-4" /> Unduh Antrean FIFO
+            <Download className="size-4" /> Unduh Antrean Belanja
           </Button>
         </div>
 
@@ -106,7 +106,7 @@ export function FifoPriorityView({
                 <th className="px-4 py-3">Unit Pemohon</th>
                 <th className="px-4 py-3">Tgl Diajukan &amp; Waktu Tunggu</th>
                 <th className="px-4 py-3">Estimasi Biaya</th>
-                <th className="px-4 py-3 text-center">Status Antrean FIFO</th>
+                <th className="px-4 py-3 text-center">Status Antrean</th>
                 <th className="px-4 py-3 text-right">Rekomendasi Aksi</th>
               </tr>
             </thead>

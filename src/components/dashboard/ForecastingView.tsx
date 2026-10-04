@@ -666,7 +666,7 @@ export function ForecastingView({
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 {/* 3D Glowing Pulsing Gradient Orb */}
-                <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-blue-700 via-indigo-600 to-sky-400 text-white shadow-md animate-orb-floating">
+                <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-blue-800 via-blue-600 to-sky-400 text-white shadow-md animate-orb-floating">
                   <Sparkles className="size-5 text-white animate-pulse" />
                 </div>
                 <div>

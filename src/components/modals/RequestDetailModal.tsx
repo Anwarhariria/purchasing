@@ -428,7 +428,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                         decisionNote || "Disetujui Kaprodi. Diajukan pencairan dana ke Keuangan."
                       );
                     }}
-                    className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs w-full sm:w-auto"
+                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs w-full sm:w-auto cursor-pointer"
                   >
                     <Check className="size-3.5" /> Setujui Kurikulum & Ajukan ke Keuangan
                   </Button>
@@ -539,7 +539,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                       setReportSpentAmount(activeRequest.disbursedAmount || activeRequest.price);
                       onClose();
                     }}
-                    className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"
+                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer"
                   >
                     <Receipt className="size-3.5" /> Input Laporan Bon & Selisih Uang
                   </Button>

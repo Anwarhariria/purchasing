@@ -1,5 +1,5 @@
 import React from "react";
-import { ChefHat, Sliders, Box, Plus, Trash2, CheckCircle2, Send } from "lucide-react";
+import { Utensils, Sliders, Box, Plus, Trash2, CheckCircle2, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
         <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
-              <ChefHat className="size-4" />
+              <Utensils className="size-4" />
             </span>
             <div>
               <DialogTitle className="text-lg font-black text-foreground">

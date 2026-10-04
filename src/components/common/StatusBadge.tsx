@@ -24,8 +24,8 @@ export function StatusBadge({ status }: { status: Status }) {
       );
     case "Dana Dicairkan":
       return (
-        <span className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium border shadow-2xs bg-violet-50 text-violet-800 border-violet-200/60 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800/40">
-          <Check className="size-3 text-violet-600 stroke-[2.5]" />
+        <span className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium border shadow-2xs bg-blue-50 text-blue-800 border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40">
+          <Check className="size-3 text-blue-600 stroke-[2.5]" />
           Dana Dicairkan
         </span>
       );
@@ -38,8 +38,8 @@ export function StatusBadge({ status }: { status: Status }) {
       );
     case "Laporan Belanja Diajukan":
       return (
-        <span className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium border shadow-2xs bg-indigo-50 text-indigo-800 border-indigo-200/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/40">
-          <Truck className="size-3 text-indigo-600" />
+        <span className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium border shadow-2xs bg-sky-50 text-sky-800 border-sky-200/60 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/40">
+          <Truck className="size-3 text-sky-600" />
           Laporan Belanja Diajukan
         </span>
       );

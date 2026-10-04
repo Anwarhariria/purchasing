@@ -1,5 +1,5 @@
 import React from "react";
-import { ChefHat, Package, Plus, Trash2, Check } from "lucide-react";
+import { Utensils, Package, Plus, Trash2, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -46,8 +46,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl rounded-xl border-border p-0 shadow-2xl">
         <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
           <div className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-purple-600 text-white shrink-0">
-              <ChefHat className="size-4" />
+            <span className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white shrink-0">
+              <Utensils className="size-4" />
             </span>
             <div>
               <DialogTitle className="text-base font-black text-foreground">
@@ -79,7 +79,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Package className="size-3.5 text-purple-600" />
+                  <Package className="size-3.5 text-blue-600" />
                   Daftar Kebutuhan Bahan Resep:
                 </h4>
                 <p className="text-[11px] text-muted-foreground">
@@ -96,7 +96,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                     { name: "", neededQty: 1, unit: "kg", pricePerUnit: 15000 },
                   ])
                 }
-                className="h-7 text-xs gap-1 font-bold text-purple-700 border-purple-200 hover:bg-purple-50 self-start sm:self-auto shrink-0"
+                className="h-7 text-xs gap-1 font-bold text-blue-700 border-blue-200 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-950/40 self-start sm:self-auto shrink-0 cursor-pointer"
               >
                 <Plus className="size-3" /> Tambah Baris Bahan
               </Button>
@@ -319,7 +319,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               <span className="font-semibold text-muted-foreground">
                 Total {menuFormIngredients.length} Macam Bahan:
               </span>
-              <span className="text-sm font-black text-purple-700 dark:text-purple-400">
+              <span className="text-sm font-black text-blue-700 dark:text-blue-400">
                 {money(
                   menuFormIngredients.reduce(
                     (sum, ing) => sum + ing.neededQty * ing.pricePerUnit,
@@ -335,13 +335,13 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto cursor-pointer"
             >
               Batal
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md w-full sm:w-auto"
+              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md w-full sm:w-auto cursor-pointer"
             >
               <Check className="size-4" />
               {editingMenuName ? "Simpan Perubahan Menu & Bahan" : "Simpan Menu & Resep Baru"}

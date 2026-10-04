@@ -164,7 +164,7 @@ export function LandingPage({ onGoToLogin, onQuickRoleLogin, initialUsers }: Lan
               <p className="text-[10px] sm:text-xs text-muted-foreground font-semibold mt-0.5 leading-snug">Hak Akses Terintegrasi</p>
             </div>
             <div className="min-w-0">
-              <p className="text-xl sm:text-2xl md:text-3xl font-black text-primary">FIFO Model</p>
+              <p className="text-xl sm:text-2xl md:text-3xl font-black text-primary">Antrean Belanja</p>
               <p className="text-[10px] sm:text-xs text-muted-foreground font-semibold mt-0.5 leading-snug">Prioritas Antrean Transparan</p>
             </div>
             <div className="min-w-0">
@@ -263,7 +263,7 @@ export function LandingPage({ onGoToLogin, onQuickRoleLogin, initialUsers }: Lan
               {/* Role 3: Kaprodi */}
               <div className="rounded-xl border border-border bg-surface p-5 hover:border-primary/50 transition-all hover:shadow-md flex flex-col justify-between">
                 <div>
-                  <div className="flex size-11 items-center justify-center rounded-lg bg-purple-500/10 text-purple-700 mb-4 font-black">
+                  <div className="flex size-11 items-center justify-center rounded-lg bg-blue-500/10 text-blue-700 mb-4 font-black">
                     <Award className="size-5" />
                   </div>
                   <h3 className="font-extrabold text-sm text-foreground">3. Kaprodi</h3>
@@ -275,7 +275,7 @@ export function LandingPage({ onGoToLogin, onQuickRoleLogin, initialUsers }: Lan
                   variant="ghost"
                   type="button"
                   onClick={() => kaprodiUser && onQuickRoleLogin(kaprodiUser, "Kaprodi")}
-                  className="mt-4 justify-between text-xs font-bold text-purple-700 hover:bg-purple-500/10 p-0 h-auto cursor-pointer"
+                  className="mt-4 justify-between text-xs font-bold text-blue-700 hover:bg-blue-500/10 p-0 h-auto cursor-pointer"
                 >
                   Buka Kaprodi →
                 </Button>

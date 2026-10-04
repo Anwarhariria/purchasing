@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, BookOpen, ChefHat, Edit, Trash2 } from "lucide-react";
+import { Plus, BookOpen, Utensils, Edit, Trash2 } from "lucide-react";
 import { money } from "@/lib/algorithms/saw";
 import type { StudyProgramData, MenuItemRecipe } from "@/types/procurement";
 
@@ -41,7 +41,7 @@ export function RecipeMenuView({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
           <div>
             <h2 className="text-lg font-black text-foreground flex items-center gap-2">
-              <ChefHat className="size-5 text-purple-600" />
+              <Utensils className="size-5 text-blue-600" />
               Manajemen Menu Hidangan &amp; Resep Bahan (Kaprodi)
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -143,7 +143,7 @@ export function RecipeMenuView({
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div>
                   <h3 className="text-base font-black text-foreground flex items-center gap-2">
-                    <span className="flex size-7 items-center justify-center rounded-md bg-purple-100 text-purple-700 text-xs font-bold">
+                    <span className="flex size-7 items-center justify-center rounded-md bg-blue-100 text-blue-700 text-xs font-bold">
                       MK
                     </span>
                     {activeCourseObj.courseName}
@@ -152,21 +152,14 @@ export function RecipeMenuView({
                     Semester {kaprodiSelectedSem} · {activeCourseObj.menus.length} Menu Hidangan Terdaftar
                   </p>
                 </div>
-                <Button
-                  onClick={() => onOpenAddMenu(activeCourseObj.courseName)}
-                  className="h-9 gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs cursor-pointer"
-                >
-                  <Plus className="size-4" />
-                  Tambah Menu &amp; Bahan Masakan
-                </Button>
               </div>
 
               {activeCourseObj.menus.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border p-8 text-center bg-surface/50">
-                  <ChefHat className="mx-auto size-8 text-purple-400 mb-2" />
+                  <Utensils className="mx-auto size-8 text-blue-400 mb-2" />
                   <p className="text-xs font-bold text-foreground">Belum ada menu hidangan untuk mata kuliah ini.</p>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Klik "+ Tambah Menu &amp; Bahan Masakan" untuk merumuskan hidangan dan daftar kebutuhan belanja.
+                    Silakan gunakan menu mata kuliah lain atau hubungi admin untuk sinkronisasi kurikulum.
                   </p>
                 </div>
               ) : (
@@ -180,7 +173,7 @@ export function RecipeMenuView({
                     return (
                       <div
                         key={menu.menuName + mIdx}
-                        className="rounded-xl border border-border bg-card p-4 transition-all hover:border-purple-300 shadow-xs"
+                        className="rounded-xl border border-border bg-card p-4 transition-all hover:border-blue-300 shadow-xs"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-3">
                           <div>
@@ -195,7 +188,7 @@ export function RecipeMenuView({
                               variant="outline"
                               size="sm"
                               onClick={() => onOpenEditMenu(activeCourseObj.courseName, menu)}
-                              className="h-8 gap-1 text-xs font-semibold text-purple-700 border-purple-200 hover:bg-purple-50 cursor-pointer"
+                              className="h-8 gap-1 text-xs font-semibold text-blue-700 border-blue-200 hover:bg-blue-50 cursor-pointer"
                             >
                               <Edit className="size-3.5" />
                               Edit Menu &amp; Bahan

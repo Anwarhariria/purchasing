@@ -211,7 +211,7 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
                       <Button
                         size="sm"
                         onClick={() => setSelectedId(r.id)}
-                        className="h-8 gap-1 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold shadow-xs"
+                        className="h-8 gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-xs cursor-pointer"
                       >
                         <Award className="size-3" /> Review & ACC
                       </Button>
@@ -267,7 +267,7 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
                             setReportingRequestId(r.id);
                             setReportSpentAmount(r.disbursedAmount || r.price);
                           }}
-                          className="h-8 gap-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-xs"
+                          className="h-8 gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-xs cursor-pointer"
                           title="Input total belanja sesuai nota dan laporkan selisih dana"
                         >
                           <Receipt className="size-3" /> Lapor Bon & Selisih

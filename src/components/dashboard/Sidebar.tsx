@@ -13,7 +13,7 @@ import {
   PackageCheck,
   UserPlus,
   Building2,
-  ChefHat,
+  Utensils,
   Scale,
   ClipboardCheck,
   Banknote,
@@ -399,7 +399,7 @@ export function Sidebar({
                         isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
                       } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
                     >
-                      <ChefHat className="size-[18px] shrink-0 text-blue-200" />
+                      <Utensils className="size-[18px] shrink-0 text-blue-200" />
                       <span
                         className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
                           isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"

@@ -10,7 +10,7 @@ import {
   ClipboardCheck,
   Sliders,
   ShieldCheck,
-  ChefHat,
+  Utensils,
   Award,
   Wallet,
   Building2,
@@ -978,7 +978,7 @@ function Dashboard() {
             icon: ClipboardCheck,
             count: requests.filter((r) => r.status === "Diajukan").length,
           },
-          { label: "Antrean Belanja (FIFO)", icon: Clock3 },
+          { label: "Antrean Belanja", icon: Clock3 },
           { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
           { label: "Laporan", icon: FileText },
         ];
@@ -990,8 +990,8 @@ function Dashboard() {
             icon: ShieldCheck,
             count: requests.filter((r) => r.status === "Diverifikasi Koordinator").length,
           },
-          { label: "Kelola Menu & Bahan", icon: ChefHat },
-          { label: "Antrean Belanja (FIFO)", icon: Clock3 },
+          { label: "Kelola Menu & Bahan", icon: Utensils },
+          { label: "Antrean Belanja", icon: Clock3 },
           { label: "Peramalan Bahan (Forecasting)", icon: TrendingUp },
           { label: "Laporan", icon: FileText },
         ];
@@ -1189,10 +1189,10 @@ function Dashboard() {
           }
         }}
         onOpenFifoPriority={() => {
-          setSection("Antrean Belanja (FIFO)");
+          setSection("Antrean Belanja");
         }}
         onOpenSawPriority={() => {
-          setSection("Antrean Belanja (FIFO)");
+          setSection("Antrean Belanja");
         }}
         onOpenVerify={() => {
           if (role === "Koordinator") {
@@ -1356,7 +1356,8 @@ function Dashboard() {
             />
           )}
 
-          {(section === "Antrean Belanja (FIFO)" ||
+          {(section === "Antrean Belanja" ||
+            section === "Antrean Belanja (FIFO)" ||
             section === "Prioritas Belanja" ||
             section === "Prioritas Belanja (FIFO)") && (
             <FifoPriorityView
