@@ -125,7 +125,7 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
       <div className="overflow-x-auto">
         <div className="sm:hidden px-4 py-1.5 bg-muted/40 border-b border-border text-[10px] text-muted-foreground flex items-center justify-between">
           <span>Tabel Pengadaan</span>
-          <span className="font-semibold flex items-center gap-1 text-primary">
+          <span className="font-semibold flex items-center gap-1 text-foreground">
             Geser ke samping <ArrowRight className="size-3" />
           </span>
         </div>
@@ -145,14 +145,14 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
               <tr key={r.id} className="transition-colors hover:bg-surface/70">
                 {/* Kode PR */}
                 <td className="whitespace-nowrap px-5 py-4">
-                  <span className="text-xs font-extrabold text-primary font-mono">{r.id}</span>
+                  <span className="text-xs font-extrabold text-foreground font-mono">{r.id}</span>
                   <p className="mt-0.5 text-[10px] text-muted-foreground">{r.date}</p>
                 </td>
 
                 {/* Nama Permohonan & Unit */}
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[#0f172a] border border-slate-200">
                       <Box className="size-4" />
                     </div>
                     <div className="min-w-0">

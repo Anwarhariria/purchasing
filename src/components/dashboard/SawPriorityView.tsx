@@ -81,7 +81,7 @@ export function SawPriorityView({
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-primary">{item.id}</span>
+                      <span className="text-xs font-extrabold text-foreground font-mono">{item.id}</span>
                       <StatusBadge status={item.status} />
                     </div>
                     <p className="mt-0.5 text-xs font-bold text-foreground">{item.item}</p>
@@ -100,7 +100,7 @@ export function SawPriorityView({
                     {money(item.price)}
                   </td>
                   <td className="px-4 py-3.5 text-center">
-                    <span className="inline-block rounded-md bg-primary/10 px-2.5 py-1 text-xs font-black text-primary font-mono">
+                    <span className="inline-block rounded-md bg-slate-100 px-2.5 py-1 text-xs font-black text-[#0f172a] font-mono border border-slate-200">
                       {item.sawScore.toFixed(3)}
                     </span>
                   </td>

@@ -52,8 +52,8 @@ export function StatusBadge({ status }: { status: Status }) {
       );
     case "Ditolak":
       return (
-        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-bold bg-red-100 text-red-800 border border-red-200">
-          <X className="size-3 text-red-700" />
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-bold bg-slate-100 text-slate-900 border border-slate-300">
+          <X className="size-3 text-slate-900 stroke-[2.5]" />
           Ditolak
         </span>
       );

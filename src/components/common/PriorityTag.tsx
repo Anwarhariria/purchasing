@@ -22,14 +22,14 @@ export function PriorityTag({
       <span
         className={`inline-flex w-fit items-center whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold ${
           isUrgent
-            ? "bg-rose-50 text-rose-700 border border-rose-200"
+            ? "bg-slate-100 text-slate-900 border border-slate-300 font-bold"
             : "bg-slate-100 text-slate-700 border border-slate-200"
         }`}
       >
         {itemNeedBy ? (d < 0 ? `Terlambat ${-d} hari` : d === 0 ? "Hari ini" : `${d} hari lagi`) : itemUrgency}
       </span>
       {itemUrgency === "Mendesak" && (
-        <span className="text-[9px] font-bold text-destructive uppercase tracking-wider">
+        <span className="text-[9px] font-extrabold text-slate-900 uppercase tracking-wider">
           Urgensi Tinggi
         </span>
       )}

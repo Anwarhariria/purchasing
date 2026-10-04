@@ -277,7 +277,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                         + {money(r.refundAmount)} (Kembalian di Asdos)
                       </span>
                     ) : r.deficitAmount && r.deficitAmount > 0 ? (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 border border-rose-200">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-[#0f172a] border border-slate-300">
                         - {money(r.deficitAmount)} ({r.reimbursementStatus === "Telah Diganti" ? "Telah Diganti" : "Uang Kurang"})
                       </span>
                     ) : r.actualSpent ? (
@@ -311,7 +311,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => exportSingleExcel(r)}
-                        className="h-7 px-2 text-xs text-primary font-bold hover:bg-primary/10"
+                        className="h-7 px-2 text-xs text-foreground font-bold hover:bg-slate-100"
                         title="Unduh Excel Laporan PR & Bon"
                       >
                         <Download className="size-3" />
@@ -321,7 +321,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => exportSinglePdf(r)}
-                          className="h-7 px-2 text-xs text-rose-600 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                          className="h-7 px-2 text-xs text-[#0f172a] font-bold hover:bg-slate-100"
                           title="Unduh PDF Formulir PR"
                         >
                           <FileText className="size-3" />

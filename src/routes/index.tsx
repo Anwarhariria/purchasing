@@ -1154,6 +1154,59 @@ function Dashboard() {
         exportPdf={() => exportPdf(requests)}
         notify={notify}
         currentUser={currentUser}
+        onOpenCreateRequest={() => setFormOpen(true)}
+        onOpenAddStock={() => {
+          setSection("Inventaris Stok Lab");
+          setEditingStockItem(null);
+          setStockModalOpen(true);
+        }}
+        onOpenAddUser={() => {
+          setSection("Pengguna & Peran");
+          setEditingUser(null);
+          setUserModalOpen(true);
+        }}
+        onOpenAddProdi={() => {
+          setSection("Master Prodi & Matakuliah");
+          setNewProdiName("");
+          setProdiModalOpen(true);
+        }}
+        onOpenAddCourse={() => {
+          setSection("Master Prodi & Matakuliah");
+          setEditingCourseName(null);
+          setCourseFormName("");
+          setCourseModalOpen(true);
+        }}
+        onOpenAddMenu={() => {
+          setSection("Kelola Menu & Bahan");
+          const defaultCourse =
+            kaprodiSelectedCourse ||
+            curriculum[0]?.semesters[0]?.courses[0]?.courseName ||
+            "Praktik Tata Boga";
+          handleOpenAddMenu(defaultCourse);
+        }}
+        onQuickReviewFinance={() => {
+          if (financeUrgentItem) {
+            setQuickReviewId(financeUrgentItem.id);
+          } else {
+            setSection("Perlu Tindakan Dana");
+          }
+        }}
+        onOpenSawPriority={() => {
+          if (role === "Koordinator") {
+            setSection("Prioritas SAW (Koor)");
+          } else if (role === "Kaprodi") {
+            setSection("Prioritas SAW (Kaprodi)");
+          }
+        }}
+        onOpenVerify={() => {
+          if (role === "Koordinator") {
+            setSection("Verifikasi Berkas");
+          } else if (role === "Kaprodi") {
+            setSection("Verifikasi Kaprodi");
+          } else if (role === "Bagian Keuangan") {
+            setSection("LPJ & Sisa Uang");
+          }
+        }}
       />
 
       {/* MAIN CONTENT AREA */}
@@ -1185,8 +1238,8 @@ function Dashboard() {
           {/* Page Header */}
           <div className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
             <div>
-              <div className="mb-1 flex items-center gap-2 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary">
-                <span className="h-0.5 w-3 sm:w-4 bg-primary" />
+              <div className="mb-1 flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#0f172a] dark:text-slate-100">
+                <span className="h-0.5 w-3 sm:w-4 bg-[#0f172a] dark:bg-slate-100" />
                 SPAKE WORKSPACE · {role.toUpperCase()}
               </div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-foreground">
@@ -1201,46 +1254,19 @@ function Dashboard() {
                   (section === "Ringkasan" ? "Dashboard Super Admin" : section)}
               </h1>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              {role === "Staf / Asdos" && (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSection("Inventaris Stok Lab");
-                      setEditingStockItem(null);
-                      setStockModalOpen(true);
-                    }}
-                    className="h-9 sm:h-10 w-full sm:w-auto gap-1.5 border-primary/40 bg-card hover:bg-primary/10 text-primary font-bold px-3.5 sm:px-4 text-xs shadow-xs cursor-pointer"
-                  >
-                    <PackageCheck className="size-4" />
-                    Input Stok Barang Lab
-                  </Button>
-                  <Button
-                    onClick={() => setFormOpen(true)}
-                    className="h-9 sm:h-10 w-full sm:w-auto gap-2 bg-[#1e3a8a] hover:bg-[#162e5b] text-white font-bold px-3.5 sm:px-4 text-xs shadow-md transition-transform active:scale-95 cursor-pointer"
-                  >
-                    <Plus className="size-4" />
-                    Ajukan Bahan Praktik
-                  </Button>
-                </>
-              )}
-            </div>
           </div>
 
           {/* Quick Action Banner for Bagian Keuangan */}
           {role === "Bagian Keuangan" && financeUrgentItem && (
-            <div className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs transition-colors hover:border-primary/40">
+            <div className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs transition-colors hover:border-blue-400">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-900 border border-blue-200">
                     <Clock3 className="size-5" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-primary">
+                      <span className="font-mono text-xs font-bold text-[#0f172a] dark:text-slate-100">
                         {financeUrgentItem.id}
                       </span>
                       <span className="text-[11px] text-muted-foreground">·</span>
@@ -1249,7 +1275,7 @@ function Dashboard() {
                           Menunggu Transfer Dana ke Asdos
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 border border-rose-200">
+                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-[#0f172a] border border-slate-300">
                           LPJ Belanja Diajukan Asdos
                         </span>
                       )}

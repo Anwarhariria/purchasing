@@ -51,13 +51,13 @@ export function UserManagementView({
           <tbody className="divide-y divide-border">
             {users.map((u) => (
               <tr key={u.id} className="transition-colors hover:bg-surface/60">
-                <td className="px-5 py-3.5 text-xs font-extrabold text-primary">{u.id}</td>
+                <td className="px-5 py-3.5 text-xs font-extrabold text-foreground font-mono">{u.id}</td>
                 <td className="px-5 py-3.5 text-xs">
                   <p className="font-bold text-foreground">{u.name}</p>
                   <p className="text-[11px] text-muted-foreground">{u.email}</p>
                 </td>
                 <td className="px-5 py-3.5 text-xs">
-                  <span className="inline-block rounded-md bg-primary/10 px-2.5 py-0.5 font-bold text-primary">
+                  <span className="inline-block rounded-md bg-slate-100 px-2.5 py-0.5 font-bold text-[#0f172a] border border-slate-200">
                     {u.role}
                   </span>
                 </td>

@@ -355,8 +355,8 @@ export function ForecastingView({
                 <span className="inline-block size-3 rounded-full bg-blue-600" />
                 Pemakaian Riil (Aktual)
               </span>
-              <span className="flex items-center gap-1.5 font-semibold text-rose-700 dark:text-rose-400">
-                <span className="inline-block w-4 h-0.5 border-t-2 border-dashed border-rose-600" />
+              <span className="flex items-center gap-1.5 font-semibold text-[#0f172a] dark:text-slate-100">
+                <span className="inline-block w-4 h-0.5 border-t-2 border-dashed border-[#0f172a] dark:border-slate-100" />
                 Estimasi Kebutuhan
               </span>
               <span className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
@@ -541,7 +541,7 @@ export function ForecastingView({
                       <td className="px-4 py-2.5 text-right font-bold text-blue-700 dark:text-blue-400 font-mono">
                         {row.actual} {selectedIng.unit}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-bold text-rose-700 dark:text-rose-400 font-mono">
+                      <td className="px-4 py-2.5 text-right font-bold text-[#0f172a] dark:text-slate-100 font-mono">
                         {row.forecast} {selectedIng.unit}
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono font-medium text-foreground">

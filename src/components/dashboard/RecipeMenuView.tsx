@@ -204,7 +204,7 @@ export function RecipeMenuView({
                               variant="outline"
                               size="sm"
                               onClick={() => onDeleteMenu(activeCourseObj.courseName, menu.menuName)}
-                              className="h-8 gap-1 text-xs font-semibold text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
+                              className="h-8 gap-1 text-xs font-semibold text-[#0f172a] border-slate-300 hover:bg-slate-100 hover:text-black cursor-pointer"
                             >
                               <Trash2 className="size-3.5" />
                               Hapus Menu

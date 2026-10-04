@@ -1,7 +1,22 @@
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mark } from "@/components/common/Mark";
-import { ChevronLeft, X, Download, FileText, CircleHelp } from "lucide-react";
+import {
+  ChevronLeft,
+  X,
+  Download,
+  FileText,
+  CircleHelp,
+  Plus,
+  PackageCheck,
+  UserPlus,
+  Building2,
+  ChefHat,
+  Scale,
+  ClipboardCheck,
+  Banknote,
+  Receipt,
+} from "lucide-react";
 import type { Role, UserAccount } from "@/types/procurement";
 
 interface NavItem {
@@ -23,6 +38,16 @@ interface SidebarProps {
   exportPdf: () => void;
   notify: (msg: string) => void;
   currentUser: UserAccount | null;
+  // Role Input Action Handlers
+  onOpenCreateRequest?: () => void;
+  onOpenAddStock?: () => void;
+  onOpenAddUser?: () => void;
+  onOpenAddProdi?: () => void;
+  onOpenAddCourse?: () => void;
+  onOpenAddMenu?: () => void;
+  onQuickReviewFinance?: () => void;
+  onOpenSawPriority?: () => void;
+  onOpenVerify?: () => void;
 }
 
 export function Sidebar({
@@ -38,6 +63,15 @@ export function Sidebar({
   exportPdf,
   notify,
   currentUser,
+  onOpenCreateRequest,
+  onOpenAddStock,
+  onOpenAddUser,
+  onOpenAddProdi,
+  onOpenAddCourse,
+  onOpenAddMenu,
+  onQuickReviewFinance,
+  onOpenSawPriority,
+  onOpenVerify,
 }: SidebarProps) {
   return (
     <>
@@ -91,8 +125,163 @@ export function Sidebar({
           </Button>
         </div>
 
-        {/* Nav Items */}
-        <div className="flex-1 overflow-y-auto px-3 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+        {/* Nav Items & Fitur Input */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+          {/* Fitur Input · Sesuai Dashboard Peran (Tanpa emot / sparkle) */}
+          <div className="mb-4 space-y-2">
+            <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/80">
+              Fitur Input · {role}
+            </div>
+
+            {/* STAF / ASDOS */}
+            {role === "Staf / Asdos" && (
+              <div className="space-y-1.5">
+                <Button
+                  onClick={() => {
+                    onOpenCreateRequest?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                >
+                  <Plus className="size-4 stroke-[3] text-blue-700 shrink-0" />
+                  <span className="truncate">Ajukan Bahan Praktik</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onOpenAddStock?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                >
+                  <PackageCheck className="size-4 text-sky-300 shrink-0" />
+                  <span className="truncate">Input Stok Barang Lab</span>
+                </Button>
+              </div>
+            )}
+
+            {/* KOORDINATOR LAB */}
+            {role === "Koordinator" && (
+              <div className="space-y-1.5">
+                <Button
+                  onClick={() => {
+                    onOpenSawPriority?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                >
+                  <Scale className="size-4 stroke-[2.5] text-blue-700 shrink-0" />
+                  <span className="truncate">Input Evaluasi SAW</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onOpenVerify?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                >
+                  <ClipboardCheck className="size-4 text-sky-300 shrink-0" />
+                  <span className="truncate">Input Verifikasi Berkas</span>
+                </Button>
+              </div>
+            )}
+
+            {/* KAPRODI */}
+            {role === "Kaprodi" && (
+              <div className="space-y-1.5">
+                <Button
+                  onClick={() => {
+                    onOpenAddMenu?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                >
+                  <ChefHat className="size-4 stroke-[2.5] text-purple-700 shrink-0" />
+                  <span className="truncate">Input Menu &amp; Resep</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onOpenSawPriority?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                >
+                  <Scale className="size-4 text-sky-300 shrink-0" />
+                  <span className="truncate">Input Rekomendasi SAW</span>
+                </Button>
+              </div>
+            )}
+
+            {/* BAGIAN KEUANGAN */}
+            {role === "Bagian Keuangan" && (
+              <div className="space-y-1.5">
+                <Button
+                  onClick={() => {
+                    onQuickReviewFinance?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                >
+                  <Banknote className="size-4 stroke-[2.5] text-emerald-600 shrink-0" />
+                  <span className="truncate">Input Pencairan Dana</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onOpenVerify?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                >
+                  <Receipt className="size-4 text-sky-300 shrink-0" />
+                  <span className="truncate">Input Verifikasi LPJ</span>
+                </Button>
+              </div>
+            )}
+
+            {/* SUPER ADMIN */}
+            {role === "Super Admin" && (
+              <div className="space-y-1.5">
+                <Button
+                  onClick={() => {
+                    onOpenAddUser?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-10 w-full justify-start gap-2.5 bg-white text-[#1e3a8a] hover:bg-blue-50 font-black text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer rounded-lg border border-white"
+                >
+                  <UserPlus className="size-4 stroke-[2.5] text-blue-700 shrink-0" />
+                  <span className="truncate">Input Pengguna Baru</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onOpenAddCourse?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                >
+                  <Plus className="size-4 text-sky-300 shrink-0" />
+                  <span className="truncate">Input Mata Kuliah</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onOpenAddProdi?.();
+                    setMobileOpen(false);
+                  }}
+                  className="h-9 w-full justify-start gap-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer rounded-lg shadow-xs"
+                >
+                  <Building2 className="size-4 text-sky-300 shrink-0" />
+                  <span className="truncate">Input Program Studi</span>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="h-px bg-white/10 my-3" />
+
           <div className="px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/75">
             Menu Utama · {role}
           </div>

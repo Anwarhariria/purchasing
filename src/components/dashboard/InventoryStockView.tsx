@@ -199,7 +199,7 @@ export function InventoryStockView({
                           Menipis
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 border border-rose-200">
+                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-[#0f172a] border border-slate-300">
                           Habis (0)
                         </span>
                       )}
@@ -217,7 +217,7 @@ export function InventoryStockView({
                         size="sm"
                         onClick={() => onQuickAdjustStock(item.name, -1, "Kurangi Stok")}
                         disabled={item.stock === 0}
-                        className="size-7 p-0 text-xs font-bold text-rose-600 border-rose-200 cursor-pointer"
+                        className="size-7 p-0 text-xs font-bold text-[#0f172a] border-slate-300 cursor-pointer"
                         title="Kurangi stok (Terpakai Praktik)"
                       >
                         -1
@@ -242,7 +242,7 @@ export function InventoryStockView({
                             originalName: item.name,
                           });
                         }}
-                        className="h-7 px-2 text-xs font-semibold text-primary cursor-pointer"
+                        className="h-7 px-2 text-xs font-semibold text-foreground cursor-pointer"
                       >
                         <Edit className="size-3 mr-1" /> Edit
                       </Button>
@@ -250,7 +250,7 @@ export function InventoryStockView({
                         variant="ghost"
                         size="sm"
                         onClick={() => onDeleteStock(item.name)}
-                        className="size-7 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
+                        className="size-7 p-0 text-[#0f172a] hover:text-black hover:bg-slate-100 cursor-pointer"
                       >
                         <Trash2 className="size-3.5" />
                       </Button>
@@ -308,8 +308,8 @@ export function InventoryStockView({
                             <Clock3 className="size-3" /> Menipis
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200">
-                            <X className="size-3" /> Habis (0)
+                          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-[#0f172a] border border-slate-300">
+                            <X className="size-3 text-[#0f172a]" /> Habis (0)
                           </span>
                         )}
                       </td>
@@ -320,7 +320,7 @@ export function InventoryStockView({
                             size="sm"
                             onClick={() => onQuickAdjustStock(item.name, -1, "Terpakai Praktik")}
                             disabled={item.stock === 0}
-                            className="h-6 px-1.5 text-[10px] font-bold text-rose-600 border-rose-200 hover:bg-rose-50 cursor-pointer"
+                            className="h-6 px-1.5 text-[10px] font-bold text-[#0f172a] border-slate-300 hover:bg-slate-100 cursor-pointer"
                             title="Kurangi stok 1 unit"
                           >
                             -1
@@ -358,7 +358,7 @@ export function InventoryStockView({
                                 originalName: item.name,
                               });
                             }}
-                            className="h-7 text-xs gap-1 font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+                            className="h-7 text-xs gap-1 font-semibold text-foreground hover:bg-slate-100 cursor-pointer"
                           >
                             <Edit className="size-3" /> Edit
                           </Button>
@@ -366,7 +366,7 @@ export function InventoryStockView({
                             variant="outline"
                             size="sm"
                             onClick={() => onDeleteStock(item.name)}
-                            className="h-7 text-xs gap-1 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 border-rose-200 cursor-pointer"
+                            className="h-7 text-xs gap-1 font-semibold text-[#0f172a] hover:bg-slate-100 hover:text-black border-slate-300 cursor-pointer"
                           >
                             <Trash2 className="size-3" /> Hapus
                           </Button>
