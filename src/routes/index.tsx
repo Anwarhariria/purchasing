@@ -98,22 +98,35 @@ export const Route = createFileRoute("/")({
 export type { Role, Status };
 
 function Dashboard() {
-  const [currentView, setCurrentView] = useState<"landing" | "login" | "dashboard">(() => {
-    if (typeof window !== "undefined") {
-      const hash = window.location.hash;
-      const search = window.location.search;
-      if (hash === "#login" || search.includes("view=login") || search.includes("login=true")) {
-        return "login";
-      }
-      if (hash === "#dashboard" || search.includes("view=dashboard")) {
-        return "dashboard";
-      }
-    }
-    return "landing";
-  });
+  const [currentView, setCurrentView] = useState<"landing" | "login" | "dashboard">("landing");
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [role, setRole] = useState<Role>("Staf / Asdos");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // 1. Sync saved user & role from localStorage safely on client
+    try {
+      const saved = localStorage.getItem("spake_user");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setCurrentUser(parsed);
+        if (parsed?.role) setRole(parsed.role);
+      } else {
+        const savedRole = localStorage.getItem("spake_role") as Role;
+        if (savedRole) setRole(savedRole);
+      }
+    } catch (e) {}
+
+    // 2. Sync initial view based on URL hash / search parameters
+    const initialHash = window.location.hash;
+    const initialSearch = window.location.search;
+    if (initialHash === "#login" || initialSearch.includes("view=login") || initialSearch.includes("login=true")) {
+      setCurrentView("login");
+    } else if (initialHash === "#dashboard" || initialSearch.includes("view=dashboard")) {
+      setCurrentView("dashboard");
+    }
+
     const handleHashChange = () => {
       const hash = window.location.hash;
       const search = window.location.search;
@@ -145,25 +158,6 @@ function Dashboard() {
       window.scrollTo({ top: 0, behavior: "instant" });
     }
   };
-
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("spake_user");
-        if (saved) return JSON.parse(saved);
-      } catch (e) {}
-    }
-    return null;
-  });
-  const [role, setRole] = useState<Role>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("spake_role") as Role;
-        if (saved) return saved;
-      } catch (e) {}
-    }
-    return "Staf / Asdos";
-  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {

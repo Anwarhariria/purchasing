@@ -63,6 +63,7 @@ Server API akan aktif di: **`http://127.0.0.1:8000`**
 ### 2. Pengadaan & Alur Siklus (`/api/requests`)
 - `GET /api/requests`: Mengambil seluruh daftar pengajuan bahan (mendukung filter `?status=...&prodi=...`).
 - `GET /api/requests/kpis`: Metrik ringkasan peran (total biaya, menunggu persetujuan, total pencairan, selisih belanja).
+- `GET /api/requests/fifo-ranking`: Perangkingan prioritas antrean berbasis **First-In, First-Out (FIFO)** (nomor antrean & durasi tunggu).
 - `GET /api/requests/saw-ranking`: Hasil perangkingan prioritas pengadaan dengan algoritma **Simple Additive Weighting (SAW)**.
 - `GET /api/requests/{id}`: Detail lengkap satu pengajuan beserta rincian bahan (line-item ingredients).
 - `POST /api/requests`: Membuat pengajuan bahan baru (otomatis membuat ID `PR-2026-XXX` dan notifikasi Koordinator).

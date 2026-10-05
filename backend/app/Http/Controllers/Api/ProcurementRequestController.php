@@ -523,6 +523,67 @@ class ProcurementRequestController extends Controller
         ]);
     }
 
+    protected function parseDate($str)
+    {
+        if (!$str) return null;
+        $enStr = str_ireplace(
+            ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+            ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            $str
+        );
+        try {
+            return Carbon::parse($enStr);
+        } catch (\Throwable $e) {
+            return Carbon::today();
+        }
+    }
+
+    public function fifoRanking()
+    {
+        $items = ProcurementRequest::with('details')->get();
+
+        if ($items->isEmpty()) {
+            return response()->json(['status' => 'success', 'data' => []]);
+        }
+
+        $now = Carbon::today();
+
+        // Sort by date ASC, then id ASC
+        $sorted = $items->sort(function ($a, $b) {
+            $parsedA = $this->parseDate($a->date);
+            $parsedB = $this->parseDate($b->date);
+            $timeA = $parsedA ? $parsedA->timestamp : 0;
+            $timeB = $parsedB ? $parsedB->timestamp : 0;
+            if ($timeA !== $timeB) {
+                return $timeA <=> $timeB;
+            }
+            return strcmp($a->id, $b->id);
+        })->values();
+
+        $ranked = $sorted->map(function ($it, $index) use ($now) {
+            $submitTime = $this->parseDate($it->date) ?? $now;
+            $waitingDays = max(0, $submitTime->diffInDays($now, false));
+            $fifoQueueNumber = $index + 1;
+            $fifoPriorityLabel = $fifoQueueNumber === 1
+                ? 'Antrean Utama #1 (Pertama Masuk)'
+                : ($fifoQueueNumber <= 3
+                    ? "Antrean Prioritas #{$fifoQueueNumber}"
+                    : "Antrean #{$fifoQueueNumber}");
+
+            $formatted = $this->formatRequest($it);
+            $formatted['fifoQueueNumber'] = $fifoQueueNumber;
+            $formatted['waitingDays'] = (int)$waitingDays;
+            $formatted['fifoPriorityLabel'] = $fifoPriorityLabel;
+
+            return $formatted;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $ranked,
+        ]);
+    }
+
     public function kpis()
     {
         $requests = ProcurementRequest::all();

@@ -28,6 +28,7 @@ Route::post('/users', [AuthController::class, 'storeUser']);
 Route::prefix('requests')->group(function () {
     Route::get('/kpis', [ProcurementRequestController::class, 'kpis']);
     Route::get('/saw-ranking', [ProcurementRequestController::class, 'sawRanking']);
+    Route::get('/fifo-ranking', [ProcurementRequestController::class, 'fifoRanking']);
     Route::get('/', [ProcurementRequestController::class, 'index']);
     Route::post('/', [ProcurementRequestController::class, 'store']);
     Route::get('/{id}', [ProcurementRequestController::class, 'show']);

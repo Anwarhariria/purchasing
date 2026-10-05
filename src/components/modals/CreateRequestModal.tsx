@@ -145,9 +145,10 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
               m.ingredients?.forEach((ing) => {
                 const key = ing.name.toLowerCase().trim();
                 if (!map.has(key)) {
+                  const unitPrice = (ing as any).pricePerUnit ?? (ing as any).price ?? 0;
                   map.set(key, {
                     name: ing.name,
-                    extra: `${ing.unit} · ${money(ing.price)}`,
+                    extra: unitPrice > 0 ? `${ing.unit} · ${money(unitPrice)}` : ing.unit,
                   });
                 }
               });

@@ -1,6 +1,7 @@
 import type { RequestItem } from "@/types/procurement";
 
-export const money = (val: number) => "Rp " + val.toLocaleString("id-ID");
+export const money = (val?: number | null) =>
+  "Rp " + (Number(val) || 0).toLocaleString("id-ID");
 
 export function daysLeft(needBy: string) {
   const t = new Date();
