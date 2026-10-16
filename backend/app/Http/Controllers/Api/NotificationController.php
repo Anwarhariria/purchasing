@@ -12,6 +12,8 @@ class NotificationController extends Controller
     {
         return [
             'id' => $n->id,
+            'userId' => $n->user_id,
+            'user_id' => $n->user_id,
             'title' => $n->title,
             'desc' => $n->desc,
             'time' => $n->time,
@@ -26,15 +28,21 @@ class NotificationController extends Controller
 
     public function index(Request $request)
     {
-        $role = $request->query('role');
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthenticated.'], 401);
+        }
+
         $query = Notification::orderBy('created_at', 'desc');
 
-        if ($role && $role !== 'Super Admin') {
-            $query->where(function ($q) use ($role) {
-                $q->where('target_role', $role)
-                  ->orWhere('target_role', 'Semua');
-            });
-        }
+        // Notifikasi pribadi user + pengumuman umum untuk perannya/semua
+        $query->where(function ($q) use ($user) {
+            $q->where('user_id', $user->id)
+              ->orWhere(function ($sub) use ($user) {
+                  $sub->whereNull('user_id')
+                      ->whereIn('target_role', [$user->role, 'Semua']);
+              });
+        });
 
         $notifs = $query->get()->map(fn($n) => $this->formatNotif($n));
 

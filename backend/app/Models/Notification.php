@@ -15,6 +15,7 @@ class Notification extends Model
 
     protected $fillable = [
         'id',
+        'user_id',
         'title',
         'desc',
         'time',
@@ -28,5 +29,10 @@ class Notification extends Model
         return [
             'read' => 'boolean',
         ];
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

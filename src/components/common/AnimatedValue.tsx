@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 
 interface AnimatedValueProps {
-  value: string | number;
+  value: number | string;
   className?: string;
   showIndicator?: boolean;
   startDelay?: number;
@@ -18,20 +18,20 @@ interface ParsedNumberString {
   isCurrency: boolean;
 }
 
-export function parseFormattedString(raw: string | number): ParsedNumberString | null {
+export function parseNumberString(raw: string | number): ParsedNumberString | null {
   const str = String(raw).trim();
+  if (!str) return null;
+
   const isCurrency = str.startsWith("Rp") || str.includes("Rp");
 
-  // Regex to decompose string into prefix, number segment, and suffix:
-  // e.g. "8.5 kg" -> prefix="", num="8.5", suffix=" kg"
-  // e.g. "Sangat (94%)" -> prefix="Sangat (", num="94", suffix="%)"
-  // e.g. "88%" -> prefix="", num="88", suffix="%"
-  // e.g. "Rp 45.000.000" -> prefix="Rp ", num="45.000.000", suffix=""
+  // Regex to isolate optional prefix, the core number, and suffix
   // e.g. "14 Item" -> prefix="", num="14", suffix=" Item"
   const regex = /^(.*?)((?:-|\+)?\d+(?:[.,]\d+)*(?:\.\d+)?)(.*)$/;
   const match = str.match(regex);
 
-  if (!match) return null;
+  if (!match || match[1] === undefined || match[2] === undefined || match[3] === undefined) {
+    return null;
+  }
 
   const prefix = match[1];
   const numStr = match[2];
@@ -98,45 +98,36 @@ export function formatNumberString(current: number, parsed: ParsedNumberString):
     formattedNumber = String(Math.round(current));
   }
 
-  let p = parsed.prefix;
-  if (parsed.isCurrency) {
-    p = p.replace(/Rp\s?/g, "");
-  }
-
-  return `${p}${formattedNumber}${parsed.suffix}`.trim();
+  return `${formattedNumber}${parsed.suffix}`;
 }
 
-/**
- * AnimatedValue Component
- * Displays numbers, currency, kg, and percentages with a smooth count-up animation that
- * starts right after the parent card/container finishes its entrance transition.
- */
 export function AnimatedValue({
   value,
   className = "",
-  showIndicator = true,
+  showIndicator = false,
   startDelay,
 }: AnimatedValueProps) {
-  const str = String(value).trim();
-  const parsed = parseFormattedString(str);
+  const str = String(value);
+  const parsed = useMemo(() => parseNumberString(value), [value]);
 
-  // Initial state: starts from 0 formatted so user visually sees count-up as cards land
   const [displayNumber, setDisplayNumber] = useState<string>(() => {
     if (!parsed) return str;
-    if (parsed.isCurrency) return "0";
-    return formatNumberString(0, parsed);
+    if (parsed.isCurrency) {
+      return str.replace(/Rp\s?/g, "").trim();
+    }
+    return str;
   });
 
-  const [isChanging, setIsChanging] = useState<boolean>(false);
   const [direction, setDirection] = useState<"up" | "down" | "neutral">("neutral");
+  const [isChanging, setIsChanging] = useState<boolean>(false);
 
+  const prevTargetRef = useRef<number>(parsed?.targetNum ?? 0);
   const hasMountedAnimationRef = useRef<boolean>(false);
-  const prevTargetRef = useRef<number>(0);
 
   useEffect(() => {
     if (!parsed) {
       setDisplayNumber(str);
-      return;
+      return undefined;
     }
 
     const isFirstRun = !hasMountedAnimationRef.current;
@@ -152,10 +143,9 @@ export function AnimatedValue({
     // Wait for the card/container entrance to finish first!
     const delay = isFirstRun ? (startDelay ?? 420) : 0;
 
-    let timeoutId: ReturnType<typeof setTimeout>;
     let animationFrameId: number;
 
-    timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       hasMountedAnimationRef.current = true;
       prevTargetRef.current = nextTarget;
       setIsChanging(true);
@@ -180,11 +170,10 @@ export function AnimatedValue({
           } else {
             setDisplayNumber(str);
           }
-          const t = setTimeout(() => {
+          setTimeout(() => {
             setIsChanging(false);
             setDirection("neutral");
           }, 350);
-          return () => clearTimeout(t);
         }
       };
 
@@ -195,12 +184,14 @@ export function AnimatedValue({
       clearTimeout(timeoutId);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [value, startDelay]);
+  }, [value, startDelay, parsed, str]);
 
   const isCurrency = parsed?.isCurrency ?? (str.startsWith("Rp") || str.includes("Rp"));
 
   return (
-    <div className={`inline-flex items-baseline gap-1.5 whitespace-nowrap leading-none ${className}`}>
+    <div
+      className={`inline-flex items-baseline gap-1.5 whitespace-nowrap leading-none ${className}`}
+    >
       {/* Tulisan Rp sejajar di depan angka pada baseline yang sama */}
       {isCurrency && (
         <span className="text-base sm:text-lg font-extrabold text-blue-600 dark:text-blue-400 select-none tracking-tight">

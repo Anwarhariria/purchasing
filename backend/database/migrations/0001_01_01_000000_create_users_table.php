@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role')->default('Staf / Asdos');
+            $table->string('role')->default('Asdos Kitchen');
             $table->string('department')->default('Laboratorium Dapur & Restoran Perhotelan');
             $table->string('status')->default('Aktif');
             $table->rememberToken();

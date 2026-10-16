@@ -36,4 +36,11 @@ class LabStock extends Model
             'expiry_date' => 'date',
         ];
     }
+
+    protected $appends = ['stock'];
+
+    public function getStockAttribute(): float
+    {
+        return (float)$this->current_stock;
+    }
 }

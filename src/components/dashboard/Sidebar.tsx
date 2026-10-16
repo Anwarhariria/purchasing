@@ -2,33 +2,11 @@ import { useState, useEffect } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mark } from "@/components/common/Mark";
-import {
-  ChevronLeft,
-  Menu,
-  X,
-  Plus,
-  PackageCheck,
-  UserPlus,
-  Building2,
-  Utensils,
-  Scale,
-  ClipboardCheck,
-  Banknote,
-  Receipt,
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import type { Role, UserAccount } from "@/types/procurement";
-
-interface NavItem {
-  label: string;
-  icon: LucideIcon;
-  count?: number;
-}
+import { ChevronLeft, Menu, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { type Role, type UserAccount, isPemohon } from "@/types/procurement";
+import type { NavItem } from "@/config/navigation";
+import { SidebarRoleActions } from "./SidebarRoleActions";
 
 interface SidebarProps {
   sidebarCollapsed: boolean;
@@ -43,17 +21,17 @@ interface SidebarProps {
   exportPdf: () => void;
   notify: (msg: string) => void;
   currentUser: UserAccount | null;
+  activeWorkflow?: "A" | "B";
   // Role Input Action Handlers
-  onOpenCreateRequest?: () => void;
-  onOpenAddStock?: () => void;
-  onOpenAddUser?: () => void;
-  onOpenAddProdi?: () => void;
-  onOpenAddCourse?: () => void;
-  onOpenAddMenu?: () => void;
-  onQuickReviewFinance?: () => void;
-  onOpenFifoPriority?: () => void;
-  onOpenSawPriority?: () => void;
-  onOpenVerify?: () => void;
+  onOpenCreateRequest?: (() => void) | undefined;
+  onOpenAddStock?: (() => void) | undefined;
+  onOpenAddUser?: (() => void) | undefined;
+  onOpenAddProdi?: (() => void) | undefined;
+  onOpenAddCourse?: (() => void) | undefined;
+  onOpenAddMenu?: (() => void) | undefined;
+  onQuickReviewFinance?: (() => void) | undefined;
+  onOpenQueue?: (() => void) | undefined;
+  onOpenVerify?: (() => void) | undefined;
 }
 
 function SidebarTooltip({
@@ -63,7 +41,7 @@ function SidebarTooltip({
 }: {
   label: React.ReactNode;
   children: React.ReactNode;
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }) {
   if (!enabled) {
     return <>{children}</>;
@@ -96,6 +74,7 @@ export function Sidebar({
   exportPdf: _exportPdf,
   notify: _notify,
   currentUser,
+  activeWorkflow = "A",
   onOpenCreateRequest,
   onOpenAddStock,
   onOpenAddUser,
@@ -103,8 +82,7 @@ export function Sidebar({
   onOpenAddCourse,
   onOpenAddMenu,
   onQuickReviewFinance,
-  onOpenFifoPriority,
-  onOpenSawPriority,
+  onOpenQueue,
   onOpenVerify,
 }: SidebarProps) {
   // First load state: animasi entrance dijalankan SEKALI SAJA di awal
@@ -135,11 +113,6 @@ export function Sidebar({
 
   const isMini = isDesktop && sidebarCollapsed;
 
-  const handleOpenFifo = () => {
-    if (onOpenFifoPriority) onOpenFifoPriority();
-    else if (onOpenSawPriority) onOpenSawPriority();
-  };
-
   return (
     <TooltipProvider delayDuration={60} skipDelayDuration={40}>
       {/* Mobile backdrop */}
@@ -154,9 +127,7 @@ export function Sidebar({
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-blue-900/50 bg-[#1e3a8a] text-white shadow-2xl sidebar-collapsible ${
           mobileOpen ? "mobile-open" : ""
-        } ${
-          isMini ? "w-[72px]" : "w-[265px]"
-        }`}
+        } ${isMini ? "w-[72px]" : "w-[265px]"}`}
       >
         {/* Header: Logo Kampus ASAINDO & Tombol Toggle 'Tutup Menu' */}
         {!isMini ? (
@@ -182,9 +153,6 @@ export function Sidebar({
               <div className="min-w-0 transition-opacity duration-200 ease-in-out">
                 <div className="text-[19px] font-black tracking-tight text-white leading-tight">
                   SPAKE
-                </div>
-                <div className="text-[10px] font-bold tracking-wider uppercase text-blue-200 leading-tight">
-                  Pengadaan ASAINDO
                 </div>
               </div>
             </button>
@@ -271,294 +239,31 @@ export function Sidebar({
                 }`}
                 style={firstLoad ? { animationDelay: "80ms" } : undefined}
               >
-                Fitur Input · {role}
+                {activeWorkflow === "B" && isPemohon(role)
+                  ? "Pengajuan Barang"
+                  : `Fitur Input · ${role}`}
               </div>
             ) : (
               <div className="h-px bg-white/10 my-2 mx-2" />
             )}
 
-            {/* STAF / ASDOS */}
-            {role === "Staf / Asdos" && (
-              <div className="space-y-1">
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
-                  <SidebarTooltip label="Ajukan Bahan Praktik" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenCreateRequest?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Plus className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Ajukan Bahan Praktik
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
-                  <SidebarTooltip label="Input Stok Barang Lab" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenAddStock?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <PackageCheck className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Stok Barang Lab
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-              </div>
-            )}
-
-            {/* KOORDINATOR LAB */}
-            {role === "Koordinator" && (
-              <div className="space-y-1">
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
-                  <SidebarTooltip label="Kelola Antrean" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        handleOpenFifo();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Scale className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Kelola Antrean
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
-                  <SidebarTooltip label="Input Verifikasi Berkas" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenVerify?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <ClipboardCheck className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Verifikasi Berkas
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-              </div>
-            )}
-
-            {/* KAPRODI */}
-            {role === "Kaprodi" && (
-              <div className="space-y-1">
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
-                  <SidebarTooltip label="Input Menu & Resep" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenAddMenu?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Utensils className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Menu &amp; Resep
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
-                  <SidebarTooltip label="Kelola Antrean" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        handleOpenFifo();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Scale className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Kelola Antrean
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-              </div>
-            )}
-
-            {/* BAGIAN KEUANGAN */}
-            {role === "Bagian Keuangan" && (
-              <div className="space-y-1">
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
-                  <SidebarTooltip label="Input Pencairan Dana" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onQuickReviewFinance?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Banknote className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Pencairan Dana
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
-                  <SidebarTooltip label="Input Verifikasi LPJ" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenVerify?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Receipt className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Verifikasi LPJ
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-              </div>
-            )}
-
-            {/* SUPER ADMIN */}
-            {role === "Super Admin" && (
-              <div className="space-y-1">
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "120ms" } : undefined}>
-                  <SidebarTooltip label="Input Pengguna Baru" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenAddUser?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <UserPlus className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Pengguna Baru
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "160ms" } : undefined}>
-                  <SidebarTooltip label="Input Mata Kuliah" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenAddCourse?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Plus className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Mata Kuliah
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-                <div className={firstLoad ? "animate-first-load" : ""} style={firstLoad ? { animationDelay: "200ms" } : undefined}>
-                  <SidebarTooltip label="Input Program Studi" enabled={isMini}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onOpenAddProdi?.();
-                        setMobileOpen(false);
-                      }}
-                      className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto" : "w-full justify-start gap-3 px-3.5"
-                      } text-[13px] font-semibold text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer rounded-lg`}
-                    >
-                      <Building2 className="size-[18px] shrink-0 text-blue-200" />
-                      <span
-                        className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
-                        }`}
-                      >
-                        Input Program Studi
-                      </span>
-                    </Button>
-                  </SidebarTooltip>
-                </div>
-              </div>
-            )}
+            <SidebarRoleActions
+              role={role}
+              workflow={activeWorkflow}
+              isMini={isMini}
+              firstLoad={firstLoad}
+              setMobileOpen={setMobileOpen}
+              SidebarTooltip={SidebarTooltip}
+              onOpenCreateRequest={onOpenCreateRequest}
+              onOpenAddStock={onOpenAddStock}
+              onOpenAddUser={onOpenAddUser}
+              onOpenAddProdi={onOpenAddProdi}
+              onOpenAddCourse={onOpenAddCourse}
+              onOpenAddMenu={onOpenAddMenu}
+              onQuickReviewFinance={onQuickReviewFinance}
+              onOpenQueue={onOpenQueue}
+              onOpenVerify={onOpenVerify}
+            />
           </div>
 
           <div className={`h-px bg-white/10 ${isMini ? "my-2 mx-2" : "my-3"}`} />
@@ -592,30 +297,36 @@ export function Sidebar({
                         setMobileOpen(false);
                       }}
                       className={`h-11 ${
-                        isMini ? "w-11 px-0 justify-center mx-auto relative" : "w-full justify-start gap-3 px-3.5"
+                        isMini
+                          ? "w-11 px-0 justify-center mx-auto relative"
+                          : "w-full justify-start gap-3 px-3.5"
                       } text-[13px] font-semibold transition-colors cursor-pointer rounded-lg ${
                         isActive
                           ? "bg-white/20 text-white font-bold shadow-xs hover:bg-white/25 border border-white/20"
                           : "text-blue-100/80 hover:bg-white/10 hover:text-white"
                       }`}
                     >
-                      <Icon className={`size-[18px] shrink-0 ${isActive ? "text-sky-300" : "text-blue-200"}`} />
+                      <Icon
+                        className={`size-[18px] shrink-0 ${isActive ? "text-sky-300" : "text-blue-200"}`}
+                      />
                       <span
                         className={`transition-opacity duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
-                          isMini ? "opacity-0 w-0 max-w-0 pointer-events-none" : "opacity-100 flex-1 truncate text-left"
+                          isMini
+                            ? "opacity-0 w-0 max-w-0 pointer-events-none"
+                            : "opacity-100 flex-1 truncate text-left"
                         }`}
                       >
                         {label}
                       </span>
-                      {count !== undefined && count > 0 && (
-                        !isMini ? (
+                      {count !== undefined &&
+                        count > 0 &&
+                        (!isMini ? (
                           <span className="ml-auto rounded-full bg-white/20 text-white border border-white/25 px-2 py-0.5 text-[10px] font-extrabold shadow-xs transition-opacity duration-200">
                             {count}
                           </span>
                         ) : (
                           <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-sky-300 ring-2 ring-[#1e3a8a]" />
-                        )
-                      )}
+                        ))}
                     </Button>
                   </SidebarTooltip>
                 </div>
@@ -640,7 +351,8 @@ export function Sidebar({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-white">
-                      {currentUser?.name || (role === "Staf / Asdos" ? "Staf Lab Perhotelan & Kuliner" : `Staf ${role}`)}
+                      {currentUser?.name ||
+                        (isPemohon(role) ? "Staf Unit / Asdos" : `Staf ${role}`)}
                     </p>
                     <p className="truncate text-[10px] font-medium text-blue-200/80">
                       {currentUser?.email || role}
@@ -648,18 +360,18 @@ export function Sidebar({
                   </div>
                 </div>
               </div>
-              <p className="mt-2.5 text-center text-[10px] text-blue-200/60">© 2026 Universitas Asa Indonesia</p>
+              <p className="mt-2.5 text-center text-[10px] text-blue-200/60">
+                © 2026 Universitas Asa Indonesia
+              </p>
             </>
           ) : (
             <SidebarTooltip
               label={
                 <div className="text-left space-y-0.5 py-0.5">
                   <p className="font-bold text-white text-xs">
-                    {currentUser?.name || (role === "Staf / Asdos" ? "Staf Lab Perhotelan & Kuliner" : `Staf ${role}`)}
+                    {currentUser?.name || (isPemohon(role) ? "Staf Unit / Asdos" : `Staf ${role}`)}
                   </p>
-                  <p className="text-[10px] text-blue-200/80">
-                    {currentUser?.email || role}
-                  </p>
+                  <p className="text-[10px] text-blue-200/80">{currentUser?.email || role}</p>
                 </div>
               }
               enabled={isMini}

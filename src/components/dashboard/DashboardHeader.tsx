@@ -7,6 +7,8 @@ interface DashboardHeaderProps {
   setMobileOpen: (v: boolean) => void;
   role: Role;
   handleRoleChange: (r: Role) => void;
+  activeWorkflow?: "A" | "B";
+  setActiveWorkflow?: (w: "A" | "B") => void;
   notificationsOpen: boolean;
   setNotificationsOpen: (v: boolean) => void;
   unreadNotifCount: number;
@@ -15,27 +17,29 @@ interface DashboardHeaderProps {
   setSelectedId: (id: string) => void;
   currentUser: UserAccount | null;
   handleLogout: () => void;
-  setCurrentView: (view: "landing" | "login" | "dashboard") => void;
+  setCurrentView?: (view: "login" | "dashboard") => void;
 }
 
 export function DashboardHeader({
   setMobileOpen,
   role,
-  handleRoleChange,
+  handleRoleChange: _handleRoleChange,
+  activeWorkflow = "A",
+  setActiveWorkflow,
   notificationsOpen,
   setNotificationsOpen,
   unreadNotifCount,
   visibleNotifications,
   setNotifications,
   setSelectedId,
-  currentUser,
+  currentUser: _currentUser,
   handleLogout,
-  setCurrentView,
+  setCurrentView: _setCurrentView,
 }: DashboardHeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-[64px] sm:h-[72px] items-center justify-between border-b border-border bg-card/95 backdrop-blur px-3 sm:px-5 xl:px-8 w-full max-w-full">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        {/* Mobile hamburger (hanya tampil di layar HP/tablet saat sidebar tersembunyi) */}
+        {/* Mobile hamburger */}
         <Button
           variant="ghost"
           size="icon"
@@ -96,8 +100,8 @@ export function DashboardHeader({
                         prev.map((n) =>
                           n.targetRole === role || n.targetRole === "Semua"
                             ? { ...n, read: true }
-                            : n
-                        )
+                            : n,
+                        ),
                       );
                     }}
                   >
@@ -122,9 +126,7 @@ export function DashboardHeader({
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="font-bold text-foreground text-xs leading-snug">
-                          {n.title}
-                        </p>
+                        <p className="font-bold text-foreground text-xs leading-snug">{n.title}</p>
                         <span className="shrink-0 text-[10px] font-medium text-muted-foreground">
                           {n.time}
                         </span>

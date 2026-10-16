@@ -4,11 +4,14 @@ import type {
   NotificationItem,
   StudyProgramData,
   IngredientForecastItem,
+  ProcurementActivityLog,
+  ForecastModelInfo,
+  AlurBPredictionResponse,
 } from "@/types/procurement";
 
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+const API_BASE_URL = (import.meta.env["VITE_API_URL"] as string) || "http://localhost:8000/api";
 
-function getToken(): string | null {
+export function getToken(): string | null {
   if (typeof window === "undefined" || typeof localStorage === "undefined") return null;
   try {
     return localStorage.getItem("spake_token");
@@ -17,61 +20,98 @@ function getToken(): string | null {
   }
 }
 
+export function hasAuthToken(): boolean {
+  return !!getToken();
+}
+
 function setToken(token: string) {
   if (typeof window === "undefined" || typeof localStorage === "undefined") return;
   try {
     localStorage.setItem("spake_token", token);
-  } catch {}
+  } catch {
+    // intentional ignore storage write error
+  }
 }
 
 function removeToken() {
   if (typeof window === "undefined" || typeof localStorage === "undefined") return;
   try {
     localStorage.removeItem("spake_token");
-  } catch {}
+  } catch {
+    // intentional ignore storage write error
+  }
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const headers: Record<string, string> = {
     Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(options.headers as Record<string, string> | undefined),
   };
 
+  const token = getToken();
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || `Request failed with status ${response.status}`);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (_err: unknown) {
+    throw new Error("Tidak dapat terhubung ke server. Pastikan backend aktif.");
   }
 
-  return data;
+  let data: { message?: string; errors?: Record<string, string[]> } | undefined;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`Respon server tidak valid (Status: ${response.status})`);
+  }
+
+  if (response.status === 401) {
+    if (endpoint !== "/login" && endpoint !== "/auth/login") {
+      removeToken();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("spake_user");
+        localStorage.removeItem("spake_role");
+        window.dispatchEvent(new CustomEvent("spake:unauthorized"));
+        if (window.location.hash !== "#login") {
+          window.location.hash = "login";
+        }
+      }
+    }
+    throw new Error(data?.message || "Sesi login Anda telah berakhir. Silakan masuk kembali.");
+  }
+
+  if (response.status === 429) {
+    throw new Error(data?.message || "Terlalu banyak percobaan login. Coba lagi dalam 1 menit.");
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || `Permintaan gagal dengan status ${response.status}`);
+  }
+
+  return data as unknown as T;
 }
 
 export const SpakeApi = {
-  // Auth
-  async login(email: string, pass: string) {
-    const res = await request<{ status: string; token: string; user: UserAccount }>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password: pass }),
-    });
-    if (res.token) setToken(res.token);
-    return res;
+  // Auth Token helpers
+  getToken() {
+    return getToken();
+  },
+  hasToken(): boolean {
+    return hasAuthToken();
   },
 
-  async quickLogin(roleOrEmail: { role?: string; email?: string }) {
-    const res = await request<{ status: string; token: string; user: UserAccount }>("/auth/quick-login", {
+  // Auth
+  async login(email: string, pass: string) {
+    const res = await request<{ status: string; token: string; user: UserAccount }>("/login", {
       method: "POST",
-      body: JSON.stringify(roleOrEmail),
+      body: JSON.stringify({ email, password: pass }),
     });
     if (res.token) setToken(res.token);
     return res;
@@ -84,6 +124,8 @@ export const SpakeApi = {
   async logout() {
     try {
       await request("/auth/logout", { method: "POST" });
+    } catch {
+      // Biarkan logout lokal tetap berjalan walau backend tidak merespons
     } finally {
       removeToken();
     }
@@ -91,6 +133,26 @@ export const SpakeApi = {
 
   async getUsers() {
     return request<{ status: string; data: UserAccount[] }>("/users");
+  },
+
+  async getUnits() {
+    return request<{ status: string; data: { id: string; nama: string; kode?: string }[] }>(
+      "/units",
+    );
+  },
+
+  async createUser(data: Partial<UserAccount>) {
+    return request<{ status: string; message: string; data: UserAccount }>("/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateUser(id: string, data: Partial<UserAccount>) {
+    return request<{ status: string; message: string; data: UserAccount }>(`/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
   },
 
   // Requests
@@ -120,32 +182,47 @@ export const SpakeApi = {
     });
   },
 
-  async updateStatus(id: string, status: string, note?: string) {
-    return request<{ status: string; message: string; data: RequestItem }>(`/requests/${id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status, note }),
-    });
+  async updateStatus(id: string, status: string, note?: string, extra?: Record<string, unknown>) {
+    return request<{ status: string; message: string; data: RequestItem }>(
+      `/requests/${id}/status`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status, note, ...extra }),
+      },
+    );
   },
 
-  async disburseFunds(id: string, amount: number, note?: string) {
-    return request<{ status: string; message: string; data: RequestItem }>(`/requests/${id}/disburse`, {
-      method: "POST",
-      body: JSON.stringify({ amount, note }),
-    });
-  },
-
-  async submitSpj(id: string, actualSpent: number, receiptImages: string[] = [], note?: string) {
+  async submitSpj(
+    id: string,
+    payload:
+      | FormData
+      | { actualSpent: number; receiptImages?: string[] | undefined; note?: string | undefined },
+  ) {
+    const isFormData = typeof FormData !== "undefined" && payload instanceof FormData;
     return request<{ status: string; message: string; data: RequestItem }>(`/requests/${id}/spj`, {
       method: "POST",
-      body: JSON.stringify({ actualSpent, receiptImages, note }),
+      body: isFormData ? payload : JSON.stringify(payload),
     });
   },
 
-  async reimburseDeficit(id: string, note?: string) {
-    return request<{ status: string; message: string; data: RequestItem }>(`/requests/${id}/reimburse`, {
-      method: "POST",
-      body: JSON.stringify({ note }),
-    });
+  async catatPenyelesaianKasbon(
+    id: string,
+    payload?: { actualSpent?: number; bukti_path?: string } | FormData,
+  ) {
+    const isFormData = typeof FormData !== "undefined" && payload instanceof FormData;
+    return request<{ status: string; message: string; data: Record<string, unknown> }>(
+      `/kasbon/${id}/penyelesaian`,
+      {
+        method: "POST",
+        body: isFormData ? payload : JSON.stringify(payload || {}),
+      },
+    );
+  },
+
+  async getActivities(id: string) {
+    return request<{ status: string; data: ProcurementActivityLog[] }>(
+      `/requests/${id}/activities`,
+    );
   },
 
   async deleteRequest(id: string) {
@@ -155,24 +232,18 @@ export const SpakeApi = {
   },
 
   async getKpis() {
-    return request<{ status: string; data: any }>("/requests/kpis");
-  },
-
-  async getFifoRanking() {
-    return request<{ status: string; data: any[] }>("/requests/fifo-ranking");
-  },
-
-  async getSawRanking() {
-    return request<{ status: string; data: any[] }>("/requests/saw-ranking");
+    return request<{ status: string; data: Record<string, unknown> }>("/requests/kpis");
   },
 
   // Stocks
   async getStocks() {
-    return request<{ status: string; data: any[] }>("/stocks");
+    return request<{ status: string; data: Record<string, unknown>[] }>("/stocks");
   },
 
   async getStockMap() {
-    return request<{ status: string; data: Record<string, { stock: number; unit: string }> }>("/stocks/map");
+    return request<{ status: string; data: Record<string, { stock: number; unit: string }> }>(
+      "/stocks/map",
+    );
   },
 
   // Notifications
@@ -194,20 +265,89 @@ export const SpakeApi = {
     });
   },
 
-  // Forecasting
-  async getForecastingIngredients() {
-    return request<{ status: string; data: IngredientForecastItem[] }>("/forecasting/ingredients");
+  // Curriculums
+  async getCurriculums(format?: string) {
+    const qs = format ? `?format=${format}` : "";
+    return request<{ status: string; data: unknown }>(`/curriculums${qs}`);
   },
 
-  async calculateForecast(ingredientId: string, alpha = 0.3, beta = 0.2, horizon = 1) {
-    return request<{ status: string; data: any }>("/forecasting/calculate", {
+  // Keputusan Keuangan (Faktor f)
+  async keputusanKeuangan(
+    id: string,
+    data:
+      | FormData
+      | {
+          faktor_f: number;
+          catatan_keuangan: string;
+          nominal_transfer?: number | undefined;
+        },
+  ) {
+    const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+    return request<{ status: string; message: string; data: RequestItem }>(
+      `/requests/${id}/keputusan-keuangan`,
+      {
+        method: "POST",
+        body: isFormData ? data : JSON.stringify(data),
+      },
+    );
+  },
+
+  // Katalog Barang (Alur B)
+  async getKatalogBarang(aktifOnly = true) {
+    const qs = aktifOnly ? "?aktif=1" : "";
+    return request<{ status: string; data: Record<string, unknown>[] }>(`/katalog-barang${qs}`);
+  },
+
+  async createKatalogBarang(data: {
+    nama: string;
+    satuan: string;
+    harga_acuan: number;
+    aktif?: boolean;
+  }) {
+    return request<{ status: string; message: string; data: Record<string, unknown> }>(
+      "/katalog-barang",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  },
+
+  async updateKatalogBarang(
+    id: number | string,
+    data: Partial<{ nama: string; satuan: string; harga_acuan: number; aktif: boolean }>,
+  ) {
+    return request<{ status: string; message: string; data: Record<string, unknown> }>(
+      `/katalog-barang/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
+    );
+  },
+
+  // AI Forecasting (Alur B Random Forest & Baselines)
+  async getForecastModelInfo() {
+    return request<{ status: string; data: ForecastModelInfo }>("/forecasting/model-info");
+  },
+
+  async predictAlurB(targetPeriod?: string, unitId?: string, force = false) {
+    return request<AlurBPredictionResponse>("/forecasting/predict-alur-b", {
       method: "POST",
       body: JSON.stringify({
-        ingredient_id: ingredientId,
-        alpha,
-        beta,
-        horizon,
+        target_period: targetPeriod,
+        unit_id: unitId,
+        force,
       }),
     });
+  },
+
+  async trainAlurB() {
+    return request<{ status: string; message: string; data: Record<string, unknown> }>(
+      "/forecasting/train-alur-b",
+      {
+        method: "POST",
+      },
+    );
   },
 };

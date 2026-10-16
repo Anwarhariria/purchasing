@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'forecast' => [
+        'url' => env('FORECAST_SERVICE_URL', 'http://127.0.0.1:8001'),
+        'token' => env('FORECAST_INTERNAL_TOKEN', 'spake-forecast-internal-secret-key-2026'),
+    ],
+
 ];

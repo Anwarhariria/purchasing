@@ -40,8 +40,21 @@ class LabStockController extends Controller
         ]);
     }
 
+    protected function authorizeKitchenStockManager(Request $request): bool
+    {
+        $user = $request->user();
+        if (!$user) return false;
+        return $user->isSuperAdmin() || $user->isAsdosKitchen() || $user->isKoordinatorLab();
+    }
+
     public function store(Request $request)
     {
+        if (!$this->authorizeKitchenStockManager($request)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya Asdos Kitchen dan Koordinator Lab yang berhak mengelola stok bahan lab.',
+            ], 403);
+        }
         $request->validate([
             'name' => 'required|string|unique:lab_stocks,name',
             'unit' => 'required|string',
@@ -72,6 +85,13 @@ class LabStockController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$this->authorizeKitchenStockManager($request)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya Asdos Kitchen dan Koordinator Lab yang berhak mengelola stok bahan lab.',
+            ], 403);
+        }
+
         $stock = LabStock::find($id);
 
         if (!$stock) {
@@ -103,8 +123,15 @@ class LabStockController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if (!$this->authorizeKitchenStockManager($request)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya Asdos Kitchen dan Koordinator Lab yang berhak mengelola stok bahan lab.',
+            ], 403);
+        }
+
         $stock = LabStock::find($id);
 
         if (!$stock) {
