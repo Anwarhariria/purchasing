@@ -62,3 +62,4 @@ forecast-service/.env
 scratch/
 .tanstack/
 .pytest_cache/
+docs/REFACTOR_PLAN.md
