@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Clock3,
   Box,
-  Info,
   Search,
   Edit,
   Trash2,
@@ -34,7 +33,9 @@ export function InventoryStockView({
   onDeleteStock,
 }: InventoryStockViewProps) {
   const [stockSearchQuery, setStockSearchQuery] = useState("");
-  const [stockFilterStatus, setStockFilterStatus] = useState<"Semua" | "Tersedia" | "Menipis" | "Habis">("Semua");
+  const [stockFilterStatus, setStockFilterStatus] = useState<
+    "Semua" | "Tersedia" | "Menipis" | "Habis"
+  >("Semua");
 
   const entries = Object.entries(labStock);
   const totalItems = entries.length;
@@ -75,9 +76,6 @@ export function InventoryStockView({
                 Kelola Stok Bahan Masak Laboratorium
               </h2>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Tugas Staf / Asdos: Input barang belanjaan yang telah tiba, perbarui sisa bahan pasca praktikum, edit takaran, atau hapus item.
-            </p>
           </div>
         </div>
 
@@ -86,7 +84,6 @@ export function InventoryStockView({
           <MetricCard
             label="Total Bahan di Lab"
             value={`${totalItems} Item`}
-            foot="Bahan masakan terdaftar di inventaris"
             icon={Package}
             kind="primary"
             className="animate-slide-up-fade stagger-1"
@@ -94,43 +91,24 @@ export function InventoryStockView({
           <MetricCard
             label="Stok Aman / Tersedia"
             value={`${safeCount} Item`}
-            foot="Ketersediaan memadai (> 1 unit)"
             icon={CheckCircle2}
-            trend="Tersedia"
             kind="success"
             className="animate-slide-up-fade stagger-2"
           />
           <MetricCard
             label="Stok Menipis"
             value={`${lowCount} Item`}
-            foot="Perlu dipantau (≤ 1 unit)"
             icon={Clock3}
-            trend="Hampir Habis"
             kind="warning"
             className="animate-slide-up-fade stagger-3"
           />
           <MetricCard
             label="Stok Habis (0)"
             value={`${outCount} Item`}
-            foot="Otomatis masuk daftar belanja saat diajukan"
             icon={Box}
-            trend="Perlu Belanja"
             kind="danger"
             className="animate-slide-up-fade stagger-4"
           />
-        </div>
-
-        {/* Operational Note Banner for Asdos */}
-        <div className="animate-slide-up-fade stagger-3 mt-4 rounded-lg border border-blue-200 bg-blue-50/70 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
-          <p className="font-bold flex items-center gap-1.5">
-            <Info className="size-4 shrink-0 text-blue-700 dark:text-blue-400" />
-            Panduan Pengelolaan Stok Asdos Laboratorium:
-          </p>
-          <ul className="mt-1 list-disc list-inside space-y-0.5 text-[11px] leading-relaxed text-blue-800 dark:text-blue-300">
-            <li><strong>Belanja Tiba:</strong> Ketika bahan yang dibeli sudah sampai di dapur lab, gunakan tombol <strong>(+)</strong> atau <strong>Edit</strong> untuk menambahkan stok riil.</li>
-            <li><strong>Sisa Pasca Praktikum:</strong> Setelah sesi kelas memasak selesai, catat sisa bahan yang belum terpakai agar tercatat sebagai stok tersedia untuk praktikum berikutnya.</li>
-            <li><strong>Sinkronisasi Otomatis:</strong> Setiap kali Asdos membuat pengajuan baru, sistem akan otomatis menghitung selisih <em>(Kebutuhan Resep − Stok Lab)</em>.</li>
-          </ul>
         </div>
 
         {/* Search and Status Filter Bar */}
@@ -169,7 +147,9 @@ export function InventoryStockView({
         {items.length === 0 ? (
           <div className="py-12 text-center">
             <Package className="mx-auto size-9 text-muted-foreground/40 mb-2" />
-            <p className="text-sm font-semibold text-muted-foreground">Tidak ada bahan yang sesuai filter.</p>
+            <p className="text-sm font-semibold text-muted-foreground">
+              Tidak ada bahan yang sesuai filter.
+            </p>
             <Button
               variant="link"
               size="sm"
@@ -194,7 +174,9 @@ export function InventoryStockView({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold text-muted-foreground">#{idx + 1}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground">
+                        #{idx + 1}
+                      </span>
                       <p className="font-bold text-foreground text-xs">{item.name}</p>
                     </div>
                     <div>
@@ -217,7 +199,9 @@ export function InventoryStockView({
                   <div className="flex items-center justify-between border-t border-border/60 pt-2 text-xs">
                     <div>
                       <span className="text-[11px] text-muted-foreground">Stok Saat Ini: </span>
-                      <span className="font-black text-foreground text-sm">{item.stock} {item.unit}</span>
+                      <span className="font-black text-foreground text-sm">
+                        {item.stock} {item.unit}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
@@ -289,7 +273,9 @@ export function InventoryStockView({
                       className="animate-row-enter hover:bg-surface/60 transition-colors"
                       style={{ animationDelay: `${idx * 20}ms` }}
                     >
-                      <td className="px-4 py-3 text-center font-bold text-muted-foreground">{idx + 1}</td>
+                      <td className="px-4 py-3 text-center font-bold text-muted-foreground">
+                        {idx + 1}
+                      </td>
                       <td className="px-4 py-3 font-bold text-foreground">
                         <div className="flex items-center gap-2">
                           <span
@@ -307,9 +293,7 @@ export function InventoryStockView({
                       <td className="px-4 py-3 text-right font-black text-sm text-foreground">
                         {item.stock}
                       </td>
-                      <td className="px-4 py-3 font-medium text-muted-foreground">
-                        {item.unit}
-                      </td>
+                      <td className="px-4 py-3 font-medium text-muted-foreground">{item.unit}</td>
                       <td className="px-4 py-3 text-center">
                         {item.stock > 1 ? (
                           <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
@@ -340,7 +324,9 @@ export function InventoryStockView({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onQuickAdjustStock(item.name, 1, "Belanja Tiba / Sisa Praktik")}
+                            onClick={() =>
+                              onQuickAdjustStock(item.name, 1, "Belanja Tiba / Sisa Praktik")
+                            }
                             className="h-6 px-1.5 text-[10px] font-bold text-emerald-600 border-emerald-200 hover:bg-emerald-50 cursor-pointer"
                             title="Tambah stok 1 unit"
                           >
@@ -349,7 +335,9 @@ export function InventoryStockView({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onQuickAdjustStock(item.name, 5, "Belanja Tiba Partai Besar")}
+                            onClick={() =>
+                              onQuickAdjustStock(item.name, 5, "Belanja Tiba Partai Besar")
+                            }
                             className="h-6 px-1.5 text-[10px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer"
                             title="Tambah stok 5 unit"
                           >

@@ -23,16 +23,13 @@ export function UserManagementView({
             <Users className="size-5 text-primary" />
             Manajemen Pengguna &amp; Hak Akses SPAKE
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Kelola daftar staf pemohon, koordinator lab, kaprodi, bagian keuangan, dan super admin.
-          </p>
         </div>
         <Button
           onClick={onAddUser}
           className="h-9 gap-2 bg-primary text-primary-foreground font-bold text-xs shadow-sm hover:opacity-95 cursor-pointer"
         >
           <UserPlus className="size-4" />
-          + Tambah Pengguna Baru
+          Tambah Pengguna Baru
         </Button>
       </div>
 
@@ -55,7 +52,9 @@ export function UserManagementView({
                 className="animate-row-enter transition-colors hover:bg-surface/60"
                 style={{ animationDelay: `${idx * 25}ms` }}
               >
-                <td className="px-5 py-3.5 text-xs font-extrabold text-foreground font-mono">{u.id}</td>
+                <td className="px-5 py-3.5 text-xs font-extrabold text-foreground font-mono">
+                  {u.id}
+                </td>
                 <td className="px-5 py-3.5 text-xs">
                   <p className="font-bold text-foreground">{u.name}</p>
                   <p className="text-[11px] text-muted-foreground">{u.email}</p>
@@ -86,7 +85,9 @@ export function UserManagementView({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => notify(`Tautan reset kata sandi untuk ${u.email} telah disimulasikan.`)}
+                      onClick={() =>
+                        notify(`Tautan reset kata sandi untuk ${u.email} telah disimulasikan.`)
+                      }
                       className="h-8 gap-1.5 text-xs font-semibold cursor-pointer"
                     >
                       <KeyRound className="size-3.5 text-muted-foreground" />

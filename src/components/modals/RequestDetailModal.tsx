@@ -1,16 +1,5 @@
-import React from "react";
-import {
-  Check,
-  X,
-  Wallet,
-  CheckCircle2,
-  ShoppingBag,
-  Receipt,
-  Info,
-  Send,
-  Download,
-  FileText,
-} from "lucide-react";
+import React, { useState } from "react";
+import { Download, FileText, AlertTriangle, Receipt, Smartphone, Check, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +9,22 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { PriorityTag } from "@/components/common/PriorityTag";
-import { SIKLUS_TAHAPAN } from "@/types/procurement";
-import { money } from "@/lib/algorithms/saw";
+import { DeadlineTag } from "@/components/common/DeadlineTag";
+import {
+  SIKLUS_TAHAPAN,
+  SIKLUS_TAHAPAN_A,
+  SIKLUS_TAHAPAN_B,
+  isPemohon,
+  isKoordinator,
+} from "@/types/procurement";
+import { money, formatUnitLabel } from "@/lib/utils";
+import { exportBkkPdf, isBkkPrintable } from "@/lib/export/bkk-pdf-export";
 import type { Role, Status, RequestItem, RequestDetail, User } from "@/types/procurement";
+import { RequestItemsTable } from "./request-detail/RequestItemsTable";
+import { RequestLpjSection } from "./request-detail/RequestLpjSection";
+import { RequestWorkflowActions } from "./request-detail/RequestWorkflowActions";
+import { ProcurementTimeline } from "./request-detail/ProcurementTimeline";
+import { WhatsAppShareModal } from "./WhatsAppShareModal";
 
 interface RequestDetailModalProps {
   activeRequest: RequestItem | null;
@@ -37,7 +38,7 @@ interface RequestDetailModalProps {
     id: string,
     newStatus: Status,
     note?: string,
-    extraFields?: Partial<RequestItem>
+    extraFields?: Partial<RequestItem>,
   ) => void;
   decisionNote: string;
   setDecisionNote: (val: string) => void;
@@ -45,6 +46,8 @@ interface RequestDetailModalProps {
   setReportSpentAmount: (amt: number) => void;
   exportSingleExcel: (r: RequestItem) => void;
   exportSinglePdf?: (r: RequestItem) => void;
+  waActionData?: { action: "approve" | "reject"; id: string } | null;
+  setWaActionData?: (val: { action: "approve" | "reject"; id: string } | null) => void;
 }
 
 export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
@@ -62,565 +65,364 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
   setReportSpentAmount,
   exportSingleExcel,
   exportSinglePdf,
+  waActionData,
+  setWaActionData,
 }) => {
+  const [isHeaderWaOpen, setIsHeaderWaOpen] = useState(false);
+
   if (!activeRequest) return null;
 
-  const isKoorEditing = role === "Koordinator" && activeRequest.status === "Diajukan";
-  const isKaprodiEditing = role === "Kaprodi" && activeRequest.status === "Diverifikasi Koordinator";
+  const isKoorEditing = isKoordinator(role) && activeRequest.status === "DIAJUKAN";
+  const isKaprodiEditing = role === "Kaprodi" && activeRequest.status === "DIVERIFIKASI_KOORD";
   const canEditQtyOnly = isKoorEditing || isKaprodiEditing;
 
   return (
-    <Dialog open={Boolean(activeRequest)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[92vh] w-[95vw] sm:max-w-2xl overflow-y-auto rounded-xl border-border p-0 shadow-2xl">
-        <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="font-mono text-xs font-extrabold text-primary">
-                {activeRequest.id}
-              </span>
-              <StatusBadge status={activeRequest.status} />
-              <PriorityTag r={activeRequest} />
-            </div>
-            <span className="text-[11px] text-muted-foreground">{activeRequest.date}</span>
-          </div>
-          <DialogTitle className="mt-2 text-lg sm:text-xl font-black text-foreground">
-            {activeRequest.menu || activeRequest.item}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            {activeRequest.course
-              ? `${activeRequest.course} · Semester ${activeRequest.semester} (${activeRequest.prodi})`
-              : `Diajukan oleh ${activeRequest.applicant}`}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 px-4 sm:px-6 py-4 sm:py-5">
-          {/* Meta properties */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-lg bg-surface p-4 text-xs">
-            <div>
-              <span className="text-muted-foreground">Total Estimasi</span>
-              <p className="mt-0.5 font-extrabold text-foreground">{money(activeRequest.price)}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Dana Dicairkan</span>
-              <p className="mt-0.5 font-bold text-foreground">
-                {activeRequest.disbursedAmount ? money(activeRequest.disbursedAmount) : "-"}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Tenggat Waktu</span>
-              <p className="mt-0.5 font-bold text-foreground">
-                {activeRequest.deadline || activeRequest.needBy}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Pemohon</span>
-              <p className="mt-0.5 font-bold text-foreground">{activeRequest.applicant}</p>
-            </div>
-          </div>
-
-          {/* Details Table - EDIT QTY ONLY FOR KOORDINATOR / KAPRODI */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
-                  Rincian Bahan Masakan
-                </h4>
-                {canEditQtyOnly && (
-                  <p className="text-[11px] text-blue-700 dark:text-blue-400 font-semibold mt-0.5">
-                    Anda dapat mengedit kuantitas (Qty) saja sesuai standar porsi. Jenis barang tidak dapat ditambah/dikurang.
-                  </p>
-                )}
-              </div>
-              {canEditQtyOnly && (
-                <Button
-                  size="sm"
-                  onClick={() => handleSaveQtyChanges(activeRequest.id, editableDetails)}
-                  className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold"
-                >
-                  <Check className="size-3 mr-1" /> Simpan Perubahan Qty
-                </Button>
-              )}
-            </div>
-
-            {/* Mobile Cards View (<sm) */}
-            <div className="space-y-2 sm:hidden">
-              {(canEditQtyOnly ? editableDetails : activeRequest.details || []).map((d, i) => (
-                <div
-                  key={d.id}
-                  className="rounded-lg border border-border bg-surface p-3 text-xs space-y-1.5 shadow-2xs"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-bold text-muted-foreground mr-1">
-                        #{i + 1}
-                      </span>
-                      <span className="font-bold text-foreground">{d.name}</span>
-                    </div>
-                    <span className="font-extrabold text-foreground">{money(d.price * d.qty)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-muted-foreground text-[11px] pt-1.5 border-t border-border/50">
-                    <span>
-                      {money(d.price)} / {d.unit}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-foreground">Kuantitas:</span>
-                      {canEditQtyOnly ? (
-                        <input
-                          type="number"
-                          min="0.1"
-                          step="any"
-                          value={d.qty}
-                          onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
-                            setEditableDetails((prev) =>
-                              prev.map((item, idx) => (idx === i ? { ...item, qty: val } : item))
-                            );
-                          }}
-                          className="h-7 w-20 rounded border border-primary/60 bg-card px-2 text-right text-xs font-bold text-primary focus:ring-1 focus:ring-primary"
-                        />
-                      ) : (
-                        <span className="font-black text-foreground">
-                          {d.qty} {d.unit}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop Table View (sm+) */}
-            <div className="hidden sm:block overflow-x-auto rounded-md border border-border">
-              <table className="w-full min-w-[500px] text-left text-xs">
-                <thead className="bg-surface">
-                  <tr>
-                    <th className="px-3 py-2 font-semibold">No</th>
-                    <th className="px-3 py-2 font-semibold">Nama Bahan</th>
-                    <th className="px-3 py-2 font-semibold text-right">Kuantitas (Qty)</th>
-                    <th className="px-3 py-2 font-semibold">Satuan</th>
-                    <th className="px-3 py-2 font-semibold text-right">Harga</th>
-                    <th className="px-3 py-2 font-semibold text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y border-border">
-                  {canEditQtyOnly
-                    ? editableDetails.map((d, i) => (
-                        <tr key={d.id} className="hover:bg-surface/50">
-                          <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
-                          <td className="px-3 py-2 font-medium">{d.name}</td>
-                          <td className="px-3 py-2 text-right">
-                            <input
-                              type="number"
-                              min="0.1"
-                              step="any"
-                              value={d.qty}
-                              onChange={(e) => {
-                                const val = Number(e.target.value) || 0;
-                                setEditableDetails((prev) =>
-                                  prev.map((item, idx) =>
-                                    idx === i ? { ...item, qty: val } : item
-                                  )
-                                );
-                              }}
-                              className="h-7 w-20 rounded border border-primary/60 bg-card px-2 text-right text-xs font-bold text-primary focus:ring-1 focus:ring-primary"
-                            />
-                          </td>
-                          <td className="px-3 py-2">{d.unit}</td>
-                          <td className="px-3 py-2 text-right text-muted-foreground">
-                            {money(d.price)}
-                          </td>
-                          <td className="px-3 py-2 text-right font-semibold">
-                            {money(d.price * d.qty)}
-                          </td>
-                        </tr>
-                      ))
-                    : (activeRequest.details || []).map((d, i) => (
-                        <tr key={d.id} className="hover:bg-surface/50">
-                          <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
-                          <td className="px-3 py-2 font-medium">{d.name}</td>
-                          <td className="px-3 py-2 text-right font-bold">{d.qty}</td>
-                          <td className="px-3 py-2">{d.unit}</td>
-                          <td className="px-3 py-2 text-right text-muted-foreground">
-                            {money(d.price)}
-                          </td>
-                          <td className="px-3 py-2 text-right font-semibold">
-                            {money(d.price * d.qty)}
-                          </td>
-                        </tr>
-                      ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* FINANCIAL REPORTING BREAKDOWN (JIKA LPJ / REALISASI SUDAH ADA) */}
-          {(activeRequest.status === "Laporan Belanja Diajukan" ||
-            activeRequest.status === "Selesai" ||
-            activeRequest.actualSpent) && (
-            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                <Receipt className="size-4 text-primary" />
-                Laporan Pertanggungjawaban (LPJ) & Rekonsiliasi Kas Belanja:
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-surface p-3 rounded-lg border border-border/80">
-                <div>
-                  <span className="text-muted-foreground">Dana Ditransfer</span>
-                  <p className="mt-0.5 font-extrabold text-foreground">
-                    {money(activeRequest.disbursedAmount || activeRequest.price)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Realisasi (Bon)</span>
-                  <p className="mt-0.5 font-extrabold text-foreground">
-                    {money(activeRequest.actualSpent || 0)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Kembalian (Di Asdos)</span>
-                  <p className="mt-0.5 font-bold text-emerald-600">
-                    {money(activeRequest.refundAmount || 0)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Kekurangan Uang</span>
-                  <p className="mt-0.5 font-bold text-rose-600">
-                    {money(activeRequest.deficitAmount || 0)}
-                  </p>
-                </div>
-              </div>
-
-              {activeRequest.refundAmount && activeRequest.refundAmount > 0 ? (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
-                  <strong>Sisa Kembalian:</strong> {money(activeRequest.refundAmount)}. Sesuai aturan, dana kembalian tetap dipegang oleh Asdos untuk saldo operasional praktikum berikutnya.
-                </div>
-              ) : null}
-
-              {activeRequest.deficitAmount && activeRequest.deficitAmount > 0 ? (
-                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
-                  <strong>Kekurangan Dana Belanja:</strong> {money(activeRequest.deficitAmount)}. Status reimbursement: <strong>{activeRequest.reimbursementStatus}</strong>.
-                </div>
-              ) : null}
-
-              {/* Receipt image thumbnails */}
-              {activeRequest.receiptImages && activeRequest.receiptImages.length > 0 && (
-                <div className="mt-2">
-                  <span className="text-[11px] font-bold text-muted-foreground block mb-1">
-                    Foto Bukti Bon / Nota Belanja:
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {activeRequest.receiptImages.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`Bon ${idx + 1}`}
-                        className="h-20 w-28 object-cover rounded-md border border-border shadow-2xs hover:scale-105 transition-transform"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 6-Step Cycle Interactive Tracker */}
-          <div>
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
-              Perjalanan Siklus Pengadaan Bahan
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-              {SIKLUS_TAHAPAN.map((step, idx) => {
-                const currentIndex = SIKLUS_TAHAPAN.indexOf(activeRequest.status);
-                const isCompleted = currentIndex >= idx;
-                const isCurrent = activeRequest.status === step;
-                return (
-                  <div
-                    key={step}
-                    className={`rounded-md p-2.5 text-center border transition-all ${
-                      isCurrent
-                        ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
-                        : isCompleted
-                        ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300"
-                        : "border-border/60 bg-muted/30 text-muted-foreground opacity-60"
-                    }`}
-                  >
-                    <div className="text-[10px] font-bold opacity-80">Tahap {idx + 1}</div>
-                    <div className="text-[11px] font-bold leading-tight mt-0.5">{step}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {activeRequest.note && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200">
-              <span className="font-bold">Catatan Verifikasi:</span> {activeRequest.note}
-            </div>
-          )}
-
-          {/* WORKFLOW TRANSITION BUTTONS */}
-          <div className="border-t border-border pt-4">
-            <p className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
-              Tindakan Workflow ({role})
-            </p>
-
-            {/* Actions for Koordinator */}
-            {role === "Koordinator" && activeRequest.status === "Diajukan" && (
-              <div className="space-y-3">
-                <label className="block text-xs font-bold text-foreground">
-                  Catatan Verifikasi Koordinator Lab (Opsional):
-                  <textarea
-                    value={decisionNote}
-                    onChange={(e) => setDecisionNote(e.target.value)}
-                    placeholder="Contoh: Standar porsi telah disesuaikan dengan kebutuhan praktikum..."
-                    className="mt-1.5 min-h-16 w-full rounded-md border border-input bg-card p-3 text-xs outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button
-                    onClick={() => {
-                      handleSaveQtyChanges(activeRequest.id, editableDetails);
-                      updateStatus(
-                        activeRequest.id,
-                        "Diverifikasi Koordinator",
-                        decisionNote || "Standar porsi bahan telah diverifikasi Koordinator Lab."
-                      );
-                    }}
-                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs w-full sm:w-auto"
-                  >
-                    <Check className="size-3.5" /> Verifikasi Standar Porsi & Teruskan ke Kaprodi
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() =>
-                      updateStatus(
-                        activeRequest.id,
-                        "Ditolak",
-                        decisionNote || "Standar bahan belum sesuai alokasi praktikum"
-                      )
-                    }
-                    className="gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs w-full sm:w-auto shadow-xs cursor-pointer"
-                  >
-                    <X className="size-3.5" /> Tolak
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Actions for Kaprodi */}
-            {role === "Kaprodi" && activeRequest.status === "Diverifikasi Koordinator" && (
-              <div className="space-y-3">
-                <label className="block text-xs font-bold text-foreground">
-                  Catatan Persetujuan Kaprodi (Opsional):
-                  <textarea
-                    value={decisionNote}
-                    onChange={(e) => setDecisionNote(e.target.value)}
-                    placeholder="Contoh: Kurikulum praktik disetujui. Diajukan pencairan anggaran ke Bagian Keuangan..."
-                    className="mt-1.5 min-h-16 w-full rounded-md border border-input bg-card p-3 text-xs outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button
-                    onClick={() => {
-                      handleSaveQtyChanges(activeRequest.id, editableDetails);
-                      updateStatus(
-                        activeRequest.id,
-                        "Disetujui Kaprodi",
-                        decisionNote || "Disetujui Kaprodi. Diajukan pencairan dana ke Keuangan."
-                      );
-                    }}
-                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs w-full sm:w-auto cursor-pointer"
-                  >
-                    <Check className="size-3.5" /> Setujui Kurikulum & Ajukan ke Keuangan
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() =>
-                      updateStatus(
-                        activeRequest.id,
-                        "Ditolak",
-                        decisionNote || "Kurikulum belum sesuai jadwal akademik"
-                      )
-                    }
-                    className="gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs w-full sm:w-auto shadow-xs cursor-pointer"
-                  >
-                    <X className="size-3.5" /> Tolak
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Actions for Bagian Keuangan */}
-            {role === "Bagian Keuangan" && (
-              <div className="space-y-3">
-                {activeRequest.status === "Disetujui Kaprodi" && (
-                  <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      Pengajuan telah disetujui Kaprodi. Silakan konfirmasi transfer/pencairan dana belanja ke rekening Asdos.
-                    </p>
-                    <Button
-                      onClick={() =>
-                        updateStatus(
-                          activeRequest.id,
-                          "Dana Dicairkan",
-                          "Dana belanja bahan ditransfer ke rekening Asdos.",
-                          { disbursedAmount: activeRequest.price }
-                        )
-                      }
-                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
-                    >
-                      <Wallet className="size-3.5" /> Transfer Dana ke Asdos ({money(activeRequest.price)})
-                    </Button>
-                  </div>
-                )}
-
-                {activeRequest.status === "Laporan Belanja Diajukan" && (
-                  <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      Asdos telah melampirkan nota/bon belanja. Periksa rekonsiliasi kas belanja di atas.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {activeRequest.deficitAmount && activeRequest.deficitAmount > 0 ? (
-                        <Button
-                          onClick={() =>
-                            updateStatus(
-                              activeRequest.id,
-                              "Selesai",
-                              "Kekurangan dana belanja telah diganti/ditransfer oleh Keuangan ke rekening Asdos. LPJ resmi ditutup.",
-                              { reimbursementStatus: "Telah Diganti" }
-                            )
-                          }
-                          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
-                        >
-                          <CheckCircle2 className="size-3.5" /> Transfer Penggantian Uang Kurang (
-                          {money(activeRequest.deficitAmount)}) & Tutup LPJ
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() =>
-                            updateStatus(
-                              activeRequest.id,
-                              "Selesai",
-                              "LPJ belanja & bon diverifikasi Bagian Keuangan. Sisa kembalian disimpan Asdos. Transaksi resmi selesai."
-                            )
-                          }
-                          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
-                        >
-                          <CheckCircle2 className="size-3.5" /> Verifikasi LPJ Belanja & Tutup Selesai
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Actions for Staf / Asdos */}
-            {role === "Staf / Asdos" && (
-              <div className="flex flex-wrap gap-2">
-                {activeRequest.status === "Dana Dicairkan" && (
-                  <Button
-                    onClick={() =>
-                      updateStatus(
-                        activeRequest.id,
-                        "Proses Pembelian",
-                        "Asdos mulai membelanjakan bahan masakan."
-                      )
-                    }
-                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
-                  >
-                    <ShoppingBag className="size-3.5" /> Mulai Berangkat Belanja Bahan
-                  </Button>
-                )}
-
-                {activeRequest.status === "Proses Pembelian" && (
-                  <Button
-                    onClick={() => {
-                      setReportingRequestId(activeRequest.id);
-                      setReportSpentAmount(activeRequest.disbursedAmount || activeRequest.price);
-                      onClose();
-                    }}
-                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer"
-                    title="Barang sudah sampai / belanja selesai: wajib unggah foto bon belanja"
-                  >
-                    <Receipt className="size-3.5" /> Barang Sampai & Lapor Bon
-                  </Button>
-                )}
-
-                {/* Fix #4: Ajukan Ulang setelah Ditolak */}
-                {activeRequest.status === "Ditolak" &&
-                  (!currentUser || activeRequest.applicant === currentUser.name) && (
-                    <div className="w-full space-y-2">
-                      <div className="rounded-lg border border-orange-200 bg-orange-50/80 p-3 text-xs text-orange-900 dark:border-orange-800 dark:bg-orange-950/20 dark:text-orange-300">
-                        <p className="font-bold flex items-center gap-1.5">
-                          <Info className="size-4 shrink-0 text-orange-600" />
-                          Pengajuan ini ditolak. Anda dapat merevisi dan mengajukan ulang.
-                        </p>
-                        <p className="mt-1 text-[11px] text-orange-800 dark:text-orange-400">
-                          Pastikan Anda telah menyesuaikan jumlah atau jenis bahan sesuai catatan penolakan sebelum mengajukan ulang ke Koordinator.
-                        </p>
-                      </div>
-                      <Button
-                        onClick={() =>
-                          updateStatus(
-                            activeRequest.id,
-                            "Diajukan",
-                            "Pengajuan diajukan ulang oleh Asdos setelah revisi."
-                          )
-                        }
-                        className="gap-1.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs"
-                      >
-                        <Send className="size-3.5" /> Ajukan Ulang ke Koordinator
-                      </Button>
-                    </div>
-                  )}
-              </div>
-            )}
-
-            {/* Actions for Super Admin */}
-            {role === "Super Admin" && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-muted-foreground mr-1">
-                  Ubah Status Cepat:
+    <>
+      <Dialog open={Boolean(activeRequest)} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-h-[92vh] w-[95vw] sm:max-w-2xl overflow-y-auto rounded-xl border-border p-0 shadow-2xl">
+          <DialogHeader className="border-b border-border bg-surface px-4 sm:px-6 py-4 sm:py-5 text-left">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-xs font-extrabold text-primary">
+                  {activeRequest.id}
                 </span>
-                {SIKLUS_TAHAPAN.map((s) => (
-                  <Button
-                    key={s}
-                    variant="outline"
-                    size="sm"
-                    disabled={activeRequest.status === s}
-                    onClick={() => updateStatus(activeRequest.id, s)}
-                    className="h-7 text-[10px] font-bold"
-                  >
-                    {s}
-                  </Button>
-                ))}
+                <StatusBadge status={activeRequest.status} />
+                <DeadlineTag r={activeRequest} />
               </div>
-            )}
-          </div>
-
-          {/* Unduh Dokumen Resmi PR & Laporan */}
-          <div className="border-t border-border pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <p className="text-xs text-muted-foreground">Unduh dokumen resmi PR dan lembar LPJ:</p>
-            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-              <Button
-                onClick={() => exportSingleExcel(activeRequest)}
-                className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex-1 sm:flex-initial"
-              >
-                <Download className="size-3.5" /> Unduh Excel (PR &amp; Bon)
-              </Button>
-              {exportSinglePdf && (
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => exportSinglePdf(activeRequest)}
-                  className="gap-1.5 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/30 font-bold text-xs flex-1 sm:flex-initial"
+                  size="sm"
+                  onClick={() => setIsHeaderWaOpen(true)}
+                  className="h-6 text-[10px] gap-1 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-950/40 cursor-pointer px-2 font-bold"
+                  title="Bagikan rincian pengajuan ke WhatsApp"
                 >
-                  <FileText className="size-3.5" /> Unduh PDF
+                  <Smartphone className="size-3 text-emerald-600" /> Share WA
                 </Button>
+                <span className="text-[11px] text-muted-foreground">{activeRequest.date}</span>
+              </div>
+            </div>
+            <DialogTitle className="mt-2 text-lg sm:text-xl font-black text-foreground flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-block text-[11px] px-2.5 py-0.5 rounded-full font-bold ${
+                  activeRequest.alur === "B"
+                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
+                    : "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300"
+                }`}
+              >
+                {activeRequest.alur === "B" ? "Logistik & ATK" : "Kitchen Lab"}
+              </span>
+              <span>{activeRequest.menu || activeRequest.item}</span>
+              {Boolean(activeRequest.groupCount && activeRequest.groupCount > 1) && (
+                <span className="inline-block text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                  {activeRequest.groupCount} Kelompok ({activeRequest.groupCount}x Resep)
+                </span>
               )}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {activeRequest.alur === "B"
+                ? `Unit Kerja: ${formatUnitLabel(activeRequest.unitKerja || activeRequest.department)} · Pemohon: ${activeRequest.applicant}`
+                : activeRequest.course
+                  ? `${activeRequest.course} · Semester ${activeRequest.semester} (${activeRequest.prodi})${activeRequest.groupCount ? ` · ${activeRequest.groupCount} Kelompok` : ""}`
+                  : `Diajukan oleh ${activeRequest.applicant}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Modal Share WhatsApp Header */}
+          <WhatsAppShareModal
+            open={isHeaderWaOpen}
+            onOpenChange={setIsHeaderWaOpen}
+            activeRequest={activeRequest}
+            role={role}
+            decisionNote={decisionNote}
+          />
+
+          {/* Banner Respon Cepat WhatsApp Kaprodi */}
+          {waActionData && waActionData.id === activeRequest.id && (
+            <div className="mx-4 sm:mx-6 mt-4 p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 shadow-sm space-y-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-emerald-600 text-white font-bold text-xs shrink-0 shadow-xs">
+                    WA
+                  </span>
+                  <div>
+                    <h4 className="text-xs font-black text-emerald-900 dark:text-emerald-100 flex items-center gap-1.5">
+                      Respon Cepat WhatsApp Kaprodi:{" "}
+                      <span
+                        className={
+                          waActionData.action === "approve"
+                            ? "text-emerald-700 underline"
+                            : "text-rose-700 underline"
+                        }
+                      >
+                        {waActionData.action === "approve" ? "TERIMA / SETUJUI" : "TOLAK PENGAJUAN"}
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
+                      Anda membuka permohonan ini melalui tautan WhatsApp untuk{" "}
+                      {waActionData.action === "approve"
+                        ? "menyetujui kurikulum dan mengajukan pencairan dana ke Keuangan"
+                        : "menolak permohonan ini dan mengembalikan ke Koordinator"}
+                      .
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setWaActionData && setWaActionData(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground p-1 cursor-pointer"
+                  title="Tutup banner"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-200 dark:border-emerald-900">
+                {waActionData.action === "approve" ? (
+                  <Button
+                    onClick={() => {
+                      handleSaveQtyChanges(activeRequest.id, editableDetails);
+                      updateStatus(
+                        activeRequest.id,
+                        "DISETUJUI_KAPRODI",
+                        "Disetujui oleh Kaprodi via tautan WhatsApp (1-Klik Approval).",
+                      );
+                      setWaActionData?.(null);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Check className="size-3.5" /> Konfirmasi &amp; Setujui Sekarang (1-Klik)
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setWaActionData?.(null);
+                      updateStatus(
+                        activeRequest.id,
+                        "DITOLAK_KAPRODI",
+                        "Ditolak oleh Kaprodi via tautan WhatsApp. Dikembalikan ke antrean Koordinator untuk evaluasi ulang.",
+                      );
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <X className="size-3.5" /> Konfirmasi Tolak Pengajuan Sekarang
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setWaActionData?.(null)}
+                  className="text-xs"
+                >
+                  Tinjau Rincian Dahulu
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-6 px-4 sm:px-6 py-4 sm:py-5">
+            {/* Meta properties */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-lg bg-surface p-4 text-xs">
+              <div>
+                <span className="text-muted-foreground">Total Estimasi</span>
+                <p className="mt-0.5 font-extrabold text-foreground">
+                  {money(activeRequest.price)}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Dana Dicairkan</span>
+                <p className="mt-0.5 font-bold text-foreground">
+                  {activeRequest.danaDiterima || activeRequest.nominalTransfer
+                    ? money(activeRequest.danaDiterima || activeRequest.nominalTransfer || 0)
+                    : "-"}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Tenggat Waktu</span>
+                <p className="mt-0.5 font-bold text-foreground">
+                  {activeRequest.deadline || activeRequest.needBy}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">
+                  {activeRequest.alur === "B" ? "Unit & Pemohon" : "Pemohon"}
+                </span>
+                <p className="mt-0.5 font-bold text-foreground">
+                  {activeRequest.alur === "B" &&
+                  (activeRequest.unitKerja || activeRequest.department)
+                    ? `${formatUnitLabel(activeRequest.unitKerja || activeRequest.department)} (${activeRequest.applicant})`
+                    : activeRequest.applicant}
+                </p>
+                {activeRequest.petugasPembelanja && (
+                  <p className="text-[10px] text-blue-600 font-medium mt-0.5">
+                    Pembelanja: {activeRequest.petugasPembelanja}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Details Table - EDIT QTY ONLY FOR KOORDINATOR / KAPRODI */}
+            <RequestItemsTable
+              activeRequest={activeRequest}
+              canEditQtyOnly={canEditQtyOnly}
+              editableDetails={editableDetails}
+              setEditableDetails={setEditableDetails}
+              handleSaveQtyChanges={handleSaveQtyChanges}
+            />
+
+            {/* Financial Reporting Breakdown (Laporan Belanja) */}
+            <RequestLpjSection activeRequest={activeRequest} />
+
+            {/* Dynamic Stepper Tracker (Alur A: 6 Tahap, Alur B: 5 Tahap) */}
+            <div>
+              {(() => {
+                const isB = activeRequest.alur === "B";
+                const steps = isB ? SIKLUS_TAHAPAN_B : SIKLUS_TAHAPAN_A;
+                const s = activeRequest.status;
+                let activeStepIdx = -1;
+                if (isB) {
+                  if (s === "DIAJUKAN") activeStepIdx = 0;
+                  else if (s === "DIVERIFIKASI_KOORD") activeStepIdx = 1;
+                  else if (s === "SEDANG_DIBELANJAKAN") activeStepIdx = 2;
+                  else if (s === "BARANG_DITERIMA") activeStepIdx = 3;
+                  else if (s === "SELESAI") activeStepIdx = 4;
+                } else {
+                  if (s === "DIAJUKAN") activeStepIdx = 0;
+                  else if (s === "DIVERIFIKASI_KOORD") activeStepIdx = 1;
+                  else if (s === "DISETUJUI_KAPRODI") activeStepIdx = 2;
+                  else if (s === "DANA_DICAIRKAN") activeStepIdx = 3;
+                  else if (s === "BARANG_DITERIMA") activeStepIdx = 4;
+                  else if (s === "LAPORAN_BELANJA_DIAJUKAN" || s === "SELESAI") activeStepIdx = 5;
+                }
+
+                return (
+                  <>
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
+                      Perjalanan Siklus Pengadaan ({isB ? "Alur B: 5 Tahap" : "Alur A: 6 Tahap"})
+                    </h4>
+                    <div
+                      className={`grid grid-cols-2 sm:grid-cols-3 ${isB ? "md:grid-cols-5" : "md:grid-cols-6"} gap-2`}
+                    >
+                      {steps.map((item, idx) => {
+                        const isCompleted = activeStepIdx >= idx;
+                        const isCurrent = activeStepIdx === idx;
+                        return (
+                          <div
+                            key={item.status + idx}
+                            className={`rounded-md p-2.5 text-center border transition-all ${
+                              isCurrent
+                                ? "border-primary bg-primary/10 text-primary font-bold shadow-xs ring-1 ring-primary/30"
+                                : isCompleted
+                                  ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300"
+                                  : "border-border/60 bg-muted/30 text-muted-foreground opacity-60"
+                            }`}
+                          >
+                            <div className="text-[10px] font-bold opacity-80">Tahap {idx + 1}</div>
+                            <div className="text-[11px] font-bold leading-tight mt-0.5">
+                              {item.label}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Rejection Reason Banner */}
+            {activeRequest.status.startsWith("DITOLAK_") && (
+              <div className="rounded-xl border border-red-300 bg-red-50/90 dark:bg-red-950/40 dark:border-red-900/80 p-4 text-xs text-red-900 dark:text-red-200 shadow-xs space-y-1.5">
+                <div className="flex items-center gap-2 font-black text-red-700 dark:text-red-400">
+                  <AlertTriangle className="size-4" />
+                  <span>Pengajuan Ini Telah Ditolak oleh Reviewer</span>
+                </div>
+                <p className="text-xs leading-relaxed">
+                  <strong className="text-foreground">Alasan Penolakan:</strong>{" "}
+                  <span className="font-semibold text-red-700 dark:text-red-300">
+                    {activeRequest.rejectionReason ||
+                      activeRequest.rejection_reason ||
+                      activeRequest.note ||
+                      "Standar atau kurikulum belum sesuai jadwal akademik."}
+                  </span>
+                </p>
+                {isPemohon(role) && (
+                  <p className="mt-2 text-[11px] text-muted-foreground border-t border-red-200 dark:border-red-900/50 pt-2">
+                    💡 Silakan perbaiki kuantitas atau kebutuhan bahan sesuai alasan di atas, lalu
+                    gunakan tombol <strong>"Ajukan Ulang"</strong> pada baris pengajuan di tabel
+                    utama.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Jejak Waktu Aktivitas & Audit Trail */}
+            <ProcurementTimeline
+              activityLogs={activeRequest.activityLogs}
+              activeRequest={activeRequest}
+            />
+
+            {/* Workflow Transition Buttons */}
+            <RequestWorkflowActions
+              activeRequest={activeRequest}
+              role={role}
+              currentUser={currentUser}
+              decisionNote={decisionNote}
+              setDecisionNote={setDecisionNote}
+              editableDetails={editableDetails}
+              handleSaveQtyChanges={handleSaveQtyChanges}
+              updateStatus={updateStatus}
+              setReportingRequestId={setReportingRequestId}
+              setReportSpentAmount={setReportSpentAmount}
+              onClose={onClose}
+            />
+
+            {/* Unduh Dokumen Resmi PR & Laporan */}
+            <div className="border-t border-border pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <p className="text-xs text-muted-foreground">
+                Unduh dokumen resmi PR dan lembar laporan belanja:
+              </p>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                {isBkkPrintable(activeRequest.status) && (
+                  <Button
+                    variant="outline"
+                    onClick={() => exportBkkPdf(activeRequest)}
+                    className="gap-1.5 border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-950/30 font-bold text-xs flex-1 sm:flex-initial cursor-pointer"
+                    title="Cetak lembar Bukti Kas Keluar (BKK) / Kuitansi resmi pencairan dana"
+                  >
+                    <Receipt className="size-3.5" /> Cetak BKK
+                  </Button>
+                )}
+                <Button
+                  onClick={() => exportSingleExcel(activeRequest)}
+                  className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex-1 sm:flex-initial"
+                >
+                  <Download className="size-3.5" /> Unduh Excel (PR &amp; Bon)
+                </Button>
+                {exportSinglePdf && (
+                  <Button
+                    variant="outline"
+                    onClick={() => exportSinglePdf(activeRequest)}
+                    className="gap-1.5 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/30 font-bold text-xs flex-1 sm:flex-initial"
+                  >
+                    <FileText className="size-3.5" /> Unduh PDF
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* WhatsApp Modal dari tombol header Share WA */}
+      <WhatsAppShareModal
+        open={isHeaderWaOpen}
+        onOpenChange={setIsHeaderWaOpen}
+        activeRequest={activeRequest}
+        role={role}
+        decisionNote={decisionNote}
+      />
+    </>
   );
 };

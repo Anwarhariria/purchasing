@@ -75,8 +75,12 @@
 }
 
 @layer base {
-  * { border-color: var(--border); box-sizing: border-box; }
-  html, body {
+  * {
+    border-color: var(--border);
+    box-sizing: border-box;
+  }
+  html,
+  body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -88,8 +92,15 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  button, input, select, textarea { font: inherit; }
-  button { cursor: pointer; }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button {
+    cursor: pointer;
+  }
 
   /* Hide number input spinners */
   input[type="number"]::-webkit-outer-spin-button,
@@ -102,11 +113,22 @@
   }
 }
 
-@utility panel-shadow { box-shadow: 0 2px 18px oklch(0.3 0.015 40 / 0.035); }
-@utility soft-shadow { box-shadow: 0 10px 35px oklch(0.3 0.015 40 / 0.09); }
+@utility panel-shadow {
+  box-shadow: 0 2px 18px oklch(0.3 0.015 40 / 0.035);
+}
+@utility soft-shadow {
+  box-shadow: 0 10px 35px oklch(0.3 0.015 40 / 0.09);
+}
 
-.brand-mark { clip-path: polygon(50% 0%, 91% 10%, 91% 64%, 50% 100%, 9% 64%, 9% 10%); }
-.grid-lines { background-image: linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px); background-size: 22px 22px; }
+.brand-mark {
+  clip-path: polygon(50% 0%, 91% 10%, 91% 64%, 50% 100%, 9% 64%, 9% 10%);
+}
+.grid-lines {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
 
 /* ==========================================================================
    ANIMATIONS & TRANSITIONS (SPAKE UI Animation Suite)
@@ -121,8 +143,9 @@
 /* Mobile Screen (<1024px): Off-canvas Drawer */
 @media (max-width: 1023px) {
   .sidebar-collapsible {
-    transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateX(-100%);
     opacity: 0;
     pointer-events: none;
@@ -181,14 +204,30 @@
 }
 
 /* Stagger Delay Utility Classes */
-.stagger-1 { animation-delay: 50ms; }
-.stagger-2 { animation-delay: 110ms; }
-.stagger-3 { animation-delay: 170ms; }
-.stagger-4 { animation-delay: 230ms; }
-.stagger-5 { animation-delay: 290ms; }
-.stagger-6 { animation-delay: 350ms; }
-.stagger-7 { animation-delay: 410ms; }
-.stagger-8 { animation-delay: 470ms; }
+.stagger-1 {
+  animation-delay: 50ms;
+}
+.stagger-2 {
+  animation-delay: 110ms;
+}
+.stagger-3 {
+  animation-delay: 170ms;
+}
+.stagger-4 {
+  animation-delay: 230ms;
+}
+.stagger-5 {
+  animation-delay: 290ms;
+}
+.stagger-6 {
+  animation-delay: 350ms;
+}
+.stagger-7 {
+  animation-delay: 410ms;
+}
+.stagger-8 {
+  animation-delay: 470ms;
+}
 
 /* 3. Bar Chart Vertical Fill / Scale-Y Growth */
 @keyframes barGrowUp {
@@ -225,7 +264,8 @@
 
 /* 5. Floating / Pulsing Subtle Glow (AI Orb / Highlight elements) */
 @keyframes orbFloating {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1);
     box-shadow: 0 0 15px rgba(37, 99, 235, 0.35);
   }
@@ -241,7 +281,8 @@
 
 /* 6. Smooth Global Color Transitions */
 .smooth-theme-transition {
-  transition: background-color 350ms cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 350ms cubic-bezier(0.16, 1, 0.3, 1),
-              color 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background-color 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }

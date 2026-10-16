@@ -41,17 +41,13 @@ export function CurriculumMasterView({
               <Building2 className="size-5 text-primary" />
               Master Program Studi &amp; Mata Kuliah Praktik
             </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Kelola Program Studi (Jurusan) dan seluruh mata kuliah praktik dari Semester 1 sampai 8 untuk kegiatan laboratorium.
-            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
               onClick={onOpenAddProdi}
               className="h-9 gap-1.5 bg-primary text-primary-foreground font-bold text-xs shadow-xs cursor-pointer"
             >
-              <Plus className="size-4" />
-              + Tambah Prodi Baru
+              <Plus className="size-4" />+ Tambah Prodi Baru
             </Button>
           </div>
         </div>
@@ -140,7 +136,8 @@ export function CurriculumMasterView({
                 Mata Kuliah Praktik: Semester {adminSelectedSem} ({adminSelectedProdi})
               </h3>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                Saat Staf memilih Semester {adminSelectedSem} di form pengajuan, hanya mata kuliah ini yang akan muncul di dropdown.
+                Saat Staf memilih Semester {adminSelectedSem} di form pengajuan, hanya mata kuliah
+                ini yang akan muncul di dropdown.
               </p>
             </div>
             <Button
@@ -148,8 +145,7 @@ export function CurriculumMasterView({
               onClick={() => onOpenAddCourse(adminSelectedSem)}
               className="h-8 gap-1.5 bg-primary hover:bg-blue-900 text-white text-xs font-bold shadow-xs cursor-pointer"
             >
-              <Plus className="size-3.5" />
-              + Tambah Mata Kuliah (Sem {adminSelectedSem})
+              <Plus className="size-3.5" />+ Tambah Mata Kuliah (Sem {adminSelectedSem})
             </Button>
           </div>
 
@@ -160,7 +156,8 @@ export function CurriculumMasterView({
                 Belum ada mata kuliah praktik terdaftar di Semester {adminSelectedSem}.
               </p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                Klik tombol "+ Tambah Mata Kuliah (Sem {adminSelectedSem})" untuk menambahkan mata kuliah praktik baru.
+                Klik tombol "+ Tambah Mata Kuliah (Sem {adminSelectedSem})" untuk menambahkan mata
+                kuliah praktik baru.
               </p>
             </div>
           ) : (
@@ -181,7 +178,9 @@ export function CurriculumMasterView({
                       className="animate-row-enter hover:bg-surface/60 transition-colors"
                       style={{ animationDelay: `${idx * 25}ms` }}
                     >
-                      <td className="px-4 py-3 text-center font-bold text-muted-foreground">{idx + 1}</td>
+                      <td className="px-4 py-3 text-center font-bold text-muted-foreground">
+                        {idx + 1}
+                      </td>
                       <td className="px-4 py-3 font-bold text-foreground">
                         <div className="flex items-center gap-2">
                           <span className="size-2 rounded-full bg-emerald-500" />

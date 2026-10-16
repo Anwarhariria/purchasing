@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus, BookOpen, Utensils, Edit, Trash2 } from "lucide-react";
-import { money } from "@/lib/algorithms/saw";
+import { money } from "@/lib/utils";
 import type { StudyProgramData, MenuItemRecipe } from "@/types/procurement";
 
 interface RecipeMenuViewProps {
@@ -44,9 +44,6 @@ export function RecipeMenuView({
               <Utensils className="size-5 text-blue-600" />
               Manajemen Menu Hidangan &amp; Resep Bahan (Kaprodi)
             </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Wewenang penuh Kaprodi: Menambah, mengedit, dan menghapus nama masakan praktik serta menetapkan rincian bahan yang dibutuhkan, takaran (Qty), satuan, dan estimasi harga per unit.
-            </p>
           </div>
         </div>
 
@@ -58,7 +55,9 @@ export function RecipeMenuView({
           <div className="grid gap-3 sm:grid-cols-3">
             {/* 1. Pilih Prodi */}
             <div>
-              <label className="block text-[11px] font-bold text-foreground mb-1">1. Program Studi:</label>
+              <label className="block text-[11px] font-bold text-foreground mb-1">
+                1. Program Studi:
+              </label>
               <select
                 value={kaprodiSelectedProdi}
                 onChange={(e) => {
@@ -82,7 +81,9 @@ export function RecipeMenuView({
 
             {/* 2. Pilih Semester (1 s/d 8) */}
             <div>
-              <label className="block text-[11px] font-bold text-foreground mb-1">2. Semester (1 - 8):</label>
+              <label className="block text-[11px] font-bold text-foreground mb-1">
+                2. Semester (1 - 8):
+              </label>
               <select
                 value={kaprodiSelectedSem}
                 onChange={(e) => {
@@ -106,7 +107,9 @@ export function RecipeMenuView({
 
             {/* 3. Pilih Mata Kuliah */}
             <div>
-              <label className="block text-[11px] font-bold text-foreground mb-1">3. Mata Kuliah Praktik:</label>
+              <label className="block text-[11px] font-bold text-foreground mb-1">
+                3. Mata Kuliah Praktik:
+              </label>
               <select
                 value={kaprodiSelectedCourse}
                 onChange={(e) => setKaprodiSelectedCourse(e.target.value)}
@@ -132,10 +135,12 @@ export function RecipeMenuView({
             <div className="rounded-lg border border-dashed border-border p-8 text-center bg-surface/50">
               <BookOpen className="mx-auto size-8 text-muted-foreground/40 mb-2" />
               <p className="text-xs font-bold text-foreground">
-                Tidak ada mata kuliah praktik di Semester {kaprodiSelectedSem} ({kaprodiSelectedProdi}).
+                Tidak ada mata kuliah praktik di Semester {kaprodiSelectedSem} (
+                {kaprodiSelectedProdi}).
               </p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                Mata kuliah dapat ditambahkan terlebih dahulu oleh Super Admin melalui menu Master Prodi &amp; Matakuliah.
+                Mata kuliah dapat ditambahkan terlebih dahulu oleh Super Admin melalui menu Master
+                Prodi &amp; Matakuliah.
               </p>
             </div>
           ) : !activeCourseObj ? null : (
@@ -149,7 +154,8 @@ export function RecipeMenuView({
                     {activeCourseObj.courseName}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Semester {kaprodiSelectedSem} · {activeCourseObj.menus.length} Menu Hidangan Terdaftar
+                    Semester {kaprodiSelectedSem} · {activeCourseObj.menus.length} Menu Hidangan
+                    Terdaftar
                   </p>
                 </div>
               </div>
@@ -157,9 +163,12 @@ export function RecipeMenuView({
               {activeCourseObj.menus.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border p-8 text-center bg-surface/50">
                   <Utensils className="mx-auto size-8 text-blue-400 mb-2" />
-                  <p className="text-xs font-bold text-foreground">Belum ada menu hidangan untuk mata kuliah ini.</p>
+                  <p className="text-xs font-bold text-foreground">
+                    Belum ada menu hidangan untuk mata kuliah ini.
+                  </p>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Silakan gunakan menu mata kuliah lain atau hubungi admin untuk sinkronisasi kurikulum.
+                    Silakan gunakan menu mata kuliah lain atau hubungi admin untuk sinkronisasi
+                    kurikulum.
                   </p>
                 </div>
               ) : (
@@ -167,7 +176,7 @@ export function RecipeMenuView({
                   {activeCourseObj.menus.map((menu, mIdx) => {
                     const totalRecipeCost = menu.ingredients.reduce(
                       (sum, ing) => sum + ing.neededQty * ing.pricePerUnit,
-                      0
+                      0,
                     );
 
                     return (
@@ -177,7 +186,9 @@ export function RecipeMenuView({
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-3">
                           <div>
-                            <h4 className="text-sm font-extrabold text-foreground">{menu.menuName}</h4>
+                            <h4 className="text-sm font-extrabold text-foreground">
+                              {menu.menuName}
+                            </h4>
                             <p className="text-[11px] text-muted-foreground">
                               {menu.ingredients.length} jenis bahan · Total estimasi biaya:{" "}
                               <strong className="text-foreground">{money(totalRecipeCost)}</strong>
@@ -196,7 +207,9 @@ export function RecipeMenuView({
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => onDeleteMenu(activeCourseObj.courseName, menu.menuName)}
+                              onClick={() =>
+                                onDeleteMenu(activeCourseObj.courseName, menu.menuName)
+                              }
                               className="h-8 gap-1 text-xs font-semibold text-[#0f172a] border-slate-300 hover:bg-slate-100 hover:text-black cursor-pointer"
                             >
                               <Trash2 className="size-3.5" />
@@ -223,7 +236,9 @@ export function RecipeMenuView({
                                   <td className="px-3 py-2 text-center text-muted-foreground font-medium">
                                     {ingIdx + 1}
                                   </td>
-                                  <td className="px-3 py-2 font-bold text-foreground">{ing.name}</td>
+                                  <td className="px-3 py-2 font-bold text-foreground">
+                                    {ing.name}
+                                  </td>
                                   <td className="px-3 py-2 font-semibold text-foreground">
                                     {ing.neededQty} {ing.unit}
                                   </td>

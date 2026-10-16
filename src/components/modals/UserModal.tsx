@@ -1,5 +1,5 @@
-import React from "react";
-import { Edit, UserPlus, Check } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Edit, UserPlus, Check, Building2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,35 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { User } from "@/types/procurement";
+import { SpakeApi } from "@/lib/api-client";
+import { formatUnitLabel } from "@/lib/utils";
+import type { User, Role } from "@/types/procurement";
+
+const SRS_ROLES: { value: Role; label: string }[] = [
+  { value: "Asdos Kitchen", label: "Asdos Kitchen (Pemohon Pengadaan Praktikum - Alur A)" },
+  { value: "Staf Unit", label: "Staf Unit (Pemohon Pengadaan Logistik & ATK - Alur B)" },
+  { value: "Koordinator Lab", label: "Koordinator Lab (Verifikator Alur A Kitchen)" },
+  { value: "Koordinator Unit", label: "Koordinator Unit (Verifikator Alur B Unit Kerja)" },
+  { value: "Kaprodi", label: "Kaprodi (Persetujuan Alur A Kitchen)" },
+  { value: "Keuangan Kitchen", label: "Keuangan Kitchen (Pencairan & SPJ Alur A)" },
+  { value: "Keuangan Umum", label: "Keuangan Umum (Alokasi & Belanja Alur B)" },
+  { value: "Super Admin", label: "Super Admin (Pengelola Sistem & Master Data)" },
+];
+
+const FALLBACK_UNITS = [
+  { id: "PMB", nama: "Penerimaan Mahasiswa Baru", kode: "PMB" },
+  { id: "PERPUS", nama: "Perpustakaan", kode: "PERPUS" },
+  { id: "SEKR-S1", nama: "Sekretariat S1 Terapan Perhotelan", kode: "SEKR-S1" },
+  { id: "SEKR-S2", nama: "Sekretariat S2 Terapan Pariwisata", kode: "SEKR-S2" },
+  { id: "SEKR-D3", nama: "Sekretariat D3 Perhotelan", kode: "SEKR-D3" },
+  { id: "LSP", nama: "Lembaga Sertifikasi Profesi", kode: "LSP" },
+];
+
+interface UnitOption {
+  id: string;
+  nama: string;
+  kode?: string;
+}
 
 interface UserModalProps {
   open: boolean;
@@ -26,6 +54,39 @@ export const UserModal: React.FC<UserModalProps> = ({
   setEditingUser,
   handleSaveUser,
 }) => {
+  const [role, setRole] = useState<Role>(editingUser ? editingUser.role : "Staf Unit");
+  const [selectedUnitId, setSelectedUnitId] = useState<string>(editingUser?.unit_id || "PMB");
+  const [units, setUnits] = useState<UnitOption[]>(FALLBACK_UNITS);
+
+  // Sync state ketika editingUser berubah
+  useEffect(() => {
+    if (editingUser) {
+      setRole(editingUser.role);
+      setSelectedUnitId(editingUser.unit_id || "PMB");
+    } else {
+      setRole("Staf Unit");
+      setSelectedUnitId("PMB");
+    }
+  }, [editingUser, open]);
+
+  // Muat daftar unit dari backend tabel units
+  useEffect(() => {
+    if (open) {
+      SpakeApi.getUnits()
+        .then((res) => {
+          if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+            setUnits(res.data);
+          }
+        })
+        .catch(() => {
+          // Pakai FALLBACK_UNITS jika API gagal
+        });
+    }
+  }, [open]);
+
+  const isUnitRole = role === "Staf Unit" || role === "Koordinator Unit";
+  const activeUnitName = units.find((u) => u.id === selectedUnitId)?.nama || "Unit Kerja Kampus";
+
   return (
     <Dialog
       open={open}
@@ -81,31 +142,100 @@ export const UserModal: React.FC<UserModalProps> = ({
             />
           </label>
 
+          {!editingUser && (
+            <label className="block text-xs font-bold text-foreground">
+              Kata Sandi Awal <span className="text-red-500">*</span>
+              <Input
+                type="password"
+                name="password"
+                defaultValue="password123"
+                required
+                placeholder="Minimal 3 karakter"
+                className="mt-1.5 h-10 font-normal"
+              />
+            </label>
+          )}
+
           <label className="block text-xs font-bold text-foreground">
             Peran (Role) <span className="text-red-500">*</span>
             <select
               name="role"
-              defaultValue={editingUser ? editingUser.role : "Staf / Asdos"}
+              value={role}
+              onChange={(e) => setRole(e.target.value as Role)}
               className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-xs font-normal focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
             >
-              <option value="Staf / Asdos">Staf / Asdos (Pemohon Lab Masak)</option>
-              <option value="Koordinator">Koordinator Lab</option>
-              <option value="Kaprodi">Kaprodi</option>
-              <option value="Bagian Keuangan">Bagian Keuangan</option>
-              <option value="Super Admin">Super Admin</option>
+              {SRS_ROLES.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
             </select>
           </label>
 
-          <label className="block text-xs font-bold text-foreground">
-            Unit / Departemen <span className="text-red-500">*</span>
-            <Input
-              name="department"
-              defaultValue={editingUser ? editingUser.department : ""}
-              required
-              placeholder="Contoh: Lab Perhotelan & Dapur Praktik Kuliner"
-              className="mt-1.5 h-10 font-normal"
-            />
-          </label>
+          {/* Untuk Staf Unit / Koordinator Unit: Dropdown Unit dari tabel units */}
+          {isUnitRole ? (
+            <label className="block text-xs font-bold text-foreground">
+              <span className="flex items-center gap-1.5">
+                <Building2 className="size-3.5 text-primary" />
+                Unit Kerja Kampus <span className="text-red-500">*</span>
+              </span>
+              <select
+                name="unit_id"
+                value={selectedUnitId}
+                onChange={(e) => setSelectedUnitId(e.target.value)}
+                required
+                className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-xs font-normal focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+              >
+                <option value="" disabled>
+                  -- Pilih Unit Kerja Kampus --
+                </option>
+                {units.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {formatUnitLabel(u)}
+                  </option>
+                ))}
+              </select>
+              <input type="hidden" name="department" value={activeUnitName} />
+              <p className="mt-1 text-[11px] text-muted-foreground font-normal">
+                Staf Unit dan Koordinator Unit terhubung langsung dengan unit kerja kampus. Hanya
+                satu Koordinator diperbolehkan per unit kerja.
+              </p>
+            </label>
+          ) : (
+            <label className="block text-xs font-bold text-foreground">
+              Unit / Departemen <span className="text-red-500">*</span>
+              <select
+                name="department"
+                defaultValue={
+                  editingUser?.department ||
+                  (role === "Kaprodi"
+                    ? "Program Studi D3 Perhotelan"
+                    : role === "Keuangan Kitchen"
+                      ? "Keuangan Kitchen (Praktikum & Kasbon)"
+                      : role === "Keuangan Umum"
+                        ? "Keuangan Umum & Logistik"
+                        : role === "Super Admin"
+                          ? "Pusat Kendali Sistem & IT"
+                          : "Laboratorium Dapur & Restoran Perhotelan")
+                }
+                className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+                required
+              >
+                <option value="Laboratorium Dapur & Restoran Perhotelan">
+                  Laboratorium Dapur & Restoran Perhotelan (Kitchen)
+                </option>
+                <option value="Program Studi D3 Perhotelan">Program Studi D3 Perhotelan</option>
+                <option value="Keuangan Kitchen (Praktikum & Kasbon)">
+                  Keuangan Kitchen (Praktikum & Kasbon)
+                </option>
+                <option value="Keuangan Umum & Logistik">Keuangan Umum & Logistik</option>
+                <option value="Pusat Kendali Sistem & IT">Pusat Kendali Sistem & IT</option>
+              </select>
+              <p className="mt-1 text-[11px] text-muted-foreground font-normal">
+                Pengaturan unit menentukan jalur verifikasi Koordinator dan pengelolaan Keuangan.
+              </p>
+            </label>
+          )}
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 border-t border-border pt-4">
             <Button

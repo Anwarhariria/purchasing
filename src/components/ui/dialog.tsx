@@ -43,9 +43,7 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      <div className="flex-1 overflow-y-auto min-w-0 w-full">
-        {children}
-      </div>
+      <div className="flex-1 overflow-y-auto min-w-0 w-full">{children}</div>
       <DialogPrimitive.Close className="absolute right-3.5 top-3.5 z-20 rounded-md p-1.5 opacity-70 ring-offset-background cursor-pointer transition-opacity hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
         <X className="size-4" />
         <span className="sr-only">Close</span>

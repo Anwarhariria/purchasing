@@ -15,8 +15,15 @@ import {
   ShieldCheck,
   Sliders,
 } from "lucide-react";
-import { money } from "@/lib/algorithms/saw";
-import { SIKLUS_TAHAPAN, type Role, type RequestItem } from "@/types/procurement";
+import { money } from "@/lib/utils";
+import {
+  SIKLUS_TAHAPAN,
+  type Role,
+  type RequestItem,
+  isPemohon,
+  isKoordinator,
+  isKeuangan,
+} from "@/types/procurement";
 
 export interface RoleMetrics {
   total: number;
@@ -25,10 +32,10 @@ export interface RoleMetrics {
   done: number;
   needReview: number;
   needApprove: number;
-  needDisbursement: number;
+  needTransfer: number;
   needLpjVerify: number;
   totalEst: number;
-  totalDisbursed: number;
+  totalTransfer: number;
   usersCount: number;
   activeProc: number;
 }
@@ -37,57 +44,55 @@ interface RoleKpiCardsProps {
   role: Role;
   roleMetrics: RoleMetrics;
   requests: RequestItem[];
+  workflow?: "A" | "B";
 }
 
-export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps) {
+export function RoleKpiCards({ role, roleMetrics, requests, workflow = "A" }: RoleKpiCardsProps) {
   return (
     <>
-      <div key={role} className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {role === "Staf / Asdos" && (
+      <div key={`${role}-${workflow}`} className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {isPemohon(role) && (
           <>
             <MetricCard
-              label="Total Pengajuan Bahan"
+              label={workflow === "B" ? "Total Pengajuan Logistik Unit" : "Total Pengajuan Bahan"}
               value={String(roleMetrics.total).padStart(2, "0")}
-              foot="Seluruh menu praktik diajukan"
               icon={ClipboardList}
               kind="primary"
               className="animate-slide-up-fade stagger-1"
             />
             <MetricCard
-              label="Menunggu ACC (Koor/Kaprodi)"
+              label={
+                workflow === "B" ? "Menunggu Verifikasi Koordinator" : "Menunggu ACC (Koor/Kaprodi)"
+              }
               value={String(roleMetrics.waiting).padStart(2, "0")}
-              foot="Dalam proses verifikasi resep"
               icon={Clock3}
-              trend="Dalam antrean"
               kind="warning"
               className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
-              label="Siap / Sedang Dibelanjakan"
+              label={
+                workflow === "B" ? "Sedang Dibelanjakan (Sarpras)" : "Siap / Sedang Dibelanjakan"
+              }
               value={String(roleMetrics.inProcess).padStart(2, "0")}
-              foot="Dana cair / proses belanja"
               icon={ShoppingBag}
               kind="info"
               className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
-              label="Praktik Selesai"
+              label={workflow === "B" ? "Logistik Selesai Diterima" : "Praktik Selesai"}
               value={String(roleMetrics.done).padStart(2, "0")}
-              foot="LPJ & bon diverifikasi tuntas"
               icon={PackageCheck}
-              trend="Transaksi tuntas"
               kind="success"
               className="animate-slide-up-fade stagger-4"
             />
           </>
         )}
 
-        {role === "Koordinator" && (
+        {isKoordinator(role) && (
           <>
             <MetricCard
               label="Total Pengajuan Masuk"
               value={String(roleMetrics.total).padStart(2, "0")}
-              foot="Pengajuan bahan dapur masak"
               icon={Layers}
               kind="primary"
               className="animate-slide-up-fade stagger-1"
@@ -95,16 +100,13 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Perlu Verifikasi Qty"
               value={String(roleMetrics.needReview).padStart(2, "0")}
-              foot="Cek takaran & edit kuantitas"
               icon={ClipboardCheck}
-              trend="Perlu ditinjau"
               kind="warning"
               className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
               label="Dalam Proses Lanjutan"
               value={String(roleMetrics.inProcess).padStart(2, "0")}
-              foot="Di Kaprodi / Keuangan / Belanja"
               icon={Activity}
               kind="info"
               className="animate-slide-up-fade stagger-3"
@@ -112,9 +114,7 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Selesai Dipertanggungjawabkan"
               value={String(roleMetrics.done).padStart(2, "0")}
-              foot="Bahan terpakai & nota tuntas"
               icon={PackageCheck}
-              trend="Selesai"
               kind="success"
               className="animate-slide-up-fade stagger-4"
             />
@@ -126,7 +126,6 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Total Pengajuan Kurikulum"
               value={String(roleMetrics.total).padStart(2, "0")}
-              foot="Mata kuliah praktik semester aktif"
               icon={Award}
               kind="primary"
               className="animate-slide-up-fade stagger-1"
@@ -134,16 +133,13 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Menunggu Persetujuan Kaprodi"
               value={String(roleMetrics.needApprove).padStart(2, "0")}
-              foot="Telah divalidasi Koordinator Lab"
               icon={Clock3}
-              trend="Siap di-ACC"
               kind="warning"
               className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
               label="Disetujui & Dijalankan"
               value={String(roleMetrics.inProcess).padStart(2, "0")}
-              foot="Dalam tahap pencairan & belanja"
               icon={ShoppingBag}
               kind="info"
               className="animate-slide-up-fade stagger-3"
@@ -151,49 +147,40 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Siklus Selesai"
               value={String(roleMetrics.done).padStart(2, "0")}
-              foot="Praktikum & LPJ tuntas"
               icon={PackageCheck}
-              trend="Selesai"
               kind="success"
               className="animate-slide-up-fade stagger-4"
             />
           </>
         )}
 
-        {role === "Bagian Keuangan" && (
+        {isKeuangan(role) && (
           <>
             <MetricCard
               label="Total Estimasi Diajukan"
               value={money(roleMetrics.totalEst)}
-              foot="Akumulasi kebutuhan semester"
               icon={Wallet}
               kind="primary"
               className="animate-slide-up-fade stagger-1"
             />
             <MetricCard
               label="Perlu Transfer ke Asdos"
-              value={String(roleMetrics.needDisbursement).padStart(2, "0")}
-              foot="Disetujui Kaprodi, siap dicairkan"
+              value={String(roleMetrics.needTransfer).padStart(2, "0")}
               icon={Clock3}
-              trend="Perlu pencairan"
               kind="danger"
               className="animate-slide-up-fade stagger-2"
             />
             <MetricCard
-              label="Perlu Verifikasi LPJ Belanja"
+              label="Perlu Verifikasi Laporan Belanja"
               value={String(roleMetrics.needLpjVerify).padStart(2, "0")}
-              foot="Asdos melampirkan bon belanja"
               icon={ClipboardList}
-              trend="Cek nota & selisih"
               kind="warning"
               className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
               label="Total Dana Ditransfer"
-              value={money(roleMetrics.totalDisbursed)}
-              foot="Dana operasional yang telah dicairkan"
+              value={money(roleMetrics.totalTransfer)}
               icon={CheckCircle2}
-              trend="Realisasi kas"
               kind="success"
               className="animate-slide-up-fade stagger-4"
             />
@@ -205,7 +192,6 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Master Pengajuan"
               value={String(roleMetrics.total).padStart(2, "0")}
-              foot="Total database permohonan"
               icon={ClipboardList}
               kind="primary"
               className="animate-slide-up-fade stagger-1"
@@ -213,7 +199,6 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Pengguna Terdaftar"
               value={String(roleMetrics.usersCount).padStart(2, "0")}
-              foot="Akun sistem pengadaan"
               icon={Users}
               kind="info"
               className="animate-slide-up-fade stagger-2"
@@ -221,18 +206,14 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
             <MetricCard
               label="Belanja Aktif"
               value={String(roleMetrics.activeProc).padStart(2, "0")}
-              foot="Sedang berjalan di siklus"
               icon={Activity}
-              trend="Aktif berproses"
               kind="warning"
               className="animate-slide-up-fade stagger-3"
             />
             <MetricCard
               label="Siklus Selesai"
               value={String(roleMetrics.done).padStart(2, "0")}
-              foot="Tuntas hingga LPJ ditutup"
               icon={ShieldCheck}
-              trend="Selesai sempurna"
               kind="success"
               className="animate-slide-up-fade stagger-4"
             />
@@ -249,9 +230,6 @@ export function RoleKpiCards({ role, roleMetrics, requests }: RoleKpiCardsProps)
                 <Sliders className="size-4 text-primary" />
                 Monitoring 6 Tahapan Siklus Pengadaan Kampus ASAINDO
               </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Distribusi status permohonan dalam alur kerja end-to-end.
-              </p>
             </div>
             <span className="text-[11px] font-bold text-muted-foreground">
               Total {requests.length} Permohonan Tercatat

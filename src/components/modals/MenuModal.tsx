@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { money } from "@/lib/algorithms/saw";
+import { money } from "@/lib/utils";
 import type { Ingredient } from "@/types/procurement";
 
 interface MenuModalProps {
@@ -56,7 +56,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                   : "Tambah Menu & Resep Bahan Baru"}
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Mata Kuliah: <strong>{kaprodiSelectedCourse}</strong> (Semester {kaprodiSelectedSem} · {kaprodiSelectedProdi})
+                Mata Kuliah: <strong>{kaprodiSelectedCourse}</strong> (Semester {kaprodiSelectedSem}{" "}
+                · {kaprodiSelectedProdi})
               </DialogDescription>
             </div>
           </div>
@@ -83,7 +84,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                   Daftar Kebutuhan Bahan Resep:
                 </h4>
                 <p className="text-[11px] text-muted-foreground">
-                  Tentukan bahan apa saja yang dibutuhkan beserta takaran standar per porsi praktikum.
+                  Tentukan bahan apa saja yang dibutuhkan beserta takaran standar per porsi
+                  praktikum.
                 </p>
               </div>
               <Button
@@ -140,7 +142,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                       onChange={(e) => {
                         const val = e.target.value;
                         setMenuFormIngredients((prev) =>
-                          prev.map((item, i) => (i === idx ? { ...item, name: val } : item))
+                          prev.map((item, i) => (i === idx ? { ...item, name: val } : item)),
                         );
                       }}
                       className="h-8 text-xs font-medium mt-0.5"
@@ -161,7 +163,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           setMenuFormIngredients((prev) =>
-                            prev.map((item, i) => (i === idx ? { ...item, neededQty: val } : item))
+                            prev.map((item, i) => (i === idx ? { ...item, neededQty: val } : item)),
                           );
                         }}
                         className="h-8 text-xs font-bold mt-0.5"
@@ -176,7 +178,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                         onChange={(e) => {
                           const val = e.target.value;
                           setMenuFormIngredients((prev) =>
-                            prev.map((item, i) => (i === idx ? { ...item, unit: val } : item))
+                            prev.map((item, i) => (i === idx ? { ...item, unit: val } : item)),
                           );
                         }}
                         className="h-8 text-xs mt-0.5"
@@ -195,7 +197,9 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           setMenuFormIngredients((prev) =>
-                            prev.map((item, i) => (i === idx ? { ...item, pricePerUnit: val } : item))
+                            prev.map((item, i) =>
+                              i === idx ? { ...item, pricePerUnit: val } : item,
+                            ),
                           );
                         }}
                         className="h-8 text-xs font-mono mt-0.5"
@@ -237,7 +241,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                           onChange={(e) => {
                             const val = e.target.value;
                             setMenuFormIngredients((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, name: val } : item))
+                              prev.map((item, i) => (i === idx ? { ...item, name: val } : item)),
                             );
                           }}
                           className="h-8 text-xs font-medium"
@@ -253,7 +257,9 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             setMenuFormIngredients((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, neededQty: val } : item))
+                              prev.map((item, i) =>
+                                i === idx ? { ...item, neededQty: val } : item,
+                              ),
                             );
                           }}
                           className="h-8 text-xs font-bold"
@@ -267,7 +273,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                           onChange={(e) => {
                             const val = e.target.value;
                             setMenuFormIngredients((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, unit: val } : item))
+                              prev.map((item, i) => (i === idx ? { ...item, unit: val } : item)),
                             );
                           }}
                           className="h-8 text-xs"
@@ -283,7 +289,9 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             setMenuFormIngredients((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, pricePerUnit: val } : item))
+                              prev.map((item, i) =>
+                                i === idx ? { ...item, pricePerUnit: val } : item,
+                              ),
                             );
                           }}
                           className="h-8 text-xs font-mono"
@@ -323,8 +331,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 {money(
                   menuFormIngredients.reduce(
                     (sum, ing) => sum + ing.neededQty * ing.pricePerUnit,
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </span>
             </div>

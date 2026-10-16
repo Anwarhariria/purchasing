@@ -16,7 +16,7 @@ export function MetricCard({
 }: {
   label: string;
   value: string;
-  foot: string;
+  foot?: string;
   icon: LucideIcon;
   trend?: string;
   colorScheme?: "primary" | "warning" | "success" | "danger" | "info";
@@ -32,18 +32,18 @@ export function MetricCard({
     startDelay !== undefined
       ? startDelay
       : className.includes("stagger-1")
-      ? 380
-      : className.includes("stagger-2")
-      ? 450
-      : className.includes("stagger-3")
-      ? 520
-      : className.includes("stagger-4")
-      ? 590
-      : className.includes("stagger-5")
-      ? 660
-      : className.includes("stagger-6")
-      ? 730
-      : 400;
+        ? 380
+        : className.includes("stagger-2")
+          ? 450
+          : className.includes("stagger-3")
+            ? 520
+            : className.includes("stagger-4")
+              ? 590
+              : className.includes("stagger-5")
+                ? 660
+                : className.includes("stagger-6")
+                  ? 730
+                  : 400;
   const iconColorMap = {
     primary: "text-primary",
     warning: "text-blue-600 dark:text-blue-400",
@@ -62,6 +62,7 @@ export function MetricCard({
       const timer = setTimeout(() => setHighlight(false), 1800);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [value]);
 
   return (
@@ -74,7 +75,9 @@ export function MetricCard({
       }`}
     >
       <div className="flex items-start justify-between gap-2.5 min-w-0">
-        <span className="text-xs font-bold text-muted-foreground leading-snug line-clamp-2">{label}</span>
+        <span className="text-xs font-bold text-muted-foreground leading-snug line-clamp-2">
+          {label}
+        </span>
         <div
           className={`flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface shadow-2xs transition-transform duration-500 ${
             highlight ? "scale-105" : ""
@@ -86,14 +89,16 @@ export function MetricCard({
       <div className="mt-2.5 sm:mt-3 min-h-[36px] flex items-center">
         <AnimatedValue value={value} startDelay={computedDelay} />
       </div>
-      <div className="mt-3 sm:mt-4 flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 text-[11px] border-t border-border/60 pt-2 min-w-0">
-        <span className="text-muted-foreground line-clamp-1">{foot}</span>
-        {trend && (
-          <span className="font-bold text-foreground shrink-0 self-start xs:self-auto px-1.5 py-0.5 rounded bg-muted/60 text-[10px]">
-            {trend}
-          </span>
-        )}
-      </div>
+      {(foot || trend) && (
+        <div className="mt-3 sm:mt-4 flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 text-[11px] border-t border-border/60 pt-2 min-w-0">
+          {foot && <span className="text-muted-foreground line-clamp-1">{foot}</span>}
+          {trend && (
+            <span className="font-bold text-foreground shrink-0 self-start xs:self-auto px-1.5 py-0.5 rounded bg-muted/60 text-[10px]">
+              {trend}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
