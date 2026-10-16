@@ -45,7 +45,8 @@ Server API akan aktif di: **`http://127.0.0.1:8000`**
 | **Staf / Asdos** | `asdos@gmail.com` | `123` | Buat pengajuan, cek stok, upload bon belanja, SPJ |
 | **Koordinator** | `koordinator@gmail.com` | `123` | Verifikasi standar resep masakan, penyesuaian Qty |
 | **Kaprodi** | `kaprodi@gmail.com` | `123` | ACC permohonan belanja, kurikulum prodi |
-| **Bagian Keuangan** | `keuangan@gmail.com` | `123` | Pencairan dana, validasi bon LPJ, penggantian selisih |
+| **Keuangan Kitchen** | `keuangan.kitchen@gmail.com` | `123` | Pencairan dana kasbon, validasi bon LPJ, penyelesaian selisih (Alur A) |
+| **Keuangan Umum** | `keuangan.umum@gmail.com` | `123` | Alokasi anggaran belanja ATK & barang seluruh unit (Alur B) |
 | **Super Admin** | `superadmin@gmail.com` | `123` | Kelola master data pengguna, kurikulum & log sistem |
 
 ---
@@ -54,24 +55,22 @@ Server API akan aktif di: **`http://127.0.0.1:8000`**
 
 ### 1. Autentikasi (`/api/auth`)
 - `POST /api/auth/login`: Login dengan email dan password. Mengembalikan Bearer Token.
-- `POST /api/auth/quick-login`: Login instan berbasis peran (`role: "Staf / Asdos"`) atau email.
 - `GET /api/auth/me`: Mengambil data profil user yang sedang login (`auth:sanctum`).
 - `POST /api/auth/logout`: Menghapus token sesi aktif.
-- `GET /api/users`: Daftar seluruh pengguna sistem.
-- `POST /api/users`: Menambah akun pengguna baru.
+- `GET /api/users`: Daftar seluruh pengguna sistem (Super Admin).
+- `POST /api/users`: Menambah akun pengguna baru (Super Admin).
 
 ### 2. Pengadaan & Alur Siklus (`/api/requests`)
 - `GET /api/requests`: Mengambil seluruh daftar pengajuan bahan (mendukung filter `?status=...&prodi=...`).
 - `GET /api/requests/kpis`: Metrik ringkasan peran (total biaya, menunggu persetujuan, total pencairan, selisih belanja).
-- `GET /api/requests/fifo-ranking`: Perangkingan prioritas antrean berbasis **First-In, First-Out (FIFO)** (nomor antrean & durasi tunggu).
-- `GET /api/requests/saw-ranking`: Hasil perangkingan prioritas pengadaan dengan algoritma **Simple Additive Weighting (SAW)**.
 - `GET /api/requests/{id}`: Detail lengkap satu pengajuan beserta rincian bahan (line-item ingredients).
 - `POST /api/requests`: Membuat pengajuan bahan baru (otomatis membuat ID `PR-2026-XXX` dan notifikasi Koordinator).
 - `PUT /api/requests/{id}`: Memperbarui data umum dan penyesuaian Qty bahan masakan.
 - `PATCH /api/requests/{id}/status`: Mengubah status workflow pengadaan dan otomatis menembak notifikasi ke peran terkait.
-- `POST /api/requests/{id}/disburse`: Pencairan dana oleh Bagian Keuangan.
+- `POST /api/requests/{id}/disburse`: Pencairan dana oleh Keuangan Kitchen / Keuangan Umum.
 - `POST /api/requests/{id}/spj`: Penyerahan laporan belanja riil, bukti bon/struk, dan kalkulasi otomatis selisih lebih/kurang oleh Asdos.
-- `POST /api/requests/{id}/reimburse`: Penggantian uang belanja kurang oleh Keuangan & penutupan transaksi (`Selesai`).
+- `POST /api/requests/{id}/keputusan-keuangan`: Keputusan alokasi faktor f (1, 0.5, 0.25, 0) oleh Keuangan.
+- `POST /api/kasbon/{id}/penyelesaian`: Pencatatan penyelesaian sisa/tombok kasbon oleh Keuangan Kitchen.
 - `DELETE /api/requests/{id}`: Menghapus pengajuan.
 
 ### 3. Inventaris Stok Lab (`/api/stocks`)
@@ -93,3 +92,16 @@ Server API akan aktif di: **`http://127.0.0.1:8000`**
 ### 6. Peramalan Kebutuhan (`/api/forecasting`)
 - `GET /api/forecasting/ingredients`: Dataset histori konsumsi bahan masakan per bulan.
 - `POST /api/forecasting/calculate`: Menghitung peramalan kebutuhan masa depan dengan parameter Holt's Linear / SES beserta metrik akurasi (MAPE, MAD, MSE, RMSE).
+
+### 7. Scheduler & Background Workers
+- **Auto-Konfirmasi Penerimaan Barang (3x24 Jam / 72 Jam)**:
+  - Command: `php artisan pengajuan:auto-konfirmasi`
+  - Jadwal berkala: Setiap jam (`hourly`) terdaftar di `routes/console.php`.
+  - Menjalankan scheduler di lokal/pengembangan:
+    ```sh
+    php artisan schedule:work
+    ```
+  - Konfigurasi Cron pada server produksi:
+    ```sh
+    * * * * * cd /path-to-backend && php artisan schedule:run >> /dev/null 2>&1
+    ```

@@ -12,59 +12,69 @@ class CurriculumController extends Controller
     {
         $curriculums = Curriculum::all();
 
-        // If hierarchical tree format requested
-        if ($request->query('format') === 'tree') {
-            $groupedByProdi = $curriculums->groupBy('prodi');
-            $tree = [];
+        // If explicitly requested flat array
+        if ($request->query('format') === 'flat') {
+            return response()->json([
+                'status' => 'success',
+                'data' => $curriculums,
+            ]);
+        }
 
-            foreach ($groupedByProdi as $prodiName => $prodiItems) {
-                $semesters = [];
-                $groupedBySem = $prodiItems->groupBy('semester');
+        // Default nested tree structure required by frontend:
+        // { prodiName, semesters: [ { semester, courses: [ { courseName, menus: [ { id, menuName, ingredients } ] } ] } ] }
+        $groupedByProdi = $curriculums->groupBy('prodi');
+        $tree = [];
 
-                foreach ($groupedBySem as $semNum => $semItems) {
-                    $courses = [];
-                    $groupedByCourse = $semItems->groupBy('course');
+        foreach ($groupedByProdi as $prodiName => $prodiItems) {
+            $semesters = [];
+            $groupedBySem = $prodiItems->groupBy('semester');
 
-                    foreach ($groupedByCourse as $courseName => $courseItems) {
-                        $menus = [];
-                        foreach ($courseItems as $item) {
-                            $menus[] = [
-                                'menuName' => $item->menu_name,
-                                'ingredients' => $item->ingredients,
-                            ];
-                        }
-                        $courses[] = [
-                            'courseName' => $courseName,
-                            'menus' => $menus,
+            foreach ($groupedBySem as $semNum => $semItems) {
+                $courses = [];
+                $groupedByCourse = $semItems->groupBy('course');
+
+                foreach ($groupedByCourse as $courseName => $courseItems) {
+                    $menus = [];
+                    foreach ($courseItems as $item) {
+                        $menus[] = [
+                            'id' => $item->id,
+                            'menuName' => $item->menu_name,
+                            'ingredients' => $item->ingredients,
                         ];
                     }
-
-                    $semesters[] = [
-                        'semester' => (int)$semNum,
-                        'courses' => $courses,
+                    $courses[] = [
+                        'courseName' => $courseName,
+                        'menus' => $menus,
                     ];
                 }
 
-                $tree[] = [
-                    'prodiName' => $prodiName,
-                    'semesters' => $semesters,
+                $semesters[] = [
+                    'semester' => (int)$semNum,
+                    'courses' => $courses,
                 ];
             }
 
-            return response()->json([
-                'status' => 'success',
-                'data' => $tree,
-            ]);
+            $tree[] = [
+                'prodiName' => $prodiName,
+                'semesters' => $semesters,
+            ];
         }
 
         return response()->json([
             'status' => 'success',
-            'data' => $curriculums,
+            'data' => $tree,
         ]);
     }
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        if (!$user || (!$user->isKaprodi() && !$user->isSuperAdmin())) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya Kaprodi yang berhak menambahkan standar kurikulum dan resep praktik.',
+            ], 403);
+        }
         $request->validate([
             'prodi' => 'required|string',
             'semester' => 'required|integer',
