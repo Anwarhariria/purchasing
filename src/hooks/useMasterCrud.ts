@@ -13,7 +13,6 @@ import type {
 interface UseMasterCrudProps {
   curriculum: StudyProgramData[];
   setCurriculum: React.Dispatch<React.SetStateAction<StudyProgramData[]>>;
-  users: UserAccount[];
   setUsers: React.Dispatch<React.SetStateAction<UserAccount[]>>;
   currentUser: UserAccount | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<UserAccount | null>>;
@@ -27,7 +26,6 @@ interface UseMasterCrudProps {
 export function useMasterCrud({
   curriculum,
   setCurriculum,
-  users,
   setUsers,
   currentUser,
   setCurrentUser,

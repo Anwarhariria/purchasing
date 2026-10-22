@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import {
   Wallet,
-  Activity,
-  ShieldCheck,
   Download,
   FileText,
   ShoppingBag,
@@ -13,11 +11,7 @@ import {
   User,
   Users,
   ChevronDown,
-  Filter,
-  ArrowRight,
-  TrendingUp,
   AlertCircle,
-  Receipt,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -151,7 +145,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
   }, [isPemohon, currentUser, defaultApplicantLabel]);
 
   // State Tampilan Rangkuman Asdos (Tabel / Card Rekapitulasi)
-  const [showAsdosSummary, setShowAsdosSummary] = useState<boolean>(true);
+  const showAsdosSummary = true;
   const [isDownloadingExcel, setIsDownloadingExcel] = useState<boolean>(false);
 
   // Hitung daftar tahun yang tersedia dari dataset scopedRequests

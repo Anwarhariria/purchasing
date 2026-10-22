@@ -370,7 +370,11 @@ export function matchesCoordinatorUnit(
  * untuk Asdos / applicant yang sama pada pengajuan Alur A lain.
  */
 export function getPendingCarryOverFromRequests(
-  targetReq?: { id?: string | undefined; alur?: string | undefined; applicant?: string | undefined } | null,
+  targetReq?: {
+    id?: string | undefined;
+    alur?: string | undefined;
+    applicant?: string | undefined;
+  } | null,
   requests: RequestItem[] = [],
 ): { total: number; kodeCarryOvers: string } {
   if (!targetReq || targetReq.alur === "B" || !targetReq.applicant) {
@@ -411,10 +415,7 @@ export function getPendingCarryOverFromRequests(
     if (!foundInPenyelesaian && r.deficitAmount && r.deficitAmount > 0) {
       const isCarryOverSettled = r.penyelesaian?.some((p) =>
         Boolean(
-          p.kasbonTujuanId ||
-            p.kasbon_tujuan_id ||
-            p.digantiLangsungAt ||
-            p.diganti_langsung_at,
+          p.kasbonTujuanId || p.kasbon_tujuan_id || p.digantiLangsungAt || p.diganti_langsung_at,
         ),
       );
       if (!isCarryOverSettled) {

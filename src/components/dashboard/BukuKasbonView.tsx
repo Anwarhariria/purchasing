@@ -3,8 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SpakeApi } from "@/lib/api-client";
 import {
-  Receipt,
-  ArrowDownRight,
   ArrowUpRight,
   CheckCircle2,
   AlertTriangle,
@@ -16,8 +14,6 @@ import {
   HandCoins,
   UploadCloud,
   X,
-  CreditCard,
-  Building,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,7 +21,6 @@ import { money } from "@/lib/utils";
 import {
   type RequestItem,
   type Role,
-  type Status,
   type KasbonAsdosSummary,
   type KasbonTransactionDetail,
   type UserAccount,
@@ -38,12 +33,6 @@ interface BukuKasbonViewProps {
   role: Role;
   currentUser?: UserAccount | null;
   notify: (msg: string) => void;
-  onUpdateStatus?: (
-    id: string,
-    newStatus: Status,
-    notes?: string,
-    extra?: Partial<RequestItem>,
-  ) => void;
 }
 
 interface StatCardProps {
@@ -104,13 +93,7 @@ function isMenungguSetoran(r: RequestItem): boolean {
   return true;
 }
 
-export function BukuKasbonView({
-  requests,
-  role,
-  currentUser,
-  notify,
-  onUpdateStatus,
-}: BukuKasbonViewProps) {
+export function BukuKasbonView({ requests, role, currentUser, notify }: BukuKasbonViewProps) {
   const isPemohon = checkPemohon(role);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -194,9 +177,9 @@ export function BukuKasbonView({
           const isSettled = r.penyelesaian?.some((p) =>
             Boolean(
               p.kasbonTujuanId ||
-                p.kasbon_tujuan_id ||
-                p.digantiLangsungAt ||
-                p.diganti_langsung_at,
+              p.kasbon_tujuan_id ||
+              p.digantiLangsungAt ||
+              p.diganti_langsung_at,
             ),
           );
           if (!isSettled) {
@@ -266,9 +249,9 @@ export function BukuKasbonView({
           const isCarryOverSettled = r.penyelesaian?.some((p) =>
             Boolean(
               p.kasbonTujuanId ||
-                p.kasbon_tujuan_id ||
-                p.digantiLangsungAt ||
-                p.diganti_langsung_at,
+              p.kasbon_tujuan_id ||
+              p.digantiLangsungAt ||
+              p.diganti_langsung_at,
             ),
           );
 
@@ -343,10 +326,7 @@ export function BukuKasbonView({
       let txStatus: KasbonTransactionDetail["status"] = "Lunas";
       const isCarryOverSettled = r.penyelesaian?.some((p) =>
         Boolean(
-          p.kasbonTujuanId ||
-            p.kasbon_tujuan_id ||
-            p.digantiLangsungAt ||
-            p.diganti_langsung_at,
+          p.kasbonTujuanId || p.kasbon_tujuan_id || p.digantiLangsungAt || p.diganti_langsung_at,
         ),
       );
       if (
@@ -693,23 +673,22 @@ export function BukuKasbonView({
                         )}
 
                       {/* Tombol Ganti Langsung khusus Keuangan Kitchen */}
-                      {role === "Keuangan Kitchen" &&
-                        summary.deficitCarryOver > 0 && (
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setGantiLangsungAsdos(summary);
-                              setBuktiGantiFile(null);
-                              setCatatanGanti("");
-                              setGantiError(null);
-                            }}
-                            className="h-8 gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
-                            title="Ganti langsung tombok kasbon Asdos tanpa menunggu pengajuan berikutnya"
-                          >
-                            <HandCoins className="h-3.5 w-3.5" />
-                            Ganti Langsung
-                          </Button>
-                        )}
+                      {role === "Keuangan Kitchen" && summary.deficitCarryOver > 0 && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setGantiLangsungAsdos(summary);
+                            setBuktiGantiFile(null);
+                            setCatatanGanti("");
+                            setGantiError(null);
+                          }}
+                          className="h-8 gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+                          title="Ganti langsung tombok kasbon Asdos tanpa menunggu pengajuan berikutnya"
+                        >
+                          <HandCoins className="h-3.5 w-3.5" />
+                          Ganti Langsung
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>

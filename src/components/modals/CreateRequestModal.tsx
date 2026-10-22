@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { calculateRequestTotals, money, formatUnitLabel, localDateInput } from "@/lib/utils";
 import { SpakeApi } from "@/lib/api-client";
 import {
-  UNIT_KERJA_LIST,
   type ProdiCurriculum,
   type RequestDetail,
   type LabStockItem,
@@ -124,7 +123,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
         }),
       );
     }
-  }, [katalogList, workflow]);
+  }, [katalogList, workflow, newDetails.length, setNewDetails]);
 
   // Pastikan form Alur B memiliki minimal 1 item siap diisi
   useEffect(() => {
@@ -455,7 +454,6 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                 setGroupCount={setGroupCount}
                 labStockInventory={labStockInventory}
                 onSelectMenuRecipe={onSelectMenuRecipe}
-                setNewDetails={setNewDetails}
               />
 
               {/* Form Metadata Pengajuan Alur A */}

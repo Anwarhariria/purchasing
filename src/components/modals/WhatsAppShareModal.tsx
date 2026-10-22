@@ -20,13 +20,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { money } from "@/lib/utils";
-import type { RequestItem, Role, UserAccount } from "@/types/procurement";
+import type { RequestItem, UserAccount } from "@/types/procurement";
 
 interface WhatsAppShareModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activeRequest: RequestItem;
-  role: Role;
   decisionNote?: string;
   onConfirmForward?: () => void;
   notify?: (msg: string) => void;
@@ -37,7 +36,6 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
   open,
   onOpenChange,
   activeRequest,
-  role,
   decisionNote = "",
   onConfirmForward,
   notify = () => {},

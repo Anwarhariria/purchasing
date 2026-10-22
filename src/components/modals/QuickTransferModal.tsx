@@ -198,7 +198,7 @@ export const QuickTransferModal: React.FC<QuickTransferModalProps> = ({
             Catatan Keuangan & Nomor Referensi Bank:
             {factorF < 1 && (
               <span className="text-red-500 font-bold ml-1">
-                * (Wajib mencantumkan alasan jika alokasi f &lt; 1)
+                (Wajib mencantumkan alasan jika alokasi f &lt; 1)
               </span>
             )}
             <textarea
@@ -247,7 +247,7 @@ export const QuickTransferModal: React.FC<QuickTransferModalProps> = ({
                 }
                 className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md w-full sm:w-auto"
               >
-                <Wallet className="size-4" /> Cairkan Kasbon ({money(finalTransferAmount)})
+                <Wallet className="size-4" /> Cairkan Uang ({money(finalTransferAmount)})
               </Button>
             ) : (
               <Button

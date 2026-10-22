@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Receipt, FileText, ExternalLink, Download, Eye, X } from "lucide-react";
+import { Receipt, FileText, ExternalLink, Eye } from "lucide-react";
 import { money } from "@/lib/utils";
 import type { RequestItem } from "@/types/procurement";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface RequestLpjSectionProps {
   activeRequest: RequestItem;

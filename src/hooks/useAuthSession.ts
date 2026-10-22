@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
-import type { Role, UserAccount, DummyCredential } from "@/types/procurement";
+import type { Role, UserAccount } from "@/types/procurement";
 import { SpakeApi } from "@/lib/api-client";
 
 export function useAuthSession(
@@ -30,7 +30,7 @@ export function useAuthSession(
         setCurrentUser(null);
         setRole(null);
       }
-    } catch (e) {
+    } catch {
       setCurrentUser(null);
       setRole(null);
     }

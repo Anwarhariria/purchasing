@@ -3,14 +3,12 @@ import {
   Cpu,
   RefreshCw,
   CheckCircle2,
-  AlertTriangle,
   Layers,
   Calendar,
   Database,
   Sliders,
   BarChart3,
   Award,
-  Clock,
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,18 +23,16 @@ export function AdminModelForecastingView({ notify }: AdminModelForecastingViewP
   const [modelInfo, setModelInfo] = useState<ForecastModelInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [training, setTraining] = useState<boolean>(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fetchModelInfo = async () => {
     setLoading(true);
-    setErrorMsg(null);
     try {
       const res = await SpakeApi.getForecastModelInfo();
       if (res.data) {
         setModelInfo(res.data);
       }
-    } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Gagal memuat metadata model peramalan.");
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }

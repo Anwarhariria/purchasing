@@ -18,7 +18,7 @@ interface ParsedNumberString {
   isCurrency: boolean;
 }
 
-export function parseNumberString(raw: string | number): ParsedNumberString | null {
+function parseNumberString(raw: string | number): ParsedNumberString | null {
   const str = String(raw).trim();
   if (!str) return null;
 
@@ -83,7 +83,7 @@ export function parseNumberString(raw: string | number): ParsedNumberString | nu
   };
 }
 
-export function formatNumberString(current: number, parsed: ParsedNumberString): string {
+function formatNumberString(current: number, parsed: ParsedNumberString): string {
   let formattedNumber: string;
 
   if (parsed.hasThousandSep) {

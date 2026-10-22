@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, Plus, Trash2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Check, Plus, AlertCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/utils";
 import type { RequestItem, RequestDetail } from "@/types/procurement";
@@ -9,7 +9,7 @@ interface RequestItemsTableProps {
   canEditQtyOnly: boolean;
   editableDetails: RequestDetail[];
   setEditableDetails: React.Dispatch<React.SetStateAction<RequestDetail[]>>;
-  handleSaveQtyChanges: (id: string, details: RequestDetail[]) => void;
+  handleSaveQtyChanges: (id: string, details: RequestDetail[]) => Promise<boolean>;
 }
 
 export const RequestItemsTable: React.FC<RequestItemsTableProps> = ({

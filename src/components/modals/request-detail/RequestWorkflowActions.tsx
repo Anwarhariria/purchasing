@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Check,
   X,
-  Wallet,
   CheckCircle2,
   ShoppingBag,
   Receipt,
@@ -30,7 +29,7 @@ interface RequestWorkflowActionsProps {
   decisionNote: string;
   setDecisionNote: (val: string) => void;
   editableDetails: RequestDetail[];
-  handleSaveQtyChanges: (id: string, details: RequestDetail[]) => void;
+  handleSaveQtyChanges: (id: string, details: RequestDetail[]) => Promise<boolean>;
   updateStatus: (
     id: string,
     newStatus: Status,
@@ -351,11 +350,12 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
         open={isWaModalOpen}
         onOpenChange={setIsWaModalOpen}
         activeRequest={activeRequest}
-        role={role}
         decisionNote={decisionNote}
-        onConfirmForward={() => {
+        onConfirmForward={async () => {
           if (isKoordinator(role) && activeRequest.status === "DIAJUKAN") {
-            handleSaveQtyChanges(activeRequest.id, editableDetails);
+            // Simpan qty dulu (status masih DIAJUKAN), baru ubah status
+            const ok = await handleSaveQtyChanges(activeRequest.id, editableDetails);
+            if (!ok) return;
           }
           updateStatus(
             activeRequest.id,
@@ -388,8 +388,10 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
           </label>
           <div className="flex flex-wrap gap-2">
             <Button
-              onClick={() => {
-                handleSaveQtyChanges(activeRequest.id, editableDetails);
+              onClick={async () => {
+                // Simpan qty dulu (status masih DIAJUKAN), baru ubah status
+                const ok = await handleSaveQtyChanges(activeRequest.id, editableDetails);
+                if (!ok) return;
                 updateStatus(
                   activeRequest.id,
                   "DIVERIFIKASI_KOORD",
@@ -571,8 +573,8 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
                         </div>
                       ) : (
                         <p className="text-[11px] text-muted-foreground">
-                          Catatan Alur A: Jika ada carry-over tombok kasbon Asdos sebelumnya, backend
-                          akan otomatis mengakumulasikannya ke dana diterima.
+                          Catatan Alur A: Jika ada carry-over tombok kasbon Asdos sebelumnya,
+                          backend akan otomatis mengakumulasikannya ke dana diterima.
                         </p>
                       )}
                     </div>
@@ -702,7 +704,7 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
                       <Check className="size-3.5" /> Simpan Keputusan Keuangan &amp;{" "}
                       {!isAlurB
                         ? carryOverAmount > 0
-                          ? `Cairkan Kasbon (${money(nominalTransfer + carryOverAmount)})`
+                          ? `Cairkan Uang (${money(nominalTransfer + carryOverAmount)})`
                           : "Cairkan Dana"
                         : "Alokasikan Belanja"}
                     </>

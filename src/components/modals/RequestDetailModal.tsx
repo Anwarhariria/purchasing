@@ -10,13 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { DeadlineTag } from "@/components/common/DeadlineTag";
-import {
-  SIKLUS_TAHAPAN,
-  SIKLUS_TAHAPAN_A,
-  SIKLUS_TAHAPAN_B,
-  isPemohon,
-  isKoordinator,
-} from "@/types/procurement";
+import { SIKLUS_TAHAPAN_A, SIKLUS_TAHAPAN_B, isPemohon, isKoordinator } from "@/types/procurement";
 import { money, formatUnitLabel } from "@/lib/utils";
 import { exportBkkPdf, isBkkPrintable } from "@/lib/export/bkk-pdf-export";
 import type { Role, Status, RequestItem, RequestDetail, User } from "@/types/procurement";
@@ -33,7 +27,7 @@ interface RequestDetailModalProps {
   onClose: () => void;
   editableDetails: RequestDetail[];
   setEditableDetails: React.Dispatch<React.SetStateAction<RequestDetail[]>>;
-  handleSaveQtyChanges: (id: string, details: RequestDetail[]) => void;
+  handleSaveQtyChanges: (id: string, details: RequestDetail[]) => Promise<boolean>;
   updateStatus: (
     id: string,
     newStatus: Status,
@@ -135,7 +129,6 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
             open={isHeaderWaOpen}
             onOpenChange={setIsHeaderWaOpen}
             activeRequest={activeRequest}
-            role={role}
             decisionNote={decisionNote}
           />
 
@@ -182,8 +175,10 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-200 dark:border-emerald-900">
                 {waActionData.action === "approve" ? (
                   <Button
-                    onClick={() => {
-                      handleSaveQtyChanges(activeRequest.id, editableDetails);
+                    onClick={async () => {
+                      // Simpan qty dulu, baru ubah status
+                      const ok = await handleSaveQtyChanges(activeRequest.id, editableDetails);
+                      if (!ok) return;
                       updateStatus(
                         activeRequest.id,
                         "DISETUJUI_KAPRODI",
@@ -423,7 +418,6 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
         open={isHeaderWaOpen}
         onOpenChange={setIsHeaderWaOpen}
         activeRequest={activeRequest}
-        role={role}
         decisionNote={decisionNote}
       />
     </>

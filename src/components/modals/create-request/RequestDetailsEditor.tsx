@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Plus, Trash2, CheckCircle2, Sparkles, Package, X } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Package, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { money, calculateRequestTotals } from "@/lib/utils";

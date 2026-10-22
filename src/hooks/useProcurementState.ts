@@ -274,7 +274,7 @@ export function useProcurementState(notify: (msg: string) => void, isLoggedIn: b
     reqId: string,
     updatedDetails: RequestDetail[],
     currentRole: Role,
-  ) {
+  ): Promise<boolean> {
     try {
       const { totalPrice: updatedPrice, totalQty: updatedTotalQty } =
         calculateRequestTotals(updatedDetails);
@@ -286,10 +286,11 @@ export function useProcurementState(notify: (msg: string) => void, isLoggedIn: b
       });
       await queryClient.invalidateQueries({ queryKey: ["procurement-requests"] });
       notify(`Jumlah Qty bahan untuk ${reqId} berhasil diperbarui.`);
+      return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : `Gagal memperbarui Qty.`;
       toast.error(msg);
-      notify(msg);
+      return false;
     }
   }
 

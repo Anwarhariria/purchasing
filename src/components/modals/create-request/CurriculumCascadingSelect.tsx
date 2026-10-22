@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Sliders, Box, Search, X, Check, Utensils, BookOpen } from "lucide-react";
+import { Sliders, Search, X, Check, Utensils } from "lucide-react";
 import { calculateStockDeficit } from "@/lib/utils";
-import type {
-  ProdiCurriculum,
-  RequestDetail,
-  LabStockItem,
-  MenuItemRecipe,
-} from "@/types/procurement";
+import type { ProdiCurriculum, LabStockItem, MenuItemRecipe } from "@/types/procurement";
 
 interface CurriculumCascadingSelectProps {
   curriculum: ProdiCurriculum[];
@@ -29,7 +24,6 @@ interface CurriculumCascadingSelectProps {
     curriculumData?: ProdiCurriculum[],
     groupMultiplier?: number,
   ) => void;
-  setNewDetails: React.Dispatch<React.SetStateAction<RequestDetail[]>>;
 }
 
 export const CurriculumCascadingSelect: React.FC<CurriculumCascadingSelectProps> = ({
@@ -46,7 +40,6 @@ export const CurriculumCascadingSelect: React.FC<CurriculumCascadingSelectProps>
   setGroupCount,
   labStockInventory,
   onSelectMenuRecipe,
-  setNewDetails,
 }) => {
   const [menuSearchQuery, setMenuSearchQuery] = useState(selectedMenu || "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -54,9 +47,7 @@ export const CurriculumCascadingSelect: React.FC<CurriculumCascadingSelectProps>
 
   // Sync internal search input with selectedMenu prop
   useEffect(() => {
-    if (selectedMenu && selectedMenu !== menuSearchQuery) {
-      setMenuSearchQuery(selectedMenu);
-    }
+    setMenuSearchQuery(selectedMenu || "");
   }, [selectedMenu]);
 
   // Close suggestions when clicking outside

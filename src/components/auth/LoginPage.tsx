@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, KeyRound, ArrowLeft } from "lucide-react";
+import { Mail, Lock, KeyRound } from "lucide-react";
 import { type DummyCredential } from "@/types/procurement";
 
 const SEEDER_DEMO_ACCOUNTS: DummyCredential[] = [

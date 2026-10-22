@@ -51,7 +51,7 @@ export const StockModal: React.FC<StockModalProps> = ({
       setUnit(labStock[defaultName]?.unit || "kg");
     }
     setIsDropdownOpen(false);
-  }, [editingStockItem, open]);
+  }, [editingStockItem, open, labStock]);
 
   // Click outside to close suggestion dropdown
   useEffect(() => {

@@ -2,8 +2,6 @@ import type {
   RequestItem,
   UserAccount,
   NotificationItem,
-  StudyProgramData,
-  IngredientForecastItem,
   ProcurementActivityLog,
   ForecastModelInfo,
   AlurBPredictionResponse,

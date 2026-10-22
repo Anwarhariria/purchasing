@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AlertTriangle, X, Ban } from "lucide-react";
+import { AlertTriangle, Ban } from "lucide-react";
 import {
   Dialog,
   DialogContent,

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Receipt, CheckCircle2, Clock3, Send, Loader2, FileText, ExternalLink } from "lucide-react";
+import React from "react";
+import { Receipt, CheckCircle2, Clock3, Send, FileText, ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { money, compressImageToDataUrl } from "@/lib/utils";
+import { money } from "@/lib/utils";
 import type { RequestItem } from "@/types/procurement";
 
 interface ReportExpenseModalProps {
@@ -37,8 +37,6 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
   setReportReceiptFile,
   handleReportExpense,
 }) => {
-  const [isCompressing, setIsCompressing] = useState(false);
-
   if (!reportingRequestId) return null;
 
   const reportingItem = requests.find((r) => r.id === reportingRequestId);
@@ -146,7 +144,6 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
             <Input
               type="file"
               accept=".jpg,.jpeg,.png,.webp,.pdf,application/pdf,image/*"
-              disabled={isCompressing}
               required={
                 !reportReceiptFile &&
                 !reportReceiptImg &&
@@ -189,12 +186,6 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
               }}
               className="h-9 text-xs cursor-pointer"
             />
-            {isCompressing && (
-              <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                <Loader2 className="size-3.5 animate-spin" />
-                <span>Mengompresi foto nota belanja (&lt; 800 KB)...</span>
-              </div>
-            )}
 
             {/* Preview Section */}
             {reportReceiptImg ? (
@@ -281,21 +272,14 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 border-t border-border pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isCompressing}
-              onClick={onClose}
-              className="w-full sm:w-auto"
-            >
+            <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Batal
             </Button>
             <Button
               type="submit"
               disabled={
-                isCompressing ||
-                (!reportReceiptImg &&
-                  (!reportingItem.receiptImages || reportingItem.receiptImages.length === 0))
+                !reportReceiptImg &&
+                (!reportingItem.receiptImages || reportingItem.receiptImages.length === 0)
               }
               className="gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md w-full sm:w-auto cursor-pointer"
               title={
@@ -305,17 +289,8 @@ export const ReportExpenseModal: React.FC<ReportExpenseModalProps> = ({
                   : "Kirim Laporan ke Keuangan"
               }
             >
-              {isCompressing ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  <span>Memproses...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="size-4" />
-                  <span>Kirim Laporan ke Keuangan</span>
-                </>
-              )}
+              <Send className="size-4" />
+              <span>Kirim Laporan ke Keuangan</span>
             </Button>
           </div>
         </form>

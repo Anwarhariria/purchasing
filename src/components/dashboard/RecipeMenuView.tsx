@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, BookOpen, Utensils, Edit, Trash2 } from "lucide-react";
+import { BookOpen, Utensils, Edit, Trash2 } from "lucide-react";
 import { money } from "@/lib/utils";
 import type { StudyProgramData, MenuItemRecipe } from "@/types/procurement";
 
@@ -11,7 +11,6 @@ interface RecipeMenuViewProps {
   setKaprodiSelectedSem: (s: number) => void;
   kaprodiSelectedCourse: string;
   setKaprodiSelectedCourse: (c: string) => void;
-  onOpenAddMenu: (courseName: string) => void;
   onOpenEditMenu: (courseName: string, menu: MenuItemRecipe) => void;
   onDeleteMenu: (courseName: string, menuName: string) => void;
 }
@@ -24,7 +23,6 @@ export function RecipeMenuView({
   setKaprodiSelectedSem,
   kaprodiSelectedCourse,
   setKaprodiSelectedCourse,
-  onOpenAddMenu,
   onOpenEditMenu,
   onDeleteMenu,
 }: RecipeMenuViewProps) {

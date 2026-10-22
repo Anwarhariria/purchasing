@@ -3,7 +3,6 @@ import {
   Plus,
   PackageCheck,
   ListChecks,
-  ClipboardCheck,
   Utensils,
   Banknote,
   Receipt,

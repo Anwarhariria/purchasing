@@ -10,7 +10,6 @@ import {
   type Status,
   type RequestItem,
   type RequestDetail,
-  type ProcurementActivityLog,
   isPemohon,
   isKoordinator,
   isKeuangan,
@@ -101,8 +100,6 @@ function Dashboard() {
     loginPassword,
     setLoginPassword,
     loginError,
-    handleGoToLogin,
-    handleBackToLanding,
     handleLogin,
     handleQuickLogin,
     handleLogout,
@@ -117,7 +114,6 @@ function Dashboard() {
 
   const {
     requests,
-    setRequests,
     users,
     setUsers,
     curriculum,
@@ -126,7 +122,6 @@ function Dashboard() {
     setLabStock,
     notifications,
     setNotifications,
-    addNotification,
     updateStatus,
     handleSaveQtyChanges,
     handleQuickAdjustStock,
@@ -137,9 +132,6 @@ function Dashboard() {
   // Auto-switch dashboard workflow to match logged in user role/department
   useEffect(() => {
     if (currentUser) {
-      const deptLower = (currentUser.department || "").toLowerCase();
-      const emailLower = (currentUser.email || "").toLowerCase();
-
       const r = currentUser.role;
       if (
         r === "Asdos Kitchen" ||
@@ -195,7 +187,7 @@ function Dashboard() {
       setWaActionData({ action: action as "approve" | "reject", id: reqId });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [users]);
+  }, [users, handleRoleChange, setCurrentUser, setCurrentView]);
 
   // State Cascading Dropdown Pengajuan
   const [selectedProdi, setSelectedProdi] = useState<string>(
@@ -214,7 +206,6 @@ function Dashboard() {
   const crud = useMasterCrud({
     curriculum,
     setCurriculum,
-    users,
     setUsers,
     currentUser,
     setCurrentUser,
@@ -763,7 +754,6 @@ function Dashboard() {
         <DashboardHeader
           role={role}
           handleRoleChange={handleRoleChange}
-          activeWorkflow={activeWorkflow}
           currentUser={currentUser}
           setMobileOpen={setMobileOpen}
           notificationsOpen={notificationsOpen}
@@ -805,7 +795,6 @@ function Dashboard() {
               role={role}
               currentUser={currentUser}
               notify={notify}
-              onUpdateStatus={(id, s, note, extra) => updateStatus(id, s, note, extra)}
             />
           )}
 
@@ -862,7 +851,6 @@ function Dashboard() {
               setKaprodiSelectedSem={crud.setKaprodiSelectedSem}
               kaprodiSelectedCourse={crud.kaprodiSelectedCourse}
               setKaprodiSelectedCourse={crud.setKaprodiSelectedCourse}
-              onOpenAddMenu={crud.handleOpenAddMenu}
               onOpenEditMenu={crud.handleOpenEditMenu}
               onDeleteMenu={crud.handleDeleteMenu}
             />

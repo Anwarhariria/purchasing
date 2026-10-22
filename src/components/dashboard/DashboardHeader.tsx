@@ -7,8 +7,6 @@ interface DashboardHeaderProps {
   setMobileOpen: (v: boolean) => void;
   role: Role;
   handleRoleChange: (r: Role) => void;
-  activeWorkflow?: "A" | "B";
-  setActiveWorkflow?: (w: "A" | "B") => void;
   notificationsOpen: boolean;
   setNotificationsOpen: (v: boolean) => void;
   unreadNotifCount: number;
@@ -24,8 +22,6 @@ export function DashboardHeader({
   setMobileOpen,
   role,
   handleRoleChange: _handleRoleChange,
-  activeWorkflow = "A",
-  setActiveWorkflow,
   notificationsOpen,
   setNotificationsOpen,
   unreadNotifCount,

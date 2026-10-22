@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mark } from "@/components/common/Mark";
 import { ChevronLeft, Menu, X } from "lucide-react";
