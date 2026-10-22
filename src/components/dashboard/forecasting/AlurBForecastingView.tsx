@@ -4,8 +4,8 @@ import {
   TrendingUp,
   Building2,
   Calendar,
-  Filter,
-  DollarSign,
+  Search,
+  Calculator,
   Package,
   Layers,
   HelpCircle,
@@ -83,7 +83,7 @@ function getDynamicTargetPeriodOptions(): { value: string; label: string }[] {
     "November",
     "Desember",
   ];
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 3; i++) {
     const d = new Date(jakartaTime.getFullYear(), jakartaTime.getMonth() + i, 1);
     const y = d.getFullYear();
     const m = d.getMonth() + 1;
@@ -130,14 +130,21 @@ export function AlurBForecastingView({
 
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
-  const { data: forecastData, isLoading: isQueryLoading } = useQuery({
+  const {
+    data: forecastData,
+    isLoading: isQueryLoading,
+    error: queryError,
+    isError,
+  } = useQuery({
     queryKey: [selectedUnit, targetPeriod],
     queryFn: async () => {
       const uParam = selectedUnit === "ALL" ? undefined : selectedUnit;
       return SpakeApi.predictAlurB(targetPeriod, uParam);
     },
     staleTime: 10 * 60 * 1000,
+    retry: false,
   });
 
   const loading = isQueryLoading || isRefreshing;
@@ -145,17 +152,32 @@ export function AlurBForecastingView({
   const isModelUnavailable = Boolean(forecastData?.model_tidak_tersedia);
   const availableUnits: OfficialUnit[] = forecastData?.available_units || DEFAULT_OFFICIAL_UNITS;
 
+  const errorMessage = useMemo(() => {
+    if (refreshError) return refreshError;
+    if (forecastData && forecastData.status === "error" && forecastData.message) {
+      return forecastData.message;
+    }
+    if (isError && queryError) {
+      return queryError instanceof Error
+        ? queryError.message
+        : "Terjadi kesalahan saat memuat data peramalan.";
+    }
+    return null;
+  }, [refreshError, forecastData, isError, queryError]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    setRefreshError(null);
     try {
       const uParam = selectedUnit === "ALL" ? undefined : selectedUnit;
       const res = await SpakeApi.predictAlurB(targetPeriod, uParam, true);
       queryClient.setQueryData([selectedUnit, targetPeriod], res);
       notify("Data peramalan berhasil dimuat ulang langsung dari layanan AI.");
     } catch (err: unknown) {
-      notify(
-        `Gagal memuat rekomendasi peramalan: ${err instanceof Error ? err.message : "Kesalahan server"}`,
-      );
+      const msg = err instanceof Error ? err.message : "Kesalahan server";
+      setRefreshError(msg);
+      queryClient.removeQueries({ queryKey: [selectedUnit, targetPeriod] });
+      notify(`Gagal memuat rekomendasi peramalan: ${msg}`);
     } finally {
       setIsRefreshing(false);
     }
@@ -193,6 +215,7 @@ export function AlurBForecastingView({
   };
 
   const isCoordinatorOrStaff = isKoordinator(role) || isPemohon(role);
+  const hideUnitFilter = isCoordinatorOrStaff && userUnitSlug !== "ALL";
 
   return (
     <div className="space-y-6">
@@ -272,7 +295,11 @@ export function AlurBForecastingView({
         </div>
 
         {/* CONTROLS & FILTER BAR */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4">
+        <div
+          className={`grid grid-cols-1 ${
+            hideUnitFilter ? "sm:grid-cols-2" : "sm:grid-cols-3"
+          } gap-3 pt-4`}
+        >
           {/* Target Periode */}
           <div>
             <label className="text-xs font-bold text-foreground mb-1 flex items-center gap-1.5">
@@ -281,7 +308,10 @@ export function AlurBForecastingView({
             </label>
             <select
               value={targetPeriod}
-              onChange={(e) => setTargetPeriod(e.target.value)}
+              onChange={(e) => {
+                setTargetPeriod(e.target.value);
+                setRefreshError(null);
+              }}
               className="w-full text-xs font-medium rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20"
             >
               {periodOptions.map((opt) => (
@@ -292,31 +322,35 @@ export function AlurBForecastingView({
             </select>
           </div>
 
-          {/* Unit Kerja Filter */}
-          <div>
-            <label className="text-xs font-bold text-foreground mb-1 flex items-center gap-1.5">
-              <Building2 className="size-3.5 text-primary" />
-              Unit Kerja Kampus
-            </label>
-            <select
-              value={selectedUnit}
-              onChange={(e) => setSelectedUnit(e.target.value)}
-              disabled={isCoordinatorOrStaff && userUnitSlug !== "ALL"}
-              className="w-full text-xs font-medium rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 disabled:opacity-75 disabled:bg-muted"
-            >
-              {!isCoordinatorOrStaff && <option value="ALL">Semua 6 Unit Kerja</option>}
-              {(availableUnits.length > 0 ? availableUnits : DEFAULT_OFFICIAL_UNITS).map((u) => (
-                <option key={u.id} value={u.id}>
-                  {formatUnitLabel(u)}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Unit Kerja Filter (hanya untuk Super Admin & Keuangan Umum) */}
+          {!hideUnitFilter && (
+            <div>
+              <label className="text-xs font-bold text-foreground mb-1 flex items-center gap-1.5">
+                <Building2 className="size-3.5 text-primary" />
+                Unit Kerja Kampus
+              </label>
+              <select
+                value={selectedUnit}
+                onChange={(e) => {
+                  setSelectedUnit(e.target.value);
+                  setRefreshError(null);
+                }}
+                className="w-full text-xs font-medium rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="ALL">Semua 6 Unit Kerja</option>
+                {(availableUnits.length > 0 ? availableUnits : DEFAULT_OFFICIAL_UNITS).map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {formatUnitLabel(u)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Cari Barang */}
           <div>
             <label className="text-xs font-bold text-foreground mb-1 block flex items-center gap-1.5">
-              <Filter className="size-3.5 text-primary" />
+              <Search className="size-3.5 text-primary" />
               Cari Nama / Kode Barang
             </label>
             <input
@@ -348,7 +382,7 @@ export function AlurBForecastingView({
 
           <div className="p-3.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
             <div className="p-2.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <DollarSign className="size-5" />
+              <Calculator className="size-5" />
             </div>
             <div>
               <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -421,6 +455,21 @@ export function AlurBForecastingView({
             <RefreshCw className="size-6 animate-spin mx-auto text-primary" />
             <p className="text-xs font-medium text-muted-foreground">
               Menghitung peramalan kebutuhan barang...
+            </p>
+          </div>
+        ) : errorMessage ? (
+          <div className="p-12 text-center space-y-3">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+              <AlertCircle className="size-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-foreground">Gagal Memuat Peramalan Kebutuhan</p>
+              <p className="text-xs text-rose-600 dark:text-rose-400 font-medium max-w-md mx-auto">
+                {errorMessage}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Silakan pilih periode peramalan lain atau coba muat ulang data.
             </p>
           </div>
         ) : filteredPredictions.length === 0 ? (

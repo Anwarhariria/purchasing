@@ -63,3 +63,7 @@ scratch/
 .tanstack/
 .pytest_cache/
 docs/REFACTOR_PLAN.md
+
+# Playwright demo output
+demo/hasil/
+demo/playwright-report/

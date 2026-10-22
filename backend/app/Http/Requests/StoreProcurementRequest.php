@@ -16,18 +16,21 @@ class StoreProcurementRequest extends FormRequest
         return [
             'item' => 'nullable|string',
             'applicant' => 'nullable|string',
-            'need_by' => 'nullable|date|after_or_equal:+3 days',
-            'needBy' => 'nullable|date|after_or_equal:+3 days',
-            'deadline' => 'nullable|date|after_or_equal:+3 days',
+            'need_by' => 'nullable|date|after_or_equal:today',
+            'needBy' => 'nullable|date|after_or_equal:today',
+            'deadline' => 'nullable|date|after_or_equal:today',
+            'details' => 'nullable|array',
+            'details.*.price' => 'nullable|numeric|min:0|max:1000000000',
+            'details.*.unit' => 'nullable|string|max:50',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'need_by.after_or_equal' => 'Tanggal kebutuhan praktikum (need-by date) minimal H-3 hari dari hari ini sesuai SOP pengadaan.',
-            'needBy.after_or_equal' => 'Tanggal kebutuhan praktikum (need-by date) minimal H-3 hari dari hari ini sesuai SOP pengadaan.',
-            'deadline.after_or_equal' => 'Tanggal tenggat praktikum minimal H-3 hari dari hari ini sesuai SOP pengadaan.',
+            'need_by.after_or_equal' => 'Tanggal kebutuhan tidak boleh sebelum hari ini.',
+            'needBy.after_or_equal' => 'Tanggal kebutuhan tidak boleh sebelum hari ini.',
+            'deadline.after_or_equal' => 'Tanggal kebutuhan tidak boleh sebelum hari ini.',
         ];
     }
 }

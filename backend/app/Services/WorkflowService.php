@@ -385,6 +385,7 @@ class WorkflowService
                 // Ambil semua carry_over milik Asdos yang sama dengan kasbon_tujuan_id masih NULL
                 $pendingCarryOvers = \App\Models\KasbonPenyelesaian::where('jenis', 'carry_over')
                     ->whereNull('kasbon_tujuan_id')
+                    ->whereNull('diganti_langsung_at')
                     ->whereHas('pengajuan', function ($q) use ($req) {
                         $q->where('applicant', $req->applicant)
                           ->where('id', '!=', $req->id);

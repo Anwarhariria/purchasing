@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Download, FileText, AlertTriangle, Receipt, Smartphone, Check, X } from "lucide-react";
+import { Download, FileText, AlertTriangle, Printer, Smartphone, Check, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,7 @@ interface RequestDetailModalProps {
   exportSinglePdf?: (r: RequestItem) => void;
   waActionData?: { action: "approve" | "reject"; id: string } | null;
   setWaActionData?: (val: { action: "approve" | "reject"; id: string } | null) => void;
+  requests?: RequestItem[];
 }
 
 export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
@@ -67,6 +68,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
   exportSinglePdf,
   waActionData,
   setWaActionData,
+  requests = [],
 }) => {
   const [isHeaderWaOpen, setIsHeaderWaOpen] = useState(false);
 
@@ -376,6 +378,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
               setReportingRequestId={setReportingRequestId}
               setReportSpentAmount={setReportSpentAmount}
               onClose={onClose}
+              requests={requests}
             />
 
             {/* Unduh Dokumen Resmi PR & Laporan */}
@@ -391,7 +394,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                     className="gap-1.5 border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-950/30 font-bold text-xs flex-1 sm:flex-initial cursor-pointer"
                     title="Cetak lembar Bukti Kas Keluar (BKK) / Kuitansi resmi pencairan dana"
                   >
-                    <Receipt className="size-3.5" /> Cetak BKK
+                    <Printer className="size-3.5" /> Cetak BKK
                   </Button>
                 )}
                 <Button

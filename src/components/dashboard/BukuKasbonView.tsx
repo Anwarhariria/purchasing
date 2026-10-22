@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { SpakeApi } from "@/lib/api-client";
 import {
-  Wallet,
   Receipt,
   ArrowDownRight,
   ArrowUpRight,
@@ -12,11 +13,12 @@ import {
   Search,
   Download,
   Filter,
-  DollarSign,
+  HandCoins,
   UploadCloud,
   X,
   CreditCard,
   Building,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/utils";
@@ -72,6 +74,36 @@ function StatCard({ label, value, tone = "normal" }: StatCardProps) {
   );
 }
 
+function getRequestSisa(r: RequestItem): number {
+  if (r.refundAmount && r.refundAmount > 0) return r.refundAmount;
+  const received = r.danaDiterima || r.nominalTransfer || 0;
+  const spent = r.actualSpent || 0;
+  const diff = received - spent;
+  return diff > 0 ? diff : 0;
+}
+
+function hasBuktiSetor(r: RequestItem): boolean {
+  return Boolean(
+    r.buktiSetorUrl ||
+    r.penyelesaian?.some((p) => p.jenis === "setor" && Boolean(p.buktiPath || p.bukti_path)),
+  );
+}
+
+function isMenungguSetoran(r: RequestItem): boolean {
+  if (r.alur && r.alur !== "A") return false;
+  if (hasBuktiSetor(r)) return false;
+  const sisa = getRequestSisa(r);
+  if (sisa <= 0) return false;
+  if (
+    r.status === "DITOLAK_KOORD" ||
+    r.status === "DITOLAK_KAPRODI" ||
+    r.status === "DITOLAK_KEUANGAN"
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export function BukuKasbonView({
   requests,
   role,
@@ -80,20 +112,108 @@ export function BukuKasbonView({
   onUpdateStatus,
 }: BukuKasbonViewProps) {
   const isPemohon = checkPemohon(role);
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("Semua Status");
   const [selectedAsdosDetail, setSelectedAsdosDetail] = useState<string | null>(
     isPemohon && currentUser ? currentUser.name : null,
   );
   const [settlementModalAsdos, setSettlementModalAsdos] = useState<KasbonAsdosSummary | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<string>("");
   const [settleAmount, setSettleAmount] = useState<number>(0);
   const [settleMethod, setSettleMethod] = useState<string>("Transfer Rekening Kas Kampus");
   const [settleRefNo, setSettleRefNo] = useState<string>("");
+  const [buktiSetorFile, setBuktiSetorFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // State Modal Ganti Langsung Tombok (Khusus Keuangan Kitchen)
+  const [gantiLangsungAsdos, setGantiLangsungAsdos] = useState<KasbonAsdosSummary | null>(null);
+  const [buktiGantiFile, setBuktiGantiFile] = useState<File | null>(null);
+  const [catatanGanti, setCatatanGanti] = useState<string>("");
+  const [isSubmittingGanti, setIsSubmittingGanti] = useState<boolean>(false);
+  const [gantiError, setGantiError] = useState<string | null>(null);
+  const gantiFileInputRef = useRef<HTMLInputElement>(null);
 
   // Ambil hanya pengajuan Alur A (Kitchen/Praktikum) yang memiliki data keuangan
   const kitchenRequests = useMemo(() => {
     return requests.filter((r) => !r.alur || r.alur === "A");
   }, [requests]);
+
+  // Pengajuan Alur A milik Asdos yang masih memiliki sisa kasbon ("Menunggu Setoran")
+  const eligibleRequests = useMemo(() => {
+    if (!settlementModalAsdos) return [];
+    return kitchenRequests.filter(
+      (r) => r.applicant === settlementModalAsdos.asdosName && isMenungguSetoran(r),
+    );
+  }, [settlementModalAsdos, kitchenRequests]);
+
+  // Pilih otomatis jika pengajuan yang memenuhi syarat hanya satu (atau update default saat modal dibuka)
+  useEffect(() => {
+    if (!settlementModalAsdos) {
+      setSelectedRequestId("");
+      setBuktiSetorFile(null);
+      setFormError(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+    if (eligibleRequests.length > 0) {
+      if (!selectedRequestId || !eligibleRequests.some((r) => r.id === selectedRequestId)) {
+        const first = eligibleRequests[0];
+        if (first) {
+          setSelectedRequestId(first.id);
+          setSettleAmount(getRequestSisa(first));
+        }
+      }
+    } else {
+      setSelectedRequestId("");
+      setSettleAmount(0);
+    }
+  }, [settlementModalAsdos, eligibleRequests, selectedRequestId]);
+
+  // Pengajuan Alur A milik Asdos yang masih memiliki tombok tertunda
+  const pendingTombokList = useMemo(() => {
+    if (!gantiLangsungAsdos) return [];
+    return kitchenRequests
+      .filter((r) => r.applicant === gantiLangsungAsdos.asdosName)
+      .map((r) => {
+        const coItems = (r.penyelesaian || []).filter(
+          (p) =>
+            p.jenis === "carry_over" &&
+            !p.kasbonTujuanId &&
+            !p.kasbon_tujuan_id &&
+            !p.digantiLangsungAt &&
+            !p.diganti_langsung_at,
+        );
+        let amount = coItems.reduce((acc, p) => acc + (Number(p.nominal) || 0), 0);
+        if (amount === 0 && r.deficitAmount && r.deficitAmount > 0) {
+          const isSettled = r.penyelesaian?.some((p) =>
+            Boolean(
+              p.kasbonTujuanId ||
+                p.kasbon_tujuan_id ||
+                p.digantiLangsungAt ||
+                p.diganti_langsung_at,
+            ),
+          );
+          if (!isSettled) {
+            amount = r.deficitAmount;
+          }
+        }
+        return {
+          request: r,
+          amount,
+        };
+      })
+      .filter((item) => item.amount > 0);
+  }, [gantiLangsungAsdos, kitchenRequests]);
+
+  const totalTombokNominal = useMemo(() => {
+    return pendingTombokList.reduce((acc, item) => acc + item.amount, 0);
+  }, [pendingTombokList]);
 
   // Daftar Asdos aktif dari database/API
   const [activeAsdosUsers, setActiveAsdosUsers] = useState<string[]>([]);
@@ -144,7 +264,12 @@ export function BukuKasbonView({
           totalSpent += spent;
 
           const isCarryOverSettled = r.penyelesaian?.some((p) =>
-            Boolean(p.kasbonTujuanId || p.kasbon_tujuan_id),
+            Boolean(
+              p.kasbonTujuanId ||
+                p.kasbon_tujuan_id ||
+                p.digantiLangsungAt ||
+                p.diganti_langsung_at,
+            ),
           );
 
           if (r.status === "SELESAI") {
@@ -217,7 +342,12 @@ export function BukuKasbonView({
 
       let txStatus: KasbonTransactionDetail["status"] = "Lunas";
       const isCarryOverSettled = r.penyelesaian?.some((p) =>
-        Boolean(p.kasbonTujuanId || p.kasbon_tujuan_id),
+        Boolean(
+          p.kasbonTujuanId ||
+            p.kasbon_tujuan_id ||
+            p.digantiLangsungAt ||
+            p.diganti_langsung_at,
+        ),
       );
       if (
         r.status === "SEDANG_DIBELANJAKAN" ||
@@ -251,22 +381,148 @@ export function BukuKasbonView({
     return txs;
   }, [selectedAsdosDetail, kitchenRequests]);
 
-  function handleConfirmSettlement() {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) {
+      setBuktiSetorFile(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      const err = "Ukuran berkas bukti setor maksimal 5 MB.";
+      setFormError(err);
+      toast.error(err);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      setBuktiSetorFile(null);
+      return;
+    }
+    setBuktiSetorFile(file);
+    setFormError(null);
+  };
+
+  async function handleConfirmSettlement() {
     if (!settlementModalAsdos) return;
+    if (!selectedRequestId) {
+      const err = "Pilih pengajuan yang akan diselesaikan setoran kasbonnya.";
+      setFormError(err);
+      toast.error(err);
+      return;
+    }
     if (settleAmount <= 0) {
-      notify("Nominal setoran harus lebih dari Rp 0!");
+      const err = "Nominal setoran harus lebih dari Rp 0.";
+      setFormError(err);
+      toast.error(err);
+      return;
+    }
+    if (!buktiSetorFile) {
+      const err = "Bukti setor sisa dana kasbon wajib diunggah (JPG/PNG/PDF, maks 5 MB).";
+      setFormError(err);
+      toast.error(err);
       return;
     }
 
-    notify(
-      `Setoran kembalian sebesar ${money(
-        settleAmount,
-      )} dari ${settlementModalAsdos.asdosName} berhasil dicatat via ${settleMethod}. Transaksi kasbon diperbarui!`,
-    );
-    setSettlementModalAsdos(null);
-    setSettleAmount(0);
-    setSettleRefNo("");
+    setIsSubmitting(true);
+    setFormError(null);
+
+    try {
+      const targetReq = eligibleRequests.find((r) => r.id === selectedRequestId);
+      const formData = new FormData();
+      formData.append("bukti_setor", buktiSetorFile);
+      if (settleRefNo.trim()) {
+        formData.append("nomor_referensi", settleRefNo.trim());
+        formData.append("nomorReferensi", settleRefNo.trim());
+      }
+      if (settleMethod) {
+        formData.append("metode_pengembalian", settleMethod);
+        formData.append("metodePengembalian", settleMethod);
+      }
+      if (targetReq?.actualSpent) {
+        formData.append("actualSpent", String(targetReq.actualSpent));
+      }
+
+      const res = await SpakeApi.catatPenyelesaianKasbon(selectedRequestId, formData);
+      const successMsg =
+        res?.message ||
+        `Setoran kembalian sebesar ${money(
+          settleAmount,
+        )} dari ${settlementModalAsdos.asdosName} berhasil dicatat via ${settleMethod}. Transaksi kasbon diperbarui!`;
+
+      toast.success(successMsg);
+      notify(successMsg);
+
+      await queryClient.invalidateQueries({ queryKey: ["procurement-requests"] });
+
+      setSettlementModalAsdos(null);
+      setSelectedRequestId("");
+      setSettleAmount(0);
+      setSettleRefNo("");
+      setBuktiSetorFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal mencatat setoran kasbon.";
+      setFormError(msg);
+      toast.error(msg);
+      notify(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
+
+  const handleConfirmGantiLangsung = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!gantiLangsungAsdos) return;
+    if (!buktiGantiFile) {
+      setGantiError("Bukti transfer wajib diunggah (JPG/PNG/PDF, maks 5 MB).");
+      return;
+    }
+
+    if (buktiGantiFile.size > 5 * 1024 * 1024) {
+      setGantiError("Ukuran berkas bukti transfer maksimal 5 MB.");
+      return;
+    }
+
+    setIsSubmittingGanti(true);
+    setGantiError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("applicant", gantiLangsungAsdos.asdosName);
+      formData.append("bukti_transfer", buktiGantiFile);
+      if (catatanGanti.trim()) {
+        formData.append("catatan", catatanGanti.trim());
+      }
+
+      const res = await SpakeApi.gantiLangsungTombok(formData);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["procurement-requests"] }),
+        queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+      ]);
+
+      const successMsg =
+        res?.message ||
+        `Tombok sebesar ${money(totalTombokNominal)} berhasil diganti langsung kepada ${gantiLangsungAsdos.asdosName}.`;
+      toast.success(successMsg);
+      notify(successMsg);
+
+      setGantiLangsungAsdos(null);
+      setBuktiGantiFile(null);
+      setCatatanGanti("");
+      if (gantiFileInputRef.current) {
+        gantiFileInputRef.current.value = "";
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal memproses ganti langsung tombok.";
+      setGantiError(msg);
+      toast.error(msg);
+      notify(msg);
+    } finally {
+      setIsSubmittingGanti(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -274,10 +530,7 @@ export function BukuKasbonView({
       <div className="rounded-2xl border border-rose-200/60 bg-gradient-to-r from-rose-50/80 via-amber-50/50 to-orange-50/60 p-5 dark:border-rose-900/40 dark:from-rose-950/20 dark:via-amber-950/10 dark:to-orange-950/20">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-rose-600/10 px-3 py-1 text-xs font-bold text-rose-700 dark:text-rose-300">
-              <Wallet className="h-3.5 w-3.5" /> Modul Buku Kasbon Asdos (Alur A Kitchen)
-            </div>
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
               {isPemohon && currentUser
                 ? `Buku Kasbon Pribadi: ${currentUser.name}`
                 : "Buku Kasbon & Pelunasan Tombok Asdos"}
@@ -397,17 +650,17 @@ export function BukuKasbonView({
                   </td>
                   <td className="px-4 py-4 text-center">
                     {summary.status === "Menunggu Setoran" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
                         <AlertTriangle className="h-3 w-3" /> Menunggu Setoran
                       </span>
                     )}
                     {summary.status === "Carry-Over Berikutnya" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
                         <ArrowUpRight className="h-3 w-3" /> Tombok Carry-Over
                       </span>
                     )}
                     {summary.status === "Lunas" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
                         <CheckCircle2 className="h-3 w-3" /> Saldo Bersih (Lunas)
                       </span>
                     )}
@@ -432,10 +685,29 @@ export function BukuKasbonView({
                               setSettlementModalAsdos(summary);
                               setSettleAmount(summary.refundRemaining);
                             }}
-                            className="h-8 gap-1.5 bg-amber-600 text-xs font-bold text-white hover:bg-amber-700"
+                            className="h-8 gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
                           >
-                            <DollarSign className="h-3.5 w-3.5" />
+                            <HandCoins className="h-3.5 w-3.5" />
                             Catat Setor
+                          </Button>
+                        )}
+
+                      {/* Tombol Ganti Langsung khusus Keuangan Kitchen */}
+                      {role === "Keuangan Kitchen" &&
+                        summary.deficitCarryOver > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setGantiLangsungAsdos(summary);
+                              setBuktiGantiFile(null);
+                              setCatatanGanti("");
+                              setGantiError(null);
+                            }}
+                            className="h-8 gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+                            title="Ganti langsung tombok kasbon Asdos tanpa menunggu pengajuan berikutnya"
+                          >
+                            <HandCoins className="h-3.5 w-3.5" />
+                            Ganti Langsung
                           </Button>
                         )}
                     </div>
@@ -522,14 +794,14 @@ export function BukuKasbonView({
                           </td>
                           <td className="px-3 py-3 text-center">
                             <span
-                              className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                              className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold ${
                                 tx.status === "Menunggu Setoran"
-                                  ? "bg-amber-100 text-amber-800"
+                                  ? "bg-amber-100 text-amber-700"
                                   : tx.status === "Carry-Over Berikutnya"
-                                    ? "bg-rose-100 text-rose-800"
+                                    ? "bg-rose-100 text-rose-700"
                                     : tx.status === "Proses Belanja"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-emerald-100 text-emerald-800"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : "bg-emerald-100 text-emerald-700"
                               }`}
                             >
                               {tx.status}
@@ -570,8 +842,8 @@ export function BukuKasbonView({
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="rounded-xl bg-amber-500/10 p-2 text-amber-600">
-                  <DollarSign className="h-5 w-5" />
+                <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-600">
+                  <HandCoins className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white">
@@ -598,9 +870,50 @@ export function BukuKasbonView({
                 </strong>
               </div>
 
+              {formError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
+                  {formError}
+                </div>
+              )}
+
+              {/* Dropdown Pengajuan */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Nominal Disetor (Rp)
+                  Pengajuan Alur A (PR) yang Disetor <span className="text-red-500">*</span>
+                </label>
+                {eligibleRequests.length === 0 ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
+                    Tidak ada pengajuan Alur A dengan sisa kasbon yang menunggu setoran untuk Asdos
+                    ini.
+                  </div>
+                ) : (
+                  <select
+                    value={selectedRequestId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedRequestId(id);
+                      const req = eligibleRequests.find((r) => r.id === id);
+                      if (req) {
+                        setSettleAmount(getRequestSisa(req));
+                      }
+                    }}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium dark:border-slate-700 dark:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    {eligibleRequests.map((req) => {
+                      const sisa = getRequestSisa(req);
+                      return (
+                        <option key={req.id} value={req.id}>
+                          [{req.id}] {req.item || "Praktikum"} — Sisa: {money(sisa)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Nominal Disetor (Rp) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -641,28 +954,281 @@ export function BukuKasbonView({
                 />
               </div>
 
-              <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center dark:border-slate-700">
-                <UploadCloud className="mx-auto h-7 w-7 text-slate-400" />
-                <p className="mt-1 text-xs text-slate-500">
-                  Unggah foto bukti transfer atau kwitansi setor kas (JPG/PNG/PDF, maks 5 MB)
-                </p>
-                <span className="mt-2 inline-block rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  Pilih Berkas Bukti Setor
-                </span>
+              {/* Area Unggah Bukti Setor */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Bukti Setor Sisa Kasbon <span className="text-red-500">*</span>
+                </label>
+                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    id="modal-bukti-setor-file"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  {buktiSetorFile ? (
+                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-left">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                            {buktiSetorFile.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {(buktiSetorFile.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setBuktiSetorFile(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
+                        }}
+                        className="h-7 w-7 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-0 cursor-pointer"
+                        title="Hapus berkas"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <UploadCloud className="mx-auto h-7 w-7 text-slate-400" />
+                      <p className="mt-1 text-xs text-slate-500">
+                        Unggah foto bukti transfer atau kwitansi setor kas (JPG/PNG/PDF, maks 5 MB)
+                      </p>
+                      <label
+                        htmlFor="modal-bukti-setor-file"
+                        className="mt-2 inline-flex items-center gap-1.5 cursor-pointer rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-xs transition-colors"
+                      >
+                        <UploadCloud className="h-3.5 w-3.5" />
+                        Pilih Berkas Bukti Setor
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSettlementModalAsdos(null)}>
+              <Button
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() => {
+                  setSettlementModalAsdos(null);
+                  setSelectedRequestId("");
+                  setBuktiSetorFile(null);
+                  setFormError(null);
+                }}
+              >
                 Batal
               </Button>
               <Button
                 onClick={handleConfirmSettlement}
-                className="bg-amber-600 font-bold text-white hover:bg-amber-700"
+                disabled={
+                  isSubmitting || !selectedRequestId || !buktiSetorFile || settleAmount <= 0
+                }
+                className="bg-emerald-600 font-bold text-white hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
               >
-                Konfirmasi Setoran Kasbon
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin mr-1.5" />
+                    Menyimpan Setoran...
+                  </>
+                ) : (
+                  "Konfirmasi Setoran Kasbon"
+                )}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL GANTI LANGSUNG TOMBOK (KHUSUS KEUANGAN KITCHEN) */}
+      {gantiLangsungAsdos && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in-0">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-600">
+                  <HandCoins className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white">
+                    Ganti Langsung Tombok Kasbon
+                  </h3>
+                  <p className="text-xs text-slate-500">{gantiLangsungAsdos.asdosName}</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setGantiLangsungAsdos(null)}
+                className="h-8 w-8 p-0 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleConfirmGantiLangsung} className="mt-4 space-y-4">
+              <div className="rounded-xl bg-emerald-50 p-3.5 text-xs text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-800">
+                <span className="text-slate-600 dark:text-emerald-300">
+                  Total tombok kasbon Asdos yang diganti langsung:
+                </span>
+                <strong className="text-base font-black block mt-0.5 text-emerald-700 dark:text-emerald-300">
+                  {money(totalTombokNominal)}
+                </strong>
+                <span className="text-[11px] text-muted-foreground block mt-1">
+                  Dana ditransfer langsung saat ini ke Asdos tanpa menunggu pengajuan berikutnya.
+                </span>
+              </div>
+
+              {gantiError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
+                  {gantiError}
+                </div>
+              )}
+
+              {/* DAFTAR PR ASAL TOMBOK */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Daftar Pengajuan (PR) Asal Tombok:
+                </label>
+                {pendingTombokList.length === 0 ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
+                    Tidak ada tombok tertunda untuk Asdos ini.
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950/50 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden text-xs">
+                    {pendingTombokList.map(({ request: req, amount }) => (
+                      <div key={req.id} className="p-3 flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-slate-800 dark:text-slate-200">
+                            {req.id} — {req.menu || req.item || "Praktikum Masak"}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            {req.course || req.department || "Lab Kitchen"} • {req.date}
+                          </div>
+                        </div>
+                        <div className="text-right font-black text-rose-600 dark:text-rose-400">
+                          {money(amount)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* INPUT UNGGAH BUKTI TRANSFER */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Unggah Bukti Transfer / Slip Giro <span className="text-red-500">*</span>
+                </label>
+                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                  <input
+                    ref={gantiFileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    id="modal-bukti-ganti-file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setBuktiGantiFile(file);
+                      setGantiError(null);
+                    }}
+                  />
+                  {buktiGantiFile ? (
+                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-left">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                            {buktiGantiFile.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {(buktiGantiFile.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setBuktiGantiFile(null);
+                          if (gantiFileInputRef.current) {
+                            gantiFileInputRef.current.value = "";
+                          }
+                        }}
+                        className="h-7 w-7 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-0 cursor-pointer"
+                        title="Hapus berkas"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <UploadCloud className="mx-auto h-7 w-7 text-slate-400" />
+                      <p className="mt-1 text-xs text-slate-500">
+                        Unggah foto bukti transfer atau kwitansi bank (JPG/PNG/PDF, maks 5 MB)
+                      </p>
+                      <label
+                        htmlFor="modal-bukti-ganti-file"
+                        className="mt-2 inline-flex items-center gap-1.5 cursor-pointer rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-xs transition-colors"
+                      >
+                        <UploadCloud className="h-3.5 w-3.5" />
+                        Pilih Berkas Bukti Transfer
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* CATATAN (OPSIONAL) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Catatan / Nomor Referensi Bank (Opsional)
+                </label>
+                <textarea
+                  value={catatanGanti}
+                  onChange={(e) => setCatatanGanti(e.target.value)}
+                  placeholder="Contoh: Transfer via BCA Ref: TRF-2026-9912..."
+                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 min-h-16"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSubmittingGanti}
+                  onClick={() => setGantiLangsungAsdos(null)}
+                  className="rounded-xl text-xs"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmittingGanti || !buktiGantiFile || pendingTombokList.length === 0}
+                  className="rounded-xl bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"
+                >
+                  {isSubmittingGanti ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1" />
+                      Memproses Ganti Langsung...
+                    </>
+                  ) : (
+                    "Konfirmasi Ganti Langsung"
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

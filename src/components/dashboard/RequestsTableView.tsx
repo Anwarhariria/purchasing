@@ -11,6 +11,7 @@ import {
   FileText,
   ShoppingBag,
   Receipt,
+  Printer,
   Send,
   Eye,
   ClipboardList,
@@ -400,7 +401,7 @@ export const RequestsTableView: React.FC<RequestsTableViewProps> = ({
                         className="h-8 gap-1 border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-950/40 text-[11px] font-bold shadow-xs cursor-pointer"
                         title="Cetak Bukti Kas Keluar (BKK) / Kuitansi Pencairan Dana Resmi"
                       >
-                        <Receipt className="size-3" /> Cetak BKK
+                        <Printer className="size-3" /> Cetak BKK
                       </Button>
                     )}
 

@@ -86,7 +86,7 @@ export const RejectRequestModal: React.FC<RejectRequestModalProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-foreground mb-1.5">
-              Alasan Penolakan <span className="text-destructive">* (Wajib Diisi)</span>
+              Alasan Penolakan <span className="text-destructive"> (Wajib Diisi)</span>
             </label>
             <textarea
               required

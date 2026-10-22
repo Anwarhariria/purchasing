@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MS_PER_DAY, calculateRequestTotals, money, formatUnitLabel } from "@/lib/utils";
+import { calculateRequestTotals, money, formatUnitLabel, localDateInput } from "@/lib/utils";
 import { SpakeApi } from "@/lib/api-client";
 import {
   UNIT_KERJA_LIST,
@@ -21,6 +21,7 @@ import {
 } from "@/types/procurement";
 import { CurriculumCascadingSelect } from "./create-request/CurriculumCascadingSelect";
 import { RequestDetailsEditor } from "./create-request/RequestDetailsEditor";
+import { KatalogSearch, type ModalKatalogItem } from "@/components/ui/katalog-search";
 
 interface CreateRequestModalProps {
   open: boolean;
@@ -50,14 +51,6 @@ interface CreateRequestModalProps {
   handleCreateRequest: (e: React.FormEvent<HTMLFormElement>) => void;
   labStockInventory: Record<string, LabStockItem>;
   currentUser?: UserAccount | null;
-}
-
-interface ModalKatalogItem {
-  id: string | number;
-  kode?: string;
-  nama: string;
-  satuan: string;
-  harga_acuan: number | string;
 }
 
 export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
@@ -102,22 +95,30 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
     }
   }, [open, workflow]);
 
-  // Sinkronkan harga acuan, satuan, dan code_id untuk item dari katalog jika belum lengkap
+  // Sinkronkan harga acuan, satuan, dan code_id untuk item dari katalog jika belum lengkap (mis. draf ramalan)
+  // JANGAN menimpa price/unit yang sudah diisi user.
   useEffect(() => {
     if (katalogList.length > 0 && workflow === "B" && newDetails.length > 0) {
       setNewDetails((prev) =>
         prev.map((d) => {
           const match = katalogList.find(
-            (k) => k.id === d.code_id || k.kode === d.code_id || k.id === d.id || k.nama === d.name,
+            (k) =>
+              (d.code_id && (String(k.id) === String(d.code_id) || k.kode === d.code_id)) ||
+              (d.name && k.nama.toLowerCase() === d.name.toLowerCase()),
           );
-          if (match && (!d.price || d.unit === "-" || !d.code_id || d.code_id !== match.id)) {
-            return {
-              ...d,
-              code_id: String(match.id),
-              name: match.nama,
-              unit: match.satuan,
-              price: Number(match.harga_acuan),
-            };
+          if (match) {
+            const needsCodeId = !d.code_id;
+            const needsUnit = !d.unit || d.unit.trim() === "" || d.unit === "-";
+            const needsPrice = !d.price || Number(d.price) <= 0;
+            if (needsCodeId || needsUnit || needsPrice) {
+              return {
+                ...d,
+                code_id: d.code_id || String(match.id),
+                name: d.name || match.nama,
+                unit: needsUnit ? match.satuan : d.unit,
+                price: needsPrice ? Number(match.harga_acuan) : d.price,
+              };
+            }
           }
           return d;
         }),
@@ -128,14 +129,25 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
   // Pastikan form Alur B memiliki minimal 1 item siap diisi
   useEffect(() => {
     if (open && workflow === "B" && newDetails.length === 0) {
-      setNewDetails([
-        { id: "D-" + Date.now(), code_id: "", name: "", qty: 1, unit: "-", price: 0 },
-      ]);
+      setNewDetails([{ id: "D-" + Date.now(), code_id: "", name: "", qty: 1, unit: "", price: 0 }]);
     }
   }, [open, workflow, newDetails.length, setNewDetails]);
 
   const hasUnselectedAlurBItem =
-    workflow === "B" && (newDetails.length === 0 || newDetails.some((d) => !d.code_id || !d.name));
+    workflow === "B" &&
+    (newDetails.length === 0 ||
+      newDetails.some(
+        (d) =>
+          !d.name ||
+          !d.name.trim() ||
+          !d.qty ||
+          Number(d.qty) <= 0 ||
+          !d.unit ||
+          !d.unit.trim() ||
+          d.unit === "-" ||
+          !d.price ||
+          Number(d.price) <= 0,
+      ));
 
   const currentTotal = calculateRequestTotals(newDetails).totalPrice;
 
@@ -196,7 +208,8 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                     type="date"
                     name="deadline"
                     required
-                    defaultValue={new Date(Date.now() + 2 * MS_PER_DAY).toISOString().split("T")[0]}
+                    min={localDateInput(0)}
+                    defaultValue={localDateInput(2)}
                     className="mt-1.5 h-10 font-normal"
                   />
                   <span className="block mt-1 text-[11px] text-muted-foreground">
@@ -243,7 +256,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                           code_id: "",
                           name: "",
                           qty: 1,
-                          unit: "-",
+                          unit: "",
                           price: 0,
                         },
                       ])
@@ -283,55 +296,44 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                           <label className="text-[10px] font-bold text-foreground block mb-1">
                             Pilih Barang dari Katalog <span className="text-red-500">*</span>
                           </label>
-                          <select
-                            required
-                            value={
-                              katalogList.find(
-                                (k) =>
-                                  k.id === item.code_id ||
-                                  k.kode === item.code_id ||
-                                  k.id === item.id ||
-                                  k.nama === item.name,
-                              )?.id ||
-                              item.code_id ||
-                              ""
-                            }
-                            onChange={(e) => {
-                              const selectedId = e.target.value;
-                              const selected = katalogList.find(
-                                (k) => k.id === selectedId || k.kode === selectedId,
-                              );
-                              if (selected) {
+                          <KatalogSearch
+                            items={katalogList}
+                            value={item.name || item.code_id || ""}
+                            disabled={isLoadingKatalog}
+                            loading={isLoadingKatalog}
+                            onSelect={(selected) => {
+                              if ("custom" in selected && selected.custom) {
                                 setNewDetails((prev) =>
                                   prev.map((d, i) =>
                                     i === idx
                                       ? {
                                           ...d,
-                                          code_id: String(selected.id),
-                                          name: selected.nama,
-                                          unit: selected.satuan,
-                                          price: Number(selected.harga_acuan),
+                                          code_id: "",
+                                          name: selected.name,
+                                          unit: "",
+                                          price: 0,
+                                        }
+                                      : d,
+                                  ),
+                                );
+                              } else {
+                                const kat = selected as ModalKatalogItem;
+                                setNewDetails((prev) =>
+                                  prev.map((d, i) =>
+                                    i === idx
+                                      ? {
+                                          ...d,
+                                          code_id: String(kat.id || kat.kode),
+                                          name: kat.nama,
+                                          unit: kat.satuan,
+                                          price: Number(kat.harga_acuan),
                                         }
                                       : d,
                                   ),
                                 );
                               }
                             }}
-                            className="h-8.5 w-full rounded-md border border-input bg-card px-2.5 py-1 text-xs font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
-                            disabled={isLoadingKatalog}
-                          >
-                            <option value="" disabled>
-                              {isLoadingKatalog
-                                ? "Memuat katalog…"
-                                : "-- Pilih Barang dari Katalog --"}
-                            </option>
-                            {katalogList.map((k) => (
-                              <option key={k.id || k.kode} value={k.id || k.kode}>
-                                [{k.id || k.kode}] {k.nama} ({k.satuan} -{" "}
-                                {money(Number(k.harga_acuan))})
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </div>
 
                         <div className="sm:col-span-2">
@@ -356,27 +358,63 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
 
                         <div className="sm:col-span-2">
                           <label className="text-[10px] font-bold text-foreground block mb-1">
-                            Satuan (Katalog)
+                            Satuan <span className="text-red-500">*</span>
                           </label>
                           <Input
-                            readOnly
-                            disabled
-                            value={item.unit}
-                            className="h-8.5 text-xs bg-muted/50 cursor-not-allowed font-medium text-muted-foreground"
+                            type="text"
+                            required
+                            placeholder="Rim / Pcs"
+                            value={item.unit === "-" ? "" : item.unit}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewDetails((prev) =>
+                                prev.map((d, i) => (i === idx ? { ...d, unit: val } : d)),
+                              );
+                            }}
+                            className="h-8.5 text-xs font-semibold"
                           />
                         </div>
 
-                        <div className="sm:col-span-3">
-                          <label className="text-[10px] font-bold text-foreground block mb-1">
-                            Harga Acuan (Rp)
-                          </label>
-                          <Input
-                            readOnly
-                            disabled
-                            value={item.price ? money(item.price) : "Rp 0"}
-                            className="h-8.5 text-xs font-mono font-bold bg-muted/50 cursor-not-allowed text-muted-foreground"
-                          />
-                        </div>
+                        {(() => {
+                          const kat = katalogList.find(
+                            (k) =>
+                              (item.code_id &&
+                                (k.id === item.code_id || k.kode === item.code_id)) ||
+                              (item.name && k.nama.toLowerCase() === item.name.toLowerCase()),
+                          );
+                          const showCatalogRef =
+                            kat &&
+                            kat.harga_acuan !== undefined &&
+                            Number(item.price) !== Number(kat.harga_acuan);
+
+                          return (
+                            <div className="sm:col-span-3">
+                              <label className="text-[10px] font-bold text-foreground block mb-1">
+                                Harga Satuan (Rp) <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                type="number"
+                                required
+                                min="1"
+                                step="any"
+                                placeholder="0"
+                                value={item.price || ""}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  setNewDetails((prev) =>
+                                    prev.map((d, i) => (i === idx ? { ...d, price: val } : d)),
+                                  );
+                                }}
+                                className="h-8.5 text-xs font-mono font-bold"
+                              />
+                              {showCatalogRef && (
+                                <span className="text-[10px] text-muted-foreground block mt-0.5 truncate">
+                                  Acuan katalog: {money(Number(kat.harga_acuan))}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex justify-between items-center pt-1.5 text-[11px] border-t border-slate-100 dark:border-slate-800">
@@ -423,14 +461,13 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
               {/* Form Metadata Pengajuan Alur A */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="text-xs font-bold text-foreground">
-                  Tanggal Kebutuhan Praktikum (Need-By Date){" "}
-                  <span className="text-red-500"> (Min. H-3)</span>
+                  Tanggal Kebutuhan Praktikum (Need-By Date)
                   <Input
                     type="date"
                     name="deadline"
                     required
-                    min={new Date(Date.now() + 3 * MS_PER_DAY).toISOString().split("T")[0]}
-                    defaultValue={new Date(Date.now() + 7 * MS_PER_DAY).toISOString().split("T")[0]}
+                    min={localDateInput(0)}
+                    defaultValue={localDateInput(7)}
                     className="mt-1.5 h-10 font-normal"
                   />
                 </label>
@@ -501,8 +538,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
             </div>
             {hasUnselectedAlurBItem && (
               <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 text-right">
-                Silakan pilih barang dari katalog untuk seluruh baris rincian barang sebelum
-                mengajukan.
+                Lengkapi nama barang, jumlah, satuan, dan harga di setiap baris sebelum mengajukan.
               </p>
             )}
           </div>

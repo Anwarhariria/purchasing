@@ -7,6 +7,7 @@ import type {
   ProcurementActivityLog,
   ForecastModelInfo,
   AlurBPredictionResponse,
+  KasbonPenyelesaian,
 } from "@/types/procurement";
 
 const API_BASE_URL = (import.meta.env["VITE_API_URL"] as string) || "http://localhost:8000/api";
@@ -219,6 +220,37 @@ export const SpakeApi = {
     );
   },
 
+  async getPendingCarryOver(applicant: string, excludeId?: string) {
+    const params = new URLSearchParams({ applicant });
+    if (excludeId) {
+      params.append("exclude_id", excludeId);
+    }
+    return request<{
+      status: string;
+      data: {
+        total: number;
+        kode_carry_overs: string;
+        items: KasbonPenyelesaian[];
+      };
+    }>(`/kasbon/carry-over-tertunda?${params.toString()}`);
+  },
+
+  async gantiLangsungTombok(formData: FormData) {
+    return request<{
+      status: string;
+      message: string;
+      data: {
+        applicant: string;
+        total_nominal: number;
+        kode_pengajuan: string[];
+        bukti_ganti_path: string;
+      };
+    }>("/kasbon/ganti-langsung", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
   async getActivities(id: string) {
     return request<{ status: string; data: ProcurementActivityLog[] }>(
       `/requests/${id}/activities`,
@@ -293,16 +325,25 @@ export const SpakeApi = {
   },
 
   // Katalog Barang (Alur B)
-  async getKatalogBarang(aktifOnly = true) {
-    const qs = aktifOnly ? "?aktif=1" : "";
+  async getKatalogBarang(aktifOnly = true, all = false) {
+    let qs = "";
+    if (all) {
+      qs = "?all=1";
+    } else if (aktifOnly) {
+      qs = "?aktif=1";
+    }
     return request<{ status: string; data: Record<string, unknown>[] }>(`/katalog-barang${qs}`);
   },
 
   async createKatalogBarang(data: {
     nama: string;
+    kode?: string | null | undefined;
+    kategori?: string | undefined;
     satuan: string;
     harga_acuan: number;
-    aktif?: boolean;
+    stok_tersedia?: number | undefined;
+    target_unit?: string | undefined;
+    aktif?: boolean | undefined;
   }) {
     return request<{ status: string; message: string; data: Record<string, unknown> }>(
       "/katalog-barang",
@@ -315,13 +356,31 @@ export const SpakeApi = {
 
   async updateKatalogBarang(
     id: number | string,
-    data: Partial<{ nama: string; satuan: string; harga_acuan: number; aktif: boolean }>,
+    data: {
+      nama?: string | undefined;
+      kode?: string | null | undefined;
+      kategori?: string | undefined;
+      satuan?: string | undefined;
+      harga_acuan?: number | undefined;
+      stok_tersedia?: number | undefined;
+      target_unit?: string | undefined;
+      aktif?: boolean | undefined;
+    },
   ) {
     return request<{ status: string; message: string; data: Record<string, unknown> }>(
       `/katalog-barang/${id}`,
       {
         method: "PUT",
         body: JSON.stringify(data),
+      },
+    );
+  },
+
+  async deleteKatalogBarang(id: number | string) {
+    return request<{ status: string; message: string; data: Record<string, unknown> }>(
+      `/katalog-barang/${id}`,
+      {
+        method: "DELETE",
       },
     );
   },

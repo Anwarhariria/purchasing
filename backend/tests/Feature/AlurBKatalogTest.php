@@ -80,7 +80,7 @@ class AlurBKatalogTest extends TestCase
                 [
                     'name' => 'Kertas HVS A4 80gr PaperOne',
                     'qty' => 10,
-                    'price' => 1000, // Diabaikan backend
+                    'price' => 0, // Mengambil harga acuan katalog saat 0 atau kosong
                 ],
             ],
         ];

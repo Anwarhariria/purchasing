@@ -9,7 +9,11 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "demo:reset": "node demo/reset.mjs",
+    "demo:alur-a": "playwright test -c demo/playwright.config.ts alur-a",
+    "demo:alur-b": "playwright test -c demo/playwright.config.ts alur-b",
+    "demo": "playwright test -c demo/playwright.config.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -39,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

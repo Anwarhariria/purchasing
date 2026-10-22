@@ -13,6 +13,7 @@ import {
   Users,
   BookOpen,
   Truck,
+  Package,
   type LucideIcon,
 } from "lucide-react";
 import type { Role, WorkflowType } from "@/types/procurement";
@@ -73,6 +74,7 @@ export function getSidebarNav(
         return [
           { label: "Ringkasan Logistik", icon: LayoutDashboard },
           { label: "Peramalan Kebutuhan Barang", icon: TrendingUp },
+          { label: "Katalog Barang", icon: Package },
           {
             label: "Alokasi & Penugasan Belanja",
             icon: Wallet,
@@ -90,6 +92,7 @@ export function getSidebarNav(
         return [
           { label: "Ringkasan Logistik", icon: LayoutDashboard },
           { label: "Model Peramalan", icon: TrendingUp },
+          { label: "Katalog Barang", icon: Package },
           { label: "Pengajuan Unit Kerja", icon: ClipboardList },
           { label: "Pengguna & Peran", icon: Users, count: counts.userCount },
           { label: "Laporan Logistik Unit", icon: FileText },

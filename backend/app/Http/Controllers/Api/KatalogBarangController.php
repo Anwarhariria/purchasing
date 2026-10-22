@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\KatalogBarang;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class KatalogBarangController extends Controller
 {
@@ -15,10 +16,36 @@ class KatalogBarangController extends Controller
         return $user->isSuperAdmin() || $user->isKeuanganUmum();
     }
 
+    protected function validationMessages(): array
+    {
+        return [
+            'nama.required' => 'Nama barang wajib diisi.',
+            'nama.string' => 'Nama barang harus berupa teks.',
+            'nama.max' => 'Nama barang maksimal 255 karakter.',
+            'kode.string' => 'Kode barang harus berupa teks.',
+            'kode.max' => 'Kode barang maksimal 50 karakter.',
+            'kode.unique' => 'Kode barang sudah digunakan oleh item lain.',
+            'kategori.string' => 'Kategori barang harus berupa teks.',
+            'kategori.max' => 'Kategori barang maksimal 100 karakter.',
+            'satuan.required' => 'Satuan barang wajib diisi.',
+            'satuan.string' => 'Satuan barang harus berupa teks.',
+            'satuan.max' => 'Satuan barang maksimal 50 karakter.',
+            'harga_acuan.required' => 'Harga acuan barang wajib diisi.',
+            'harga_acuan.numeric' => 'Harga acuan harus berupa angka.',
+            'harga_acuan.min' => 'Harga acuan minimal Rp 1.',
+            'harga_acuan.max' => 'Harga acuan maksimal Rp 1.000.000.000.',
+            'stok_tersedia.numeric' => 'Stok tersedia harus berupa angka.',
+            'stok_tersedia.min' => 'Stok tersedia tidak boleh kurang dari 0.',
+            'target_unit.string' => 'Target unit harus berupa teks.',
+            'target_unit.max' => 'Target unit maksimal 100 karakter.',
+            'aktif.boolean' => 'Status aktif harus berupa boolean.',
+        ];
+    }
+
     public function index(Request $request)
     {
         $isManager = $this->checkAuthorizedRole($request);
-        $showAll = $request->boolean('all', false) && $isManager;
+        $showAll = ($request->boolean('all', false) || $request->input('all') == '1') && $isManager;
 
         $query = KatalogBarang::query();
         if (!$showAll) {
@@ -56,29 +83,49 @@ class KatalogBarangController extends Controller
 
         $request->validate([
             'nama' => 'required|string|max:255',
+            'kode' => 'nullable|string|max:50|unique:katalog_barang,kode',
+            'kategori' => 'nullable|string|max:100',
             'satuan' => 'required|string|max:50',
-            'harga_acuan' => 'required|numeric|min:0',
-        ], [
-            'nama.required' => 'Nama barang wajib diisi.',
-            'satuan.required' => 'Satuan barang wajib diisi.',
-            'harga_acuan.required' => 'Harga acuan barang wajib diisi.',
-        ]);
+            'harga_acuan' => 'required|numeric|min:1|max:1000000000',
+            'stok_tersedia' => 'nullable|numeric|min:0',
+            'target_unit' => 'nullable|string|max:100',
+            'aktif' => 'nullable|boolean',
+        ], $this->validationMessages());
 
         $id = $request->id;
         if (!$id) {
-            $count = KatalogBarang::count() + 1;
-            $id = sprintf('KAT-%03d', $count);
+            $maxId = 0;
+            $existingIds = KatalogBarang::pluck('id');
+            foreach ($existingIds as $itemId) {
+                if (preg_match('/KAT-(\d+)/', (string)$itemId, $matches)) {
+                    $num = (int)$matches[1];
+                    if ($num > $maxId) {
+                        $maxId = $num;
+                    }
+                }
+            }
+            $id = sprintf('KAT-%03d', $maxId + 1);
+        }
+
+        $kode = $request->kode;
+        if (!$kode) {
+            $baseKode = 'BRG-' . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $request->nama), 0, 6));
+            $kode = $baseKode;
+            $k = 1;
+            while (KatalogBarang::where('kode', $kode)->exists()) {
+                $kode = $baseKode . '-' . $k++;
+            }
         }
 
         $item = KatalogBarang::create([
             'id' => $id,
-            'kode' => $request->kode ?? ('BRG-' . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $request->nama), 0, 6))),
-            'nama' => $request->nama,
-            'kategori' => $request->kategori ?? 'Umum & ATK',
-            'satuan' => $request->satuan,
+            'kode' => $kode,
+            'nama' => trim($request->nama),
+            'kategori' => $request->kategori ? trim($request->kategori) : 'Umum & ATK',
+            'satuan' => trim($request->satuan),
             'harga_acuan' => (float)$request->harga_acuan,
             'stok_tersedia' => (float)($request->stok_tersedia ?? 0),
-            'target_unit' => $request->target_unit ?? 'Seluruh Unit',
+            'target_unit' => $request->target_unit ? trim($request->target_unit) : 'Seluruh Unit',
             'aktif' => $request->boolean('aktif', true),
         ]);
 
@@ -122,17 +169,34 @@ class KatalogBarangController extends Controller
             ], 404);
         }
 
-        $item->fill($request->only([
-            'nama',
-            'kode',
-            'kategori',
-            'satuan',
-            'harga_acuan',
-            'stok_tersedia',
-            'target_unit',
-            'aktif',
-        ]));
+        $request->validate([
+            'nama' => 'sometimes|required|string|max:255',
+            'kode' => "sometimes|nullable|string|max:50|unique:katalog_barang,kode,{$id},id",
+            'kategori' => 'sometimes|nullable|string|max:100',
+            'satuan' => 'sometimes|required|string|max:50',
+            'harga_acuan' => 'sometimes|required|numeric|min:1|max:1000000000',
+            'stok_tersedia' => 'sometimes|nullable|numeric|min:0',
+            'target_unit' => 'sometimes|nullable|string|max:100',
+            'aktif' => 'sometimes|boolean',
+        ], $this->validationMessages());
+
+        $oldHarga = (float)$item->harga_acuan;
+
+        if ($request->has('nama')) $item->nama = trim($request->nama);
+        if ($request->has('kode')) $item->kode = $request->kode ? trim($request->kode) : null;
+        if ($request->has('kategori')) $item->kategori = $request->kategori ? trim($request->kategori) : 'Umum & ATK';
+        if ($request->has('satuan')) $item->satuan = trim($request->satuan);
+        if ($request->has('harga_acuan')) $item->harga_acuan = (float)$request->harga_acuan;
+        if ($request->has('stok_tersedia')) $item->stok_tersedia = (float)$request->stok_tersedia;
+        if ($request->has('target_unit')) $item->target_unit = $request->target_unit ? trim($request->target_unit) : 'Seluruh Unit';
+        if ($request->has('aktif')) $item->aktif = $request->boolean('aktif');
+
         $item->save();
+
+        $newHarga = (float)$item->harga_acuan;
+        if ($oldHarga !== $newHarga) {
+            Log::info("Harga acuan {$item->nama} diubah dari Rp{$oldHarga} menjadi Rp{$newHarga}");
+        }
 
         return response()->json([
             'status' => 'success',

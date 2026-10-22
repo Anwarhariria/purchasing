@@ -51,6 +51,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Penyelesaian Kasbon (Khusus Keuangan Kitchen - Alur A)
+    Route::get('/kasbon/carry-over-tertunda', [ProcurementRequestController::class, 'getPendingCarryOver']);
+    Route::post('/kasbon/ganti-langsung', [ProcurementRequestController::class, 'gantiLangsungTombok']);
     Route::post('/kasbon/{id}/penyelesaian', [ProcurementRequestController::class, 'catatPenyelesaian']);
 
     // Katalog Barang (Alur B / UC-24)

@@ -8,8 +8,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { money } from "@/lib/utils";
+import { getPendingCarryOverFromRequests, money } from "@/lib/utils";
 import { exportBkkPdf } from "@/lib/export/bkk-pdf-export";
+import { SpakeApi } from "@/lib/api-client";
 import type { RequestItem, Status } from "@/types/procurement";
 
 interface QuickTransferModalProps {
@@ -23,6 +24,7 @@ interface QuickTransferModalProps {
     note?: string,
     extraFields?: Partial<RequestItem>,
   ) => void;
+  requests?: RequestItem[];
 }
 
 export const QuickTransferModal: React.FC<QuickTransferModalProps> = ({
@@ -31,14 +33,49 @@ export const QuickTransferModal: React.FC<QuickTransferModalProps> = ({
   decisionNote,
   setDecisionNote,
   updateStatus,
+  requests = [],
 }) => {
   const [factorF, setFactorF] = React.useState<number>(1);
   const [carryOverAmount, setCarryOverAmount] = React.useState<number>(0);
+  const [kodeCarryOvers, setKodeCarryOvers] = React.useState<string>("");
 
   React.useEffect(() => {
-    setCarryOverAmount(0);
+    if (!quickReviewItem) {
+      setCarryOverAmount(0);
+      setKodeCarryOvers("");
+      setFactorF(1);
+      return;
+    }
+
     setFactorF(1);
-  }, [quickReviewItem]);
+
+    if (quickReviewItem.alur === "B") {
+      setCarryOverAmount(0);
+      setKodeCarryOvers("");
+      return;
+    }
+
+    // 1. Hitung langsung dari data requests di frontend
+    const localPending = getPendingCarryOverFromRequests(quickReviewItem, requests);
+    setCarryOverAmount(localPending.total);
+    setKodeCarryOvers(localPending.kodeCarryOvers);
+
+    // 2. Fetch dari backend untuk memastikan konsistensi
+    if (quickReviewItem.applicant) {
+      SpakeApi.getPendingCarryOver(quickReviewItem.applicant, quickReviewItem.id)
+        .then((res) => {
+          if (res?.data) {
+            setCarryOverAmount(res.data.total ?? 0);
+            if (res.data.kode_carry_overs) {
+              setKodeCarryOvers(res.data.kode_carry_overs);
+            }
+          }
+        })
+        .catch(() => {
+          // Tetap gunakan hasil hitungan lokal
+        });
+    }
+  }, [quickReviewItem, requests]);
 
   if (!quickReviewItem) return null;
 
@@ -140,7 +177,10 @@ export const QuickTransferModal: React.FC<QuickTransferModalProps> = ({
                 </div>
                 {carryOverAmount > 0 && (
                   <div className="flex justify-between text-rose-600 dark:text-rose-400 font-semibold">
-                    <span>+ Tombok Asdos Kasbon Lalu (Carry-Over):</span>
+                    <span>
+                      + Tombok Asdos Kasbon Lalu (Carry-Over
+                      {kodeCarryOvers ? ` dari ${kodeCarryOvers}` : ""}):
+                    </span>
                     <span>+{money(carryOverAmount)}</span>
                   </div>
                 )}
@@ -177,7 +217,13 @@ export const QuickTransferModal: React.FC<QuickTransferModalProps> = ({
             <Button
               type="button"
               variant="outline"
-              onClick={() => exportBkkPdf(quickReviewItem)}
+              onClick={() =>
+                exportBkkPdf({
+                  ...quickReviewItem,
+                  danaDiterima: finalTransferAmount,
+                  nominalTransfer: allocatedBase,
+                })
+              }
               className="gap-1.5 border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-950/40 text-xs font-bold w-full sm:w-auto"
               title="Cetak Bukti Kas Keluar (BKK) / Kuitansi Pencairan Dana Resmi"
             >
@@ -193,7 +239,7 @@ export const QuickTransferModal: React.FC<QuickTransferModalProps> = ({
                     decisionNote || `Dana kasbon ditransfer dengan faktor alokasi f=${factorF}.`,
                     {
                       danaDiterima: finalTransferAmount,
-                      nominalTransfer: finalTransferAmount,
+                      nominalTransfer: allocatedBase,
                       faktorF: factorF,
                       catatanAlokasi: decisionNote,
                     },

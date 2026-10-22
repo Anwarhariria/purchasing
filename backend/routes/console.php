@@ -10,4 +10,5 @@ Artisan::command('inspire', function () {
 
 Schedule::command('pengajuan:auto-konfirmasi')->hourly();
 Schedule::command('ramalan:jadwal-bulanan')->monthlyOn(1, '01:00');
+Schedule::command('kasbon:ingatkan-carry-over')->dailyAt('08:00');
 

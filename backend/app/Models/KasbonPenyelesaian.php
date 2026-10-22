@@ -18,6 +18,9 @@ class KasbonPenyelesaian extends Model
         'nominal',
         'bukti_path',
         'kasbon_tujuan_id',
+        'diganti_langsung_at',
+        'bukti_ganti_path',
+        'diganti_oleh',
         'dicatat_oleh',
         'tanggal',
     ];
@@ -25,6 +28,7 @@ class KasbonPenyelesaian extends Model
     protected $casts = [
         'nominal' => 'float',
         'tanggal' => 'date',
+        'diganti_langsung_at' => 'datetime',
     ];
 
     public function pengajuan(): BelongsTo
@@ -35,5 +39,10 @@ class KasbonPenyelesaian extends Model
     public function kasbonTujuan(): BelongsTo
     {
         return $this->belongsTo(ProcurementRequest::class, 'kasbon_tujuan_id', 'id');
+    }
+
+    public function digantiOlehUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'diganti_oleh');
     }
 }

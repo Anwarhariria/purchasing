@@ -234,6 +234,12 @@ export interface KasbonPenyelesaian {
   bukti_path?: string | null;
   kasbonTujuanId?: string | null;
   kasbon_tujuan_id?: string | null;
+  digantiLangsungAt?: string | null;
+  diganti_langsung_at?: string | null;
+  buktiGantiPath?: string | null;
+  bukti_ganti_path?: string | null;
+  digantiOleh?: number | null;
+  diganti_oleh?: number | null;
   dicatatOleh: string;
   dicatat_oleh?: string;
   tanggal: string;

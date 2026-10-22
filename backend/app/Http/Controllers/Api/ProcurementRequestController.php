@@ -93,6 +93,12 @@ class ProcurementRequestController extends Controller
                     'bukti_path' => $p->bukti_path,
                     'kasbonTujuanId' => $p->kasbon_tujuan_id,
                     'kasbon_tujuan_id' => $p->kasbon_tujuan_id,
+                    'digantiLangsungAt' => $p->diganti_langsung_at ? ($p->diganti_langsung_at instanceof \DateTimeInterface ? $p->diganti_langsung_at->toIso8601String() : (string)$p->diganti_langsung_at) : null,
+                    'diganti_langsung_at' => $p->diganti_langsung_at ? ($p->diganti_langsung_at instanceof \DateTimeInterface ? $p->diganti_langsung_at->toIso8601String() : (string)$p->diganti_langsung_at) : null,
+                    'buktiGantiPath' => $p->bukti_ganti_path,
+                    'bukti_ganti_path' => $p->bukti_ganti_path,
+                    'digantiOleh' => $p->diganti_oleh,
+                    'diganti_oleh' => $p->diganti_oleh,
                     'dicatatOleh' => $p->dicatat_oleh,
                     'dicatat_oleh' => $p->dicatat_oleh,
                     'tanggal' => $p->tanggal instanceof \DateTimeInterface ? $p->tanggal->format('Y-m-d') : (string)$p->tanggal,
@@ -359,6 +365,20 @@ class ProcurementRequestController extends Controller
                 $catalogId = $d['katalog_barang_id'] ?? $d['code_id'] ?? $d['id'] ?? null;
                 $qty = (float)($d['qty'] ?? 0);
 
+                if ($namaBarang === '') {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Nama barang wajib diisi.',
+                    ], 422);
+                }
+
+                if (mb_strlen($namaBarang) > 255) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Nama barang '{$namaBarang}' maksimal 255 karakter.",
+                    ], 422);
+                }
+
                 if ($qty <= 0) {
                     return response()->json([
                         'status' => 'error',
@@ -366,34 +386,75 @@ class ProcurementRequestController extends Controller
                     ], 422);
                 }
 
+                if (isset($d['price']) && is_numeric($d['price'])) {
+                    $p = (float)$d['price'];
+                    if ($p < 0 || $p > 1000000000) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => "Harga barang '{$namaBarang}' tidak valid (harus antara 0 dan 1.000.000.000).",
+                        ], 422);
+                    }
+                }
+
                 $katalogItem = null;
-                if ($catalogId && str_starts_with($catalogId, 'KAT-')) {
+                if ($catalogId && is_string($catalogId) && str_starts_with($catalogId, 'KAT-')) {
                     $katalogItem = KatalogBarang::find($catalogId);
                 }
                 if (!$katalogItem && $namaBarang !== '') {
                     $katalogItem = KatalogBarang::where('nama', $namaBarang)->first();
                 }
 
-                if (!$katalogItem || !$katalogItem->aktif) {
+                if ($katalogItem && !$katalogItem->aktif) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => "Barang '{$namaBarang}' tidak ditemukan atau tidak aktif di katalog barang.",
+                        'message' => "Barang '{$namaBarang}' tidak aktif di katalog barang.",
                     ], 422);
                 }
 
-                $hargaAcuan = (float)$katalogItem->harga_acuan;
-                $subtotal = $qty * $hargaAcuan;
+                $finalCodeId = $katalogItem ? $katalogItem->id : null;
+                $finalName = $katalogItem ? $katalogItem->nama : $namaBarang;
+                $stockInLab = $katalogItem ? (float)$katalogItem->stok_tersedia : 0.0;
+
+                // Satuan: trim($d['unit']) bila diisi, kalau kosong pakai satuan katalog; bila keduanya kosong -> 422
+                $inputUnit = isset($d['unit']) ? trim((string)$d['unit']) : '';
+                if ($inputUnit === '-') {
+                    $inputUnit = '';
+                }
+                $finalUnit = $inputUnit !== '' ? $inputUnit : ($katalogItem ? $katalogItem->satuan : '');
+                if ($finalUnit === '') {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Satuan barang '{$namaBarang}' wajib diisi.",
+                    ], 422);
+                }
+
+                // Harga: (float)$d['price'] bila > 0, kalau kosong/0 pakai harga_acuan katalog; bila keduanya tidak ada -> 422
+                $finalPrice = null;
+                if (isset($d['price']) && is_numeric($d['price']) && (float)$d['price'] > 0) {
+                    $finalPrice = (float)$d['price'];
+                } elseif ($katalogItem && (float)$katalogItem->harga_acuan > 0) {
+                    $finalPrice = (float)$katalogItem->harga_acuan;
+                }
+
+                if ($finalPrice === null || $finalPrice <= 0) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Harga barang '{$namaBarang}' wajib diisi.",
+                    ], 422);
+                }
+
+                $subtotal = $qty * $finalPrice;
                 $totalPrice += $subtotal;
                 $totalQty += $qty;
 
                 $detailsToCreate[] = [
-                    'code_id' => $katalogItem->id,
-                    'name' => $katalogItem->nama,
+                    'code_id' => $finalCodeId,
+                    'name' => $finalName,
                     'qty' => $qty,
                     'needed_qty' => $qty,
-                    'stock_in_lab' => (float)$katalogItem->stok_tersedia,
-                    'unit' => $katalogItem->satuan,
-                    'price' => $hargaAcuan,
+                    'stock_in_lab' => $stockInLab,
+                    'unit' => $finalUnit,
+                    'price' => $finalPrice,
                 ];
             }
         }
@@ -526,24 +587,6 @@ class ProcurementRequestController extends Controller
                 $isDeleted = !empty($d['is_deleted']) || !empty($d['deleted']);
                 $alasanHapus = $d['alasan_hapus'] ?? $d['reason'] ?? null;
 
-                // Harga dari katalog / backend
-                $hargaSatuan = 0.0;
-                $unit = $d['unit'] ?? 'item';
-
-                if ($alur === 'B') {
-                    $katalog = KatalogBarang::where('nama', $name)->orWhere('kode', $d['code_id'] ?? '')->first();
-                    $hargaSatuan = $katalog ? (float)$katalog->harga_acuan : 0.0;
-                    if ($katalog && empty($d['unit'])) {
-                        $unit = $katalog->satuan;
-                    }
-                } else {
-                    $existing = $req->details->firstWhere('name', $name);
-                    if ($existing) {
-                        $hargaSatuan = (float)$existing->price;
-                        $unit = $existing->unit;
-                    }
-                }
-
                 // Cari record detail yang ada
                 $existingRecord = null;
                 if (!empty($d['id'])) {
@@ -555,6 +598,48 @@ class ProcurementRequestController extends Controller
                 }
                 if (!$existingRecord) {
                     $existingRecord = RequestDetail::where('request_id', $req->id)->where('name', $name)->first();
+                }
+
+                // Harga dari katalog / backend
+                $hargaSatuan = 0.0;
+                $unit = $d['unit'] ?? 'item';
+
+                if ($alur === 'B') {
+                    $catalogId = $d['code_id'] ?? $d['katalog_barang_id'] ?? null;
+                    $katalog = null;
+                    if ($catalogId && is_string($catalogId) && str_starts_with($catalogId, 'KAT-')) {
+                        $katalog = KatalogBarang::find($catalogId);
+                    }
+                    if (!$katalog && $name !== '') {
+                        $katalog = KatalogBarang::where('nama', $name)->orWhere('kode', $catalogId ?? '')->first();
+                    }
+
+                    // Urutan price: input (> 0) -> existing -> katalog acuan
+                    if (isset($d['price']) && is_numeric($d['price']) && (float)$d['price'] > 0) {
+                        $hargaSatuan = (float)$d['price'];
+                    } elseif ($existingRecord && (float)$existingRecord->price > 0) {
+                        $hargaSatuan = (float)$existingRecord->price;
+                    } elseif ($katalog && (float)$katalog->harga_acuan > 0) {
+                        $hargaSatuan = (float)$katalog->harga_acuan;
+                    }
+
+                    // Urutan unit: input -> existing -> katalog
+                    $inputUnit = isset($d['unit']) ? trim((string)$d['unit']) : '';
+                    if ($inputUnit !== '' && $inputUnit !== '-') {
+                        $unit = $inputUnit;
+                    } elseif ($existingRecord && !empty($existingRecord->unit) && $existingRecord->unit !== '-') {
+                        $unit = $existingRecord->unit;
+                    } elseif ($katalog && !empty($katalog->satuan)) {
+                        $unit = $katalog->satuan;
+                    } else {
+                        $unit = 'item';
+                    }
+                } else {
+                    $existing = $req->details->firstWhere('name', $name);
+                    if ($existing) {
+                        $hargaSatuan = (float)$existing->price;
+                        $unit = $existing->unit;
+                    }
                 }
 
                 if ($isDeleted) {
@@ -570,12 +655,15 @@ class ProcurementRequestController extends Controller
                         if ($hargaSatuan > 0) {
                             $existingRecord->price = $hargaSatuan;
                         }
+                        if (!empty($unit)) {
+                            $existingRecord->unit = $unit;
+                        }
                         $existingRecord->save();
                     } else {
                         // Tambah item baru
                         $newCodeId = $d['id'] ?? null;
                         if ($alur === 'B') {
-                            $newCodeId = $katalog ? $katalog->id : ($d['code_id'] ?? $d['id'] ?? ('KAT-' . sprintf('%03d', RequestDetail::where('request_id', $req->id)->withTrashed()->count() + 1)));
+                            $newCodeId = $katalog ? $katalog->id : ($d['code_id'] ?? null);
                         } else {
                             $newCodeId = $d['id'] ?? ('D-' . sprintf('%02d', RequestDetail::where('request_id', $req->id)->withTrashed()->count() + 1));
                         }
@@ -826,6 +914,157 @@ class ProcurementRequestController extends Controller
             'status' => 'success',
             'message' => 'Laporan belanja (SPJ) berhasil disimpan.',
             'data' => $this->formatRequest($req),
+        ]);
+    }
+
+    /**
+     * Endpoint GET /api/kasbon/carry-over-tertunda?applicant=...&exclude_id=...
+     * Mengambil akumulasi carry-over tombok kasbon Asdos yang belum dibawa (kasbon_tujuan_id NULL)
+     * Menggunakan query yang sama persis dengan WorkflowService::transition (saat DANA_DICAIRKAN).
+     */
+    public function getPendingCarryOver(Request $request)
+    {
+        $applicant = $request->query('applicant');
+        $excludeId = $request->query('exclude_id') ?? $request->query('excludeId');
+
+        if (empty($applicant)) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'total' => 0.0,
+                    'kode_carry_overs' => '',
+                    'items' => [],
+                ],
+            ]);
+        }
+
+        $query = KasbonPenyelesaian::where('jenis', 'carry_over')
+            ->whereNull('kasbon_tujuan_id')
+            ->whereNull('diganti_langsung_at')
+            ->whereHas('pengajuan', function ($q) use ($applicant, $excludeId) {
+                $q->where('applicant', $applicant);
+                if ($excludeId) {
+                    $q->where('id', '!=', $excludeId);
+                }
+            });
+
+        $items = $query->get();
+        $total = (float)$items->sum('nominal');
+        $kodeCarryOvers = $items->pluck('pengajuan_id')->unique()->values()->implode(', ');
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'total' => $total,
+                'kode_carry_overs' => $kodeCarryOvers,
+                'items' => $items,
+            ],
+        ]);
+    }
+
+    /**
+     * Endpoint POST /api/kasbon/ganti-langsung
+     * Mengganti langsung tombok kasbon Asdos tanpa menunggu pengajuan berikutnya.
+     * Khusus Keuangan Kitchen (Alur A).
+     */
+    public function gantiLangsungTombok(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthenticated.'], 401);
+        }
+
+        if (!$user->isKeuanganKitchen()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya Keuangan Kitchen yang berhak mengganti langsung tombok kasbon.',
+            ], 403);
+        }
+
+        $request->validate([
+            'applicant' => 'required|string',
+            'bukti_transfer' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'catatan' => 'nullable|string',
+        ], [
+            'applicant.required' => 'Nama pemohon/Asdos wajib diisi.',
+            'bukti_transfer.required' => 'Bukti transfer wajib diunggah (JPG/PNG/PDF, maks 5 MB).',
+            'bukti_transfer.file' => 'Bukti transfer harus berupa berkas yang valid.',
+            'bukti_transfer.mimes' => 'Bukti transfer harus berformat JPG, JPEG, PNG, atau PDF.',
+            'bukti_transfer.max' => 'Ukuran berkas bukti transfer maksimal 5 MB.',
+        ]);
+
+        $applicant = $request->input('applicant');
+
+        $pendingCarryOvers = KasbonPenyelesaian::where('jenis', 'carry_over')
+            ->whereNull('kasbon_tujuan_id')
+            ->whereNull('diganti_langsung_at')
+            ->whereHas('pengajuan', function ($q) use ($applicant) {
+                $q->where('applicant', $applicant);
+            })
+            ->with('pengajuan')
+            ->get();
+
+        if ($pendingCarryOvers->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tidak ada tombok tertunda untuk pemohon ini.',
+            ], 422);
+        }
+
+        $file = $request->file('bukti_transfer');
+        $Y = now()->format('Y');
+        $m = now()->format('m');
+        $cleanApplicant = preg_replace('/[^A-Za-z0-9_\-]/', '_', $applicant);
+        $buktiGantiPath = $file->store("ganti_langsung/{$Y}/{$m}/{$cleanApplicant}", 'local');
+
+        $totalNominal = 0.0;
+        $kodeList = [];
+
+        DB::transaction(function () use ($pendingCarryOvers, $user, $buktiGantiPath, $request, &$totalNominal, &$kodeList) {
+            $now = now();
+            $catatan = $request->input('catatan');
+
+            foreach ($pendingCarryOvers as $co) {
+                $co->diganti_langsung_at = $now;
+                $co->bukti_ganti_path = $buktiGantiPath;
+                $co->diganti_oleh = $user->id;
+                $co->save();
+
+                $totalNominal += (float)$co->nominal;
+                $kodeList[] = $co->pengajuan_id;
+
+                $formattedNominal = number_format($co->nominal, 0, ',', '.');
+                $logNotes = "Tombok Rp {$formattedNominal} diganti langsung oleh Keuangan Kitchen";
+                if (!empty(trim($catatan ?? ''))) {
+                    $logNotes .= " (" . trim($catatan) . ")";
+                }
+
+                ProcurementActivityLog::create([
+                    'procurement_request_id' => $co->pengajuan_id,
+                    'user_id' => $user->id,
+                    'actor_name' => $user->name,
+                    'actor_role' => $user->role,
+                    'action' => 'Penyelesaian Kasbon: Ganti Langsung Tombok',
+                    'status_from' => $co->pengajuan?->status ?? 'SELESAI',
+                    'status_to' => $co->pengajuan?->status ?? 'SELESAI',
+                    'notes' => $logNotes,
+                ]);
+            }
+        });
+
+        $uniqueKode = array_values(array_unique($kodeList));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Tombok kasbon sebesar Rp " . number_format($totalNominal, 0, ',', '.') . " berhasil diganti langsung kepada {$applicant}.",
+            'data' => [
+                'applicant' => $applicant,
+                'total_nominal' => $totalNominal,
+                'totalNominal' => $totalNominal,
+                'kode_pengajuan' => $uniqueKode,
+                'kodePengajuan' => $uniqueKode,
+                'bukti_ganti_path' => $buktiGantiPath,
+            ],
         ]);
     }
 

@@ -214,6 +214,8 @@ npx eslint src
 npm run build
 ```
 
+Untuk menjalankan demo otomatis berbasis Playwright (browser terlihat dan merekam video Alur A & B), lihat panduan di [`demo/README.md`](demo/README.md).
+
 ---
 
 ## 11. Masalah yang sering muncul

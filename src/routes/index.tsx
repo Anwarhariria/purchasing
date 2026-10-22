@@ -43,6 +43,7 @@ import { RequestsTableView } from "@/components/dashboard/RequestsTableView";
 import { BukuKasbonView } from "@/components/dashboard/BukuKasbonView";
 import { AdminModelForecastingView } from "@/components/dashboard/forecasting/AdminModelForecastingView";
 import { AlurBForecastingView } from "@/components/dashboard/forecasting/AlurBForecastingView";
+import { KatalogBarangView } from "@/components/dashboard/KatalogBarangView";
 import type { WorkflowType } from "@/types/procurement";
 
 // Modals
@@ -934,6 +935,11 @@ function Dashboard() {
             />
           )}
 
+          {/* HALAMAN KATALOG BARANG (SUPER ADMIN & KEUANGAN UMUM) */}
+          {section === "Katalog Barang" && (role === "Super Admin" || role === "Keuangan Umum") && (
+            <KatalogBarangView notify={notify} />
+          )}
+
           {/* MAIN DATA TABLE VIEW */}
           {(section === "Ringkasan" ||
             section === "Ringkasan Logistik" ||
@@ -1015,6 +1021,7 @@ function Dashboard() {
         exportSinglePdf={(r) => exportSinglePdf(r, notify)}
         waActionData={waActionData}
         setWaActionData={setWaActionData}
+        requests={requests}
       />
 
       <QuickTransferModal
@@ -1023,6 +1030,7 @@ function Dashboard() {
         decisionNote={decisionNote}
         setDecisionNote={setDecisionNote}
         updateStatus={updateStatus}
+        requests={requests}
       />
 
       <ReportExpenseModal

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { RequestItem } from "@/types/procurement";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -7,6 +8,16 @@ export function cn(...inputs: ClassValue[]) {
 
 /** Jumlah milidetik dalam 1 hari */
 export const MS_PER_DAY = 86_400_000;
+
+/** Mengembalikan string tanggal format YYYY-MM-DD berdasarkan waktu lokal */
+export function localDateInput(offsetDays = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 /** Format angka ke format mata uang Rupiah, e.g. "Rp 1.500.000" */
 export const money = (val?: number | null) => "Rp " + (Number(val) || 0).toLocaleString("id-ID");
@@ -352,4 +363,71 @@ export function matchesCoordinatorUnit(
     (rDept.length > 0 && cDept.includes(rDept)) ||
     (rDept.length > 0 && rDept.includes(cDept))
   );
+}
+
+/**
+ * Menghitung akumulasi carry-over tombok kasbon yang belum dibawa (kasbon_tujuan_id null)
+ * untuk Asdos / applicant yang sama pada pengajuan Alur A lain.
+ */
+export function getPendingCarryOverFromRequests(
+  targetReq?: { id?: string | undefined; alur?: string | undefined; applicant?: string | undefined } | null,
+  requests: RequestItem[] = [],
+): { total: number; kodeCarryOvers: string } {
+  if (!targetReq || targetReq.alur === "B" || !targetReq.applicant) {
+    return { total: 0, kodeCarryOvers: "" };
+  }
+
+  const applicant = targetReq.applicant;
+  const targetId = targetReq.id;
+
+  const otherAlurARequests = requests.filter(
+    (r) => r.id !== targetId && r.applicant === applicant && r.alur !== "B",
+  );
+
+  let total = 0;
+  const originCodes: string[] = [];
+
+  for (const r of otherAlurARequests) {
+    let foundInPenyelesaian = false;
+    if (r.penyelesaian && Array.isArray(r.penyelesaian)) {
+      for (const p of r.penyelesaian) {
+        const isCarryOver = p.jenis === "carry_over";
+        const isPending =
+          !p.kasbonTujuanId &&
+          !p.kasbon_tujuan_id &&
+          !p.digantiLangsungAt &&
+          !p.diganti_langsung_at;
+        if (isCarryOver && isPending) {
+          foundInPenyelesaian = true;
+          total += Number(p.nominal) || 0;
+          const code = p.pengajuanId || p.pengajuan_id || r.id;
+          if (code && !originCodes.includes(code)) {
+            originCodes.push(code);
+          }
+        }
+      }
+    }
+    // Fallback bila r.penyelesaian belum diisi namun r.deficitAmount tercatat belum selesai
+    if (!foundInPenyelesaian && r.deficitAmount && r.deficitAmount > 0) {
+      const isCarryOverSettled = r.penyelesaian?.some((p) =>
+        Boolean(
+          p.kasbonTujuanId ||
+            p.kasbon_tujuan_id ||
+            p.digantiLangsungAt ||
+            p.diganti_langsung_at,
+        ),
+      );
+      if (!isCarryOverSettled) {
+        total += Number(r.deficitAmount) || 0;
+        if (r.id && !originCodes.includes(r.id)) {
+          originCodes.push(r.id);
+        }
+      }
+    }
+  }
+
+  return {
+    total,
+    kodeCarryOvers: originCodes.join(", "),
+  };
 }

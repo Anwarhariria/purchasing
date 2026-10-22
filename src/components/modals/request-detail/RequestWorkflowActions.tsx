@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Check,
   X,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SIKLUS_TAHAPAN, isPemohon, isKoordinator, isKeuangan } from "@/types/procurement";
-import { money } from "@/lib/utils";
+import { getPendingCarryOverFromRequests, money } from "@/lib/utils";
 import type { Role, Status, RequestItem, RequestDetail, User } from "@/types/procurement";
 import { RejectRequestModal } from "@/components/modals/RejectRequestModal";
 import { WhatsAppShareModal } from "@/components/modals/WhatsAppShareModal";
@@ -40,6 +40,7 @@ interface RequestWorkflowActionsProps {
   setReportingRequestId: (id: string | null) => void;
   setReportSpentAmount: (amt: number) => void;
   onClose: () => void;
+  requests?: RequestItem[];
 }
 
 const SATUAN_UTUH = new Set([
@@ -85,6 +86,7 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
   setReportingRequestId,
   setReportSpentAmount,
   onClose,
+  requests = [],
 }) => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [isWaModalOpen, setIsWaModalOpen] = useState(false);
@@ -99,6 +101,39 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
   );
   const [buktiTransferFile, setBuktiTransferFile] = useState<File | null>(null);
   const [keuanganError, setKeuanganError] = useState<string | null>(null);
+  const [carryOverAmount, setCarryOverAmount] = useState<number>(0);
+  const [kodeCarryOvers, setKodeCarryOvers] = useState<string>("");
+
+  const isAlurB = activeRequest.alur === "B";
+
+  useEffect(() => {
+    if (isAlurB || !activeRequest || activeRequest.status !== "DISETUJUI_KAPRODI") {
+      setCarryOverAmount(0);
+      setKodeCarryOvers("");
+      return;
+    }
+
+    // 1. Hitung langsung dari data requests di frontend
+    const localPending = getPendingCarryOverFromRequests(activeRequest, requests);
+    setCarryOverAmount(localPending.total);
+    setKodeCarryOvers(localPending.kodeCarryOvers);
+
+    // 2. Fetch dari backend untuk memastikan konsistensi
+    if (activeRequest.applicant) {
+      SpakeApi.getPendingCarryOver(activeRequest.applicant, activeRequest.id)
+        .then((res) => {
+          if (res?.data) {
+            setCarryOverAmount(res.data.total ?? 0);
+            if (res.data.kode_carry_overs) {
+              setKodeCarryOvers(res.data.kode_carry_overs);
+            }
+          }
+        })
+        .catch(() => {
+          // Tetap gunakan hasil hitungan lokal
+        });
+    }
+  }, [activeRequest, requests, isAlurB]);
 
   // State Alur A Kasbon Settlement
   const [buktiSetorFile, setBuktiSetorFile] = useState<File | null>(null);
@@ -116,8 +151,6 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
   const [alurBReceiptFiles, setAlurBReceiptFiles] = useState<File[]>([]);
   const [isSubmittingSpj, setIsSubmittingSpj] = useState(false);
   const [alurBSpjSuccess, setAlurBSpjSuccess] = useState(false);
-
-  const isAlurB = activeRequest.alur === "B";
 
   const handleFaktorFSelect = (fVal: number) => {
     setFaktorF(fVal);
@@ -183,12 +216,14 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
       formData.append("bukti_transfer", buktiTransferFile);
     }
 
+    const finalDanaDiterima = nominalTransfer + (!isAlurB ? carryOverAmount : 0);
+
     try {
       await updateStatus(activeRequest.id, targetStatus, catatanKeuangan.trim(), {
         faktorF,
         catatanKeuangan: catatanKeuangan.trim(),
         nominalTransfer,
-        danaDiterima: nominalTransfer,
+        danaDiterima: finalDanaDiterima,
         details: updatedDetails,
         formData,
       });
@@ -511,10 +546,36 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
                     />
                   </label>
                   {!isAlurB && (
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      Catatan Alur A: Jika ada carry-over tombok kasbon Asdos sebelumnya, backend
-                      akan otomatis mengakumulasikannya ke dana diterima.
-                    </p>
+                    <div className="mt-2 space-y-1.5">
+                      {carryOverAmount > 0 ? (
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200 space-y-1.5">
+                          <div className="flex justify-between text-muted-foreground dark:text-emerald-300/80">
+                            <span>Alokasi Dana Praktik ({faktorF * 100}%):</span>
+                            <span className="font-semibold text-foreground dark:text-emerald-200">
+                              {money(nominalTransfer)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between font-semibold text-rose-600 dark:text-rose-400">
+                            <span>
+                              + Tombok Asdos Kasbon Lalu (Carry-Over
+                              {kodeCarryOvers ? ` dari ${kodeCarryOvers}` : ""}):
+                            </span>
+                            <span>+{money(carryOverAmount)}</span>
+                          </div>
+                          <div className="flex justify-between border-t border-emerald-300/50 dark:border-emerald-800 pt-1.5 font-bold">
+                            <span>Total Transfer Kasbon (Dana Diterima):</span>
+                            <span className="font-black text-emerald-700 dark:text-emerald-300 text-sm">
+                              {money(nominalTransfer + carryOverAmount)}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground">
+                          Catatan Alur A: Jika ada carry-over tombok kasbon Asdos sebelumnya, backend
+                          akan otomatis mengakumulasikannya ke dana diterima.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -639,13 +700,23 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
                   ) : (
                     <>
                       <Check className="size-3.5" /> Simpan Keputusan Keuangan &amp;{" "}
-                      {!isAlurB ? "Cairkan Dana" : "Alokasikan Belanja"}
+                      {!isAlurB
+                        ? carryOverAmount > 0
+                          ? `Cairkan Kasbon (${money(nominalTransfer + carryOverAmount)})`
+                          : "Cairkan Dana"
+                        : "Alokasikan Belanja"}
                     </>
                   )}
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => exportBkkPdf(activeRequest)}
+                  onClick={() =>
+                    exportBkkPdf({
+                      ...activeRequest,
+                      danaDiterima: nominalTransfer + (!isAlurB ? carryOverAmount : 0),
+                      nominalTransfer,
+                    })
+                  }
                   className="gap-1.5 border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-400 font-bold text-xs cursor-pointer"
                   title="Cetak Bukti Kas Keluar (BKK) / Kuitansi Pencairan Dana Resmi"
                 >
