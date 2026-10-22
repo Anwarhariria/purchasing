@@ -428,7 +428,6 @@ export function BukuKasbonView({ requests, role, currentUser, notify }: BukuKasb
           settleAmount,
         )} dari ${settlementModalAsdos.asdosName} berhasil dicatat via ${settleMethod}. Transaksi kasbon diperbarui!`;
 
-      toast.success(successMsg);
       notify(successMsg);
 
       await queryClient.invalidateQueries({ queryKey: ["procurement-requests"] });
@@ -445,7 +444,6 @@ export function BukuKasbonView({ requests, role, currentUser, notify }: BukuKasb
       const msg = err instanceof Error ? err.message : "Gagal mencatat setoran kasbon.";
       setFormError(msg);
       toast.error(msg);
-      notify(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -485,7 +483,6 @@ export function BukuKasbonView({ requests, role, currentUser, notify }: BukuKasb
       const successMsg =
         res?.message ||
         `Tombok sebesar ${money(totalTombokNominal)} berhasil diganti langsung kepada ${gantiLangsungAsdos.asdosName}.`;
-      toast.success(successMsg);
       notify(successMsg);
 
       setGantiLangsungAsdos(null);
@@ -498,7 +495,6 @@ export function BukuKasbonView({ requests, role, currentUser, notify }: BukuKasb
       const msg = err instanceof Error ? err.message : "Gagal memproses ganti langsung tombok.";
       setGantiError(msg);
       toast.error(msg);
-      notify(msg);
     } finally {
       setIsSubmittingGanti(false);
     }

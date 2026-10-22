@@ -351,7 +351,6 @@ export function useMasterCrud({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Gagal menyimpan pengguna.";
       toast.error(msg);
-      notify(msg);
     }
   }
 

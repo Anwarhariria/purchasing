@@ -107,7 +107,7 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
   const messageText = generateMessageText();
 
   const handleCopyMessage = () => {
-    navigator.clipboard.writeText(messageText);
+    void navigator.clipboard.writeText(messageText);
     setCopied(true);
     notify("Format pesan WhatsApp berhasil disalin ke clipboard!");
     setTimeout(() => setCopied(false), 2500);

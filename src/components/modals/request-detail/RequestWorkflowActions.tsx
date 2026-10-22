@@ -241,7 +241,7 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
       targetStatus = "DITOLAK_KEUANGAN";
     }
 
-    updateStatus(activeRequest.id, targetStatus, reason, {
+    void updateStatus(activeRequest.id, targetStatus, reason, {
       rejectionReason: reason,
       rejection_reason: reason,
     });
@@ -357,7 +357,7 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
             const ok = await handleSaveQtyChanges(activeRequest.id, editableDetails);
             if (!ok) return;
           }
-          updateStatus(
+          await updateStatus(
             activeRequest.id,
             "DIVERIFIKASI_KOORD",
             decisionNote ||
@@ -392,7 +392,7 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
                 // Simpan qty dulu (status masih DIAJUKAN), baru ubah status
                 const ok = await handleSaveQtyChanges(activeRequest.id, editableDetails);
                 if (!ok) return;
-                updateStatus(
+                await updateStatus(
                   activeRequest.id,
                   "DIVERIFIKASI_KOORD",
                   decisionNote || "Standar bahan/kuantitas telah diverifikasi Koordinator.",
@@ -439,7 +439,7 @@ export const RequestWorkflowActions: React.FC<RequestWorkflowActionsProps> = ({
             <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 onClick={() => {
-                  updateStatus(
+                  void updateStatus(
                     activeRequest.id,
                     "DISETUJUI_KAPRODI",
                     decisionNote || "Disetujui Kaprodi. Diajukan pencairan dana ke Keuangan.",

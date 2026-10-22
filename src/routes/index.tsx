@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, type FormEvent } from "react";
 import { toast as sonnerToast } from "sonner";
 import { SpakeApi } from "@/lib/api-client";
-import { CheckCircle2 } from "lucide-react";
 
 // Data & Types
 import {
@@ -76,12 +75,8 @@ export const Route = createFileRoute("/")({
 export type { Role, Status };
 
 function Dashboard() {
-  const [toast, setToast] = useState("");
   function notify(msg: string) {
-    setToast(msg);
-    if (typeof window !== "undefined") {
-      window.setTimeout(() => setToast(""), 4000);
-    }
+    sonnerToast.success(msg);
   }
 
   const [section, setSection] = useState<string>("Ringkasan");
@@ -236,7 +231,7 @@ function Dashboard() {
     }
   }, [activeRequest]);
 
-  function handleReportExpense(e: FormEvent<HTMLFormElement>) {
+  async function handleReportExpense(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!reportingRequestId) return;
     const targetItem = requests.find((r) => r.id === reportingRequestId);
@@ -248,9 +243,6 @@ function Dashboard() {
       (!targetItem.receiptImages || targetItem.receiptImages.length === 0)
     ) {
       sonnerToast.error(
-        "Wajib melampirkan foto bon / nota belanja fisik! Tanpa foto bon, laporan tidak dapat diproses.",
-      );
-      notify(
         "Wajib melampirkan foto bon / nota belanja fisik! Tanpa foto bon, laporan tidak dapat diproses.",
       );
       return;
@@ -274,7 +266,7 @@ function Dashboard() {
       formData.append("receipts[]", reportReceiptFile);
     }
 
-    updateStatus(
+    await updateStatus(
       reportingRequestId,
       "LAPORAN_BELANJA_DIAJUKAN",
       "Laporan belanja & bon diserahkan oleh Asdos.",
@@ -290,7 +282,6 @@ function Dashboard() {
     setReportSpentAmount(0);
     setReportReceiptImg(null);
     setReportReceiptFile(null);
-    sonnerToast.success("Laporan belanja dan bukti bon berhasil dikirim.");
     notify(`Laporan belanja untuk ${reportingRequestId} dan bukti bon berhasil dikirim.`);
   }
 
@@ -381,9 +372,8 @@ function Dashboard() {
       const res = await SpakeApi.createRequest(newReq);
       const serverId = res?.data?.id || "Pengadaan Baru";
       setFormOpen(false);
-      refetchRequests();
-      refetchNotifications();
-      sonnerToast.success(`Permohonan ${serverId} berhasil diajukan.`);
+      void refetchRequests();
+      void refetchNotifications();
       notify(
         `Permohonan ${serverId} (${item}) berhasil diajukan ke Koordinator ${
           isAlurB ? "Unit Kerja" : "Lab Kitchen"
@@ -392,7 +382,6 @@ function Dashboard() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Gagal mengajukan permohonan.";
       sonnerToast.error(msg);
-      notify(msg);
     }
   }
 
@@ -1035,17 +1024,6 @@ function Dashboard() {
       />
 
       <MasterModalsContainer crud={crud} labStock={labStock} notify={notify} />
-
-      {/* TOAST POPUP */}
-      {toast && (
-        <div
-          role="status"
-          className="fixed bottom-6 right-6 z-[70] flex max-w-sm items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-xl text-xs font-bold text-foreground animate-in slide-in-from-bottom-5"
-        >
-          <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
-          <span>{toast}</span>
-        </div>
-      )}
     </div>
   );
 }

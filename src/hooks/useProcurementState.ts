@@ -265,7 +265,6 @@ export function useProcurementState(notify: (msg: string) => void, isLoggedIn: b
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : `Gagal mengubah status pengajuan ${id}.`;
       toast.error(msg);
-      notify(msg);
       throw err;
     }
   }

@@ -163,14 +163,17 @@ export function KatalogBarangView({ notify }: KatalogBarangViewProps) {
       const msg = variables.id
         ? `Barang "${variables.nama}" berhasil diperbarui.`
         : `Barang "${variables.nama}" berhasil ditambahkan ke katalog.`;
-      toast.success(msg);
-      notify?.(msg);
+      if (notify) {
+        notify(msg);
+      } else {
+        toast.success(msg);
+      }
 
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["katalog-barang"] });
-      queryClient.invalidateQueries({ queryKey: ["forecasting-predictions"] });
-      queryClient.invalidateQueries({ queryKey: ["forecasting-recommendations"] });
-      queryClient.invalidateQueries({ queryKey: ["forecasting-alur-b"] });
+      void queryClient.invalidateQueries({ queryKey: ["katalog-barang"] });
+      void queryClient.invalidateQueries({ queryKey: ["forecasting-predictions"] });
+      void queryClient.invalidateQueries({ queryKey: ["forecasting-recommendations"] });
+      void queryClient.invalidateQueries({ queryKey: ["forecasting-alur-b"] });
 
       setIsFormOpen(false);
       setEditingItem(null);
@@ -218,13 +221,16 @@ export function KatalogBarangView({ notify }: KatalogBarangViewProps) {
       const msg = targetAktif
         ? `Barang "${item.nama}" berhasil diaktifkan kembali.`
         : `Barang "${item.nama}" berhasil dinonaktifkan.`;
-      toast.success(msg);
-      notify?.(msg);
+      if (notify) {
+        notify(msg);
+      } else {
+        toast.success(msg);
+      }
 
-      queryClient.invalidateQueries({ queryKey: ["katalog-barang"] });
-      queryClient.invalidateQueries({ queryKey: ["forecasting-predictions"] });
-      queryClient.invalidateQueries({ queryKey: ["forecasting-recommendations"] });
-      queryClient.invalidateQueries({ queryKey: ["forecasting-alur-b"] });
+      void queryClient.invalidateQueries({ queryKey: ["katalog-barang"] });
+      void queryClient.invalidateQueries({ queryKey: ["forecasting-predictions"] });
+      void queryClient.invalidateQueries({ queryKey: ["forecasting-recommendations"] });
+      void queryClient.invalidateQueries({ queryKey: ["forecasting-alur-b"] });
 
       setConfirmDialogItem(null);
     },

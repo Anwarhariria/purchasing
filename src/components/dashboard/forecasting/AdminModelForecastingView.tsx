@@ -39,7 +39,7 @@ export function AdminModelForecastingView({ notify }: AdminModelForecastingViewP
   };
 
   useEffect(() => {
-    fetchModelInfo();
+    void fetchModelInfo();
   }, []);
 
   const handleRetrain = async () => {
