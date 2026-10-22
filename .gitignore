@@ -22,6 +22,9 @@ dist-ssr
 # Netlify
 .netlify
 
+# Receipts
+public/receipts/
+
 # Backend ignores
 backend/vendor/
 backend/node_modules/
