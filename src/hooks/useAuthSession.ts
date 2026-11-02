@@ -116,37 +116,6 @@ export function useAuthSession(
     }
   }
 
-  async function handleQuickLogin(account: {
-    email: string;
-    pass: string;
-    role?: Role;
-    label?: string;
-  }) {
-    setLoginEmail(account.email);
-    setLoginPassword(account.pass);
-    setLoginError("");
-    try {
-      const res = await SpakeApi.login(account.email, account.pass);
-      if (res && res.user) {
-        setCurrentUser(res.user);
-        setRole(res.user.role as Role);
-        onResetSection?.("Ringkasan");
-        setCurrentView("dashboard");
-        if (typeof window !== "undefined") {
-          window.location.hash = "dashboard";
-        }
-        notify(`Login berhasil sebagai ${res.user.role}.`);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("429") || msg.toLowerCase().includes("terlalu banyak")) {
-        setLoginError("Terlalu banyak percobaan login. Coba lagi dalam 1 menit.");
-      } else {
-        setLoginError(msg || "Gagal masuk menggunakan akun demo.");
-      }
-    }
-  }
-
   async function handleLogout() {
     try {
       await SpakeApi.logout();
@@ -192,7 +161,6 @@ export function useAuthSession(
     handleGoToLogin,
     handleBackToLanding,
     handleLogin,
-    handleQuickLogin,
     handleLogout,
     handleRoleChange,
   };

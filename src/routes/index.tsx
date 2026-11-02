@@ -96,7 +96,6 @@ function Dashboard() {
     setLoginPassword,
     loginError,
     handleLogin,
-    handleQuickLogin,
     handleLogout,
     handleRoleChange,
   } = useAuthSession([], notify, (s) => {
@@ -632,7 +631,6 @@ function Dashboard() {
         setLoginPassword={setLoginPassword}
         loginError={loginError}
         onLogin={handleLogin}
-        onQuickLogin={handleQuickLogin}
       />
     );
   }

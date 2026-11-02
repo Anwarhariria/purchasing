@@ -381,14 +381,6 @@ export interface UserAccount extends User {
   password?: string | undefined;
 }
 
-export interface DummyCredential {
-  role: Role;
-  label: string;
-  email: string;
-  pass: string;
-  desc: string;
-}
-
 export interface NotificationItem {
   id: string;
   title: string;

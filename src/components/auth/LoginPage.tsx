@@ -1,74 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, KeyRound } from "lucide-react";
-import { type DummyCredential } from "@/types/procurement";
-
-const SEEDER_DEMO_ACCOUNTS: DummyCredential[] = [
-  {
-    role: "Asdos Kitchen",
-    label: "1. Pemohon Alur A (Asdos Kitchen - Aura)",
-    email: "asdos@gmail.com",
-    pass: "123",
-    desc: "Praktikum D3 Perhotelan: Ajukan bahan resep, unggah bon, & pantau kasbon",
-  },
-  {
-    role: "Koordinator Lab",
-    label: "2. Koordinator Lab Kitchen (Alur A)",
-    email: "koordinator@gmail.com",
-    pass: "123",
-    desc: "Verifikasi standar resep dan kebutuhan praktik laboratorium",
-  },
-  {
-    role: "Kaprodi",
-    label: "3. Kaprodi Perhotelan (Alur A)",
-    email: "kaprodi@gmail.com",
-    pass: "123",
-    desc: "Persetujuan akademik silabus dan rencana belanja praktikum",
-  },
-  {
-    role: "Keuangan Kitchen",
-    label: "4. Keuangan Kitchen (Alur A)",
-    email: "keuangan.kitchen@gmail.com",
-    pass: "123",
-    desc: "Keputusan faktor f, pencairan kasbon, carry-over tombok & penutupan transaksi",
-  },
-  {
-    role: "Staf Unit",
-    label: "5. Pemohon Alur B (Staf Sekretariat D3)",
-    email: "staf.sekre@gmail.com",
-    pass: "123",
-    desc: "Pengadaan kertas kop surat & ATK unit kerja Sekretariat D3",
-  },
-  {
-    role: "Koordinator Unit",
-    label: "6. Koordinator Sekretariat D3 (Alur B)",
-    email: "koord.sekre@gmail.com",
-    pass: "123",
-    desc: "Verifikasi kebutuhan logistik internal unit Sekretariat D3",
-  },
-  {
-    role: "Koordinator Unit",
-    label: "6b. Koordinator PMB (Alur B)",
-    email: "koord.pmb@gmail.com",
-    pass: "123",
-    desc: "Koordinator unit PMB (untuk uji isolasi unit kerja)",
-  },
-  {
-    role: "Keuangan Umum",
-    label: "7. Keuangan Umum & ATK (Alur B)",
-    email: "keuangan.umum@gmail.com",
-    pass: "123",
-    desc: "Persetujuan faktor f alokasi belanja ATK unit & penutupan pengadaan",
-  },
-  {
-    role: "Super Admin",
-    label: "8. Super Admin (IT)",
-    email: "superadmin@gmail.com",
-    pass: "123",
-    desc: "Akses penuh monitoring sistem dan manajemen pengguna",
-  },
-];
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 interface LoginPageProps {
   loginEmail: string;
@@ -77,7 +10,6 @@ interface LoginPageProps {
   setLoginPassword: (pass: string) => void;
   loginError: string;
   onLogin: (e: React.FormEvent) => void;
-  onQuickLogin: (acc: DummyCredential) => void;
 }
 
 export function LoginPage({
@@ -87,8 +19,9 @@ export function LoginPage({
   setLoginPassword,
   loginError,
   onLogin,
-  onQuickLogin,
 }: LoginPageProps) {
+  const [showPassword, setShowPassword] = React.useState(false);
+
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden font-sans text-foreground">
       {/* ====== FULLSCREEN HERO BACKGROUND ASSET ====== */}
@@ -160,13 +93,23 @@ export function LoginPage({
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3.5 size-4 text-blue-200" />
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="pl-10 h-11 text-xs rounded-xl bg-white/10 border-white/20 text-white placeholder:text-blue-100/40 focus-visible:ring-blue-400 focus-visible:border-white/50 backdrop-blur-xs"
+                    autoComplete="current-password"
+                    className="pl-10 pr-11 h-11 text-xs rounded-xl bg-white/10 border-white/20 text-white placeholder:text-blue-100/40 focus-visible:ring-blue-400 focus-visible:border-white/50 backdrop-blur-xs"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                    title={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex size-8 items-center justify-center rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -177,50 +120,6 @@ export function LoginPage({
                 Masuk ke Sistem
               </Button>
             </form>
-
-            {/* Note Informasi Akun Demo Cepat (Hanya tampil di mode pengembangan / dev) */}
-            {import.meta.env.DEV && (
-              <div className="mt-6 border-t border-white/15 pt-5">
-                <div className="flex items-center gap-1.5 mb-2.5">
-                  <KeyRound className="size-4 text-sky-400 shrink-0" />
-                  <span className="text-xs font-extrabold text-white uppercase tracking-wide leading-tight">
-                    Pilihan Akun Cepat (Demo Pengembangan):
-                  </span>
-                </div>
-                <p className="text-[11px] text-blue-200/80 mb-3">
-                  Pilih salah satu peran dari database seeder untuk mencoba alur kerja:
-                </p>
-
-                <div className="grid grid-cols-1 gap-2.5 max-h-60 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-                  {SEEDER_DEMO_ACCOUNTS.map((acc) => (
-                    <button
-                      key={acc.email}
-                      type="button"
-                      onClick={() => onQuickLogin(acc)}
-                      className="text-left rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 hover:border-white/30 p-3 transition-all cursor-pointer group shadow-sm backdrop-blur-xs"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-black text-white group-hover:text-sky-300 transition-colors truncate flex-1 min-w-0">
-                          {acc.label}
-                        </span>
-                        <span className="shrink-0 rounded-full bg-blue-500/30 text-sky-200 border border-blue-400/30 px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap">
-                          Pilih Akun →
-                        </span>
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[11px] text-blue-200/90 font-mono">
-                        <span>
-                          Email: <strong className="text-white">{acc.email}</strong>
-                        </span>
-                        <span>
-                          Pass: <strong className="text-white">{acc.pass}</strong>
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[10px] text-blue-100/70 leading-snug">{acc.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </main>
